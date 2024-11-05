@@ -1,0 +1,6 @@
+### tarik data invoice
+GET https://account.accurate.id/api/purchase-invoice/list.do
+Authorization: Bearer 91080471-d48e-453b-a282-4d9b4dbfae35
+Content-Type: application/json
+
+
