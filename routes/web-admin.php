@@ -9,19 +9,20 @@ use Illuminate\Support\Facades\Route;
 Route::get('testemplate', function () {
     return view('frontend.emails.tess');
 });
-use App\Jobs\SyncSendEmailUlangTahunJob;
+// use App\Jobs\SyncSendEmailUlangTahunJob;
+// use App\Jobs\CalcMemberExpenseJob;
 
-Route::get('/send-birthday-email', function () {
-    SyncSendEmailUlangTahunJob::dispatch();
-    return "Email ulang tahun telah dikirim!";
-});
+// Route::get('/send-birthday-email', function () {
+//     SyncSendEmailUlangTahunJob::dispatch();
+//     return "Email ulang tahun telah dikirim!";
+// });
 Route::get('konfirmasi-hadir-event/{token}', [EventController::class, 'konfirmasi'])->name('konfirmasi-hadir-event');
 
 
 Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
     Route::prefix("admin")->group(function () {
-
+        include __DIR__ . '/jobs/route_jobs.php';
         Route::get('penjualan/cariso', function () {
             $r = new APIAccurate();
             $noso = request('so');
