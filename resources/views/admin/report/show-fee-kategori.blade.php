@@ -62,8 +62,8 @@
                                     <td>{{ $d->nomor }}</td>
                                     <td>{{ $d->customer }} ({{$d->id_no}})</td>
                                     <td style="text-align: right">{{ number_format( doubleval( $d->dpp_amount ) ) }}</td>
-                                    <td  style="text-align: right">{{ number_format( doubleval( $d->fee_amount ) ) }}</td>
-                                    <td  style="text-align: right">{{ number_format( doubleval( ($d->fee_amount / $totalfee) * 100 ), 2 ) }}%</td>
+                                    <td  style="text-align: right">{{ number_format( doubleval( $d->total_pembayaran ) ) }}</td>
+                                    <td  style="text-align: right">{{ number_format( doubleval( ($d->total_pembayaran / $totalfee) * 100 ), 2 ) }}%</td>
                                 </tr>
 
                             @endforeach

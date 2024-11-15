@@ -112,7 +112,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->call(function(){
             SyncSendEmailUlangTahunJob::dispatch()->onConnection('sync');
-        })->dailyAt('19:00');
+        })->dailyAt('07:30');
 
 //        $schedule->call(function(){
 //            SyncPenjualanJob::dispatch(Carbon::now()->subDays(60)->format('d/m/Y'), false )->onConnection('sync');

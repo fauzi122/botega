@@ -30,17 +30,14 @@ class SyncSendEmailUlangTahunJob implements ShouldQueue
     public function handle(): void
     {
         $today = Carbon::now()->format('m-d');
-    $members = UserModel::query()->whereRaw("DATE_FORMAT(birth_at, '%m-%d') = ?", [$today])->get();
-    foreach ($members as $member) {
-        try {
-            Mail::send('admin.email.birthday', ['user' => $member], function (Message $message) use ($member) {
-                $message->to($member->email, $member->first_name . ' ' . $member->last_name)
-                        ->subject('Selamat Ulang Tahun ' . $member->first_name . ' ' . $member->last_name);
-            });
-            Log::info('Birthday email sent to: ' . $member->email);
-        } catch (\Exception $e) {
-            Log::error('Failed to send birthday email to: ' . $member->email . ' Error: ' . $e->getMessage());
+        $member = UserModel::query()->whereRaw("DATE_FORMAT(birth_at, '%m-%d') = ?", [$today])->get();
+        foreach ($member as $item) {
+            try{
+                Mail::send('admin.email.birthday', ['user' => $item], function (Message $message) use ($item) {
+                    $message->to($item->email, $item->first_name . ' ' . $item->last_name)
+                            ->subject('Selamat Ulang Tahun '.$item->first_name . ' ' . $item->last_name);
+                });
+            }catch (\Exception $e){}
         }
-    }
     }
 }

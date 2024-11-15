@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
@@ -19,6 +20,7 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
     private $data;
     private $periode;
     private $strPeriode;
+    private $fee_profesional;
 
     public function __xxxconstruct($status = '')
     {
@@ -54,6 +56,7 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
 
     public function __construct($status = '')
     {
+
         $this->status = $status;
         $v = FeeNumberModel::view();
         if($this->status == ''){
@@ -70,13 +73,26 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
             $v = $v->whereNotNull(['dt_acc', 'dt_finish']);
         }
         $v->where('fee','>', 0);
-        $this->data = $v->select([
-                'member_user_id', 'first_name', 'last_name', 'id_no', 'npwp',
-                'periode', 'dpp_amount', 'fee_amount', 'pph_amount', 'total_pembayaran',
-                'is_perusahaan', 'payment_made', 'pph21', 'pph23',
-                'nama_bank', 'no_rekening', 'an_rekening'
-            ])->get();
+        $v->select([
+            'id',
+            'member_user_id', 'first_name', 'last_name', 'id_no', 'npwp',
+            'periode', 'dpp_amount', 'fee_amount', 'pph_amount', 'total_pembayaran',
+            'is_perusahaan', 'payment_made', 'pph21', 'pph23',
+            'nama_bank', 'no_rekening', 'an_rekening'
+        ]);
 
+        $this->data = $v->get();
+        $feenumberids = $v->pluck("id");
+        $diskon = [];
+        FeeProfessionalModel::query()->with(["detailTransaction"])
+                    ->whereIn("fee_number_id", $feenumberids)->get()
+                    ->mapToGroups(function ($item) use (&$diskon) {
+                        if(!empty($item->detailTransaction?->item_disc_percent)){
+                            $diskon[$item->fee_number_id][$item->detailTransaction?->item_disc_percent] = $item->detailTransaction?->item_disc_percent;
+                        }
+                        return [$item->fee_number_id => $item];
+                    });
+        $this->fee_profesional = $diskon;
     }
 
     public function title(): string
@@ -86,7 +102,7 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
 
     public function registerEvents(): array
     {
-        $cellRange      = 'A6:M'.$this->data->count() + 7;
+        $cellRange      = 'A6:N'.$this->data->count() + 7;
 
         return [
             AfterSheet::class => function(AfterSheet $event)use($cellRange){
@@ -99,7 +115,11 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
                         ],
                     ],
                 ])->getAlignment()->setWrapText(false);
-                $event->sheet->getStyle('A6:M6')->applyFromArray([
+                $event->sheet->getStyle("F7:F".$this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle("L7:L".$this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle("M7:M".$this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                $event->sheet->getStyle('A6:N6')->applyFromArray([
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => [
@@ -108,14 +128,17 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
                     ],
                 ]);
                 $event->sheet->autoSize();
+
             }
         ];
     }
 
     public function view(): View
     {
+
         return view('admin.export.fee_rekap_all', [
             'data' => $this->data,
+            "fee_profesional" => $this->fee_profesional,
             'periode' => $this->strPeriode
         ]);
     }

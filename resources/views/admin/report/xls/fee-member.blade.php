@@ -37,11 +37,11 @@
                 <td colspan="2">{{ $d->nomor }}</td>
                 <td>{{ $d->category }}</td>
                 <td style="text-align: right">{{ number_format( doubleval( $d->dpp_amount ) ) }}</td>
-                <td  style="text-align: right">{{ number_format( doubleval( $d->fee_amount ) ) }}</td>
-                <td  style="text-align: right">{{ number_format( doubleval( ($d->fee_amount / $totalfee) * 100 ) ) }}%</td>
+                <td  style="text-align: right">{{ number_format( doubleval( $d->total_pembayaran ) ) }}</td>
+                <td  style="text-align: right">{{ number_format( doubleval( ($d->total_pembayaran / $totalfee) * 100 ) ) }}%</td>
             </tr>
             @php
-                $kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->fee_amount;
+                $kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->total_pembayaran;
             @endphp
         @endforeach
         @foreach($kategori as $k => $v)

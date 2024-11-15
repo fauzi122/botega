@@ -68,6 +68,8 @@ class FeeProfessionalModel extends Model
         ], 'fee_professional')->groupBy(['fee_number_id']);
     }
 
-
+    public function detailTransaction(){
+        return $this->belongsTo(DetailTransactionModel::class, 'detail_transaction_id', 'id');
+    }
 
 }

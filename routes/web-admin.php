@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('testemplate', function () {
     return view('frontend.emails.tess');
 });
+
 use App\Jobs\SyncSendEmailUlangTahunJob;
 
 Route::get('/send-birthday-email', function () {
@@ -37,7 +38,19 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             foreach ($us as $u) {
                 $r = $api->post($url, [
 
-                    'name' => $u->first_name . ' ' . $u->last_name, 'transDate' => Carbon::parse($u->created_at)->format('d/m/Y'), 'email' => $u->email, 'customerNo' => $u->id_no, 'npwpNo' => $u->npwp, 'pkpNo' => $u->nppkp, 'mobilePhone' => $u->hp, 'fax' => $u->fax, 'website' => $u->web, 'workPhone' => $u->phone, 'shipZipCode' => $u->zip_code, 'shipStreet' => $u->home_addr, 'shipCountry' => $u->country
+                    'name' => $u->first_name . ' ' . $u->last_name,
+                    'transDate' => Carbon::parse($u->created_at)->format('d/m/Y'),
+                    'email' => $u->email,
+                    'customerNo' => $u->id_no,
+                    'npwpNo' => $u->npwp,
+                    'pkpNo' => $u->nppkp,
+                    'mobilePhone' => $u->hp,
+                    'fax' => $u->fax,
+                    'website' => $u->web,
+                    'workPhone' => $u->phone,
+                    'shipZipCode' => $u->zip_code,
+                    'shipStreet' => $u->home_addr,
+                    'shipCountry' => $u->country
 
                 ]);
                 if ($r->status() == 200) {
@@ -50,7 +63,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('delivery-order/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
 
             if ($id == null) {
@@ -63,7 +76,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('item/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
 
             if ($id == null) {
@@ -76,7 +89,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('item-category/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
 
             if ($id == null) {
@@ -89,7 +102,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('payment/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
             $keyword = request('keyword');
             if ($keyword != null) {
@@ -106,7 +119,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('sales-return/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
 
             $keyword = request('keyword');
@@ -125,26 +138,25 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('member/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
 
             $custno = request('customerNo');
 
-            if($custno != null) {
+            if ($custno != null) {
                 $response = $r->get('/api/customer/list.do?fields=id,name,customerNo,email,npwpNo,category,lastUpdate&filter.keywords.op=EQUAL&filter.keywords.val[0]=' . urlencode($custno) . '&sp.page=1&sp.sort=id|desc');
-            }else if($id == null) {
+            } else if ($id == null) {
 
                 $response = $r->get('/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&sp.page=1&sp.sort=id|desc');
-            }else{
-                $response = $r->get('/api/customer/detail.do?id='.$id );
-
+            } else {
+                $response = $r->get('/api/customer/detail.do?id=' . $id);
             }
             return $response->json();
         });
 
         Route::get('customer-category/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
             if ($id == null) {
                 $response = $r->get('/api/customer-category/list.do?fields=' . urlencode('id') . '&sp.page=1&sp.sort=id|desc');
@@ -157,7 +169,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('shipment/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
             if ($id == null) {
                 $response = $r->get('/api/shipment/list.do?fields=' . urlencode('id') . '&sp.page=1&sp.sort=id|desc');
@@ -169,7 +181,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
         Route::get('penjualan/api', function () {
             $r = new APIAccurate();
-//            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
+            //            return $r->get('/api/sales-order/list.do?sp.page=1&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=19/01/2024&sp.sort=id|desc')->json();
             $id = request('id');
             $so = request("so");
             $tgl = request("tgl");
@@ -177,15 +189,15 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             $page = (int)request('page', 1);
             if ($so != null) {
                 $url = '/api/sales-order/list.do?sp.page=' . $page . '&filter.number.op=EQUAL&filter.number.val[0]=' . urlencode($so) . '&sp.sort=id|desc';
-//
+                //
                 $response = $r->get($url);
             } else if ($tgl != null && $tgl2 != null) {
                 $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=BETWEEN&filter.transDate.val[0]=' . urlencode($tgl) . '&filter.transDate.val[1]=' . urlencode($tgl2) . '&sp.sort=transDate|asc';
-//
+                //
                 $response = $r->get($url);
             } else if ($tgl != null) {
                 $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . urlencode($tgl) . '&sp.sort=transDate|asc';
-//
+                //
                 $response = $r->get($url);
             } else if ($id == null) {
                 $response = $r->get('/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate,totalAmount,statusName,shipDate,number,charField10,description,approvalStatus') . '&sp.page=1&sp.sort=id|desc');
@@ -212,7 +224,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
             if ($data != null) {
                 $lastupdate = Carbon::parse($data->last_update_accurate)->format('d/m/Y H:i:s');
-                $id = 27900;//$data->id;
+                $id = 27900; //$data->id;
                 $query = '/api/customer/list.do?fields=id,name,customerNo,email,npwpNo,lastUpdate&filter.id.op=GREATER_THAN&filter.id.val[0]=' . $id . '&sp.page=1&sp.sort=id|asc';
 
                 $response = $r->get($query);
@@ -223,7 +235,6 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 $response = $r->get('/api/customer/list.do?fields=id,name,customerNo,email,npwpNo,lastUpdate&id=' . $id . '&sp.page=1&sp.sort=id|asc');
             } else {
                 $response = $r->get('/api/customer/detail.do?id=' . $id);
-
             }
             return $response->json();
         });
@@ -293,6 +304,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/{id}", "MemberController@edit");
                 Route::post("/", "MemberController@create");
                 Route::delete("/", "MemberController@delete");
+                Route::get("/sync-member/{id}", "MemberController@syncMemberById")->name('member.sync');
             });
 
             Route::prefix("approval")->group(function () {
@@ -520,12 +532,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/fee-merk", "ReportController@feeMerkBarang");
                 Route::post("/fee-merk/show", "ReportController@feeMerkBarangShow");
                 Route::post("/fee-merk/xls", "ReportController@feeMerkBarangXLS");
-
             });
-
-
         });
-
     });
-
 });

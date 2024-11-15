@@ -122,7 +122,8 @@ class FeeSplitModel extends Model
                         ->leftJoin('fee_number as fn','fn.id','=','fp.fee_number_id')
                         ->whereNull('fs.fee_professional_id')->where('fe2.fee_outstanding','>', 0)
                         ->select(['fs.*', 'fn.nomor', 'u.id_no', 'u.first_name', 'u.last_name', 'trxdd.trx_at', 'dt.notes as dtnotes',
-                            'dtdd.notes as dtddnotes', 'trx.nomor_so as so_dt', 'trxdd.nomor_so as so_trx', 'fe2.fee_outstanding as os']);
+                            'dtdd.notes as dtddnotes', 'trx.nomor_so as so_dt', "fn.id as fee_number_id",
+                            'trxdd.nomor_so as so_trx', 'fe2.fee_outstanding as os']);
         }, 'fee_split');
     }
 

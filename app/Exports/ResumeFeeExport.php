@@ -17,7 +17,6 @@ class ResumeFeeExport implements WithMultipleSheets
     {
         $this->mode = $mode;
     }
-
     public function sheets(): array
     {
         set_time_limit(300);

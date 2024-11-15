@@ -201,7 +201,7 @@ class Form extends Component
 
                 if($hassplit === false) {
                     $r = [$this->member_user_id, $cit->detail_transactions_id, $cit->detail_delivery_order_id];
-                    session()->flash('error', 'Item transaksi ini sudah pernah di claim '.json_encode($r));
+                    session()->flash('error', 'Item transaksi ini sudah pernah di claim ');
                     return false;
                 }
             }

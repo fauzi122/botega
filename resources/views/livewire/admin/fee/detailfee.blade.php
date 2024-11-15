@@ -23,11 +23,15 @@
                                     <h3>Fee Professional</h3>
                                     @if($member != null)
                                         <div class="form-group">
+                                            <label class="col-md-1">Fee Number</label><span  class="col-md-3">{{$feenumber->nomor}}</span>
+                                        </div>
+                                        <div class="form-group">
                                             <label class="col-md-1">Nama</label><span  class="col-md-3">{{$member->first_name}} {{$member->last_name}} ({{  $member->id_no }})</span>
                                         </div>
                                         <div class="form-group">
                                             <label  class="col-md-1">NPWP</label><span  class="col-md-3">{{$member->npwp}} </span>
                                         </div>
+
                                     @endif
                                     <table class="table table-hover table-bordered table-striped table-responsive">
                                         <thead>

@@ -15,17 +15,17 @@ class PengajuanFeeCSV implements FromView, WithCustomCsvSettings
 
     private $fees;
 
-    public function __construct( $ids = [] )
+    public function __construct($ids = [])
     {
         FeeNumberModel::updateRekeningPengajuan();
 
-        if($ids == null || count($ids) <= 0) {
+        if ($ids == null || count($ids) <= 0) {
             $this->fees = FeeNumberModel::view()->whereNotNull([
                 'dt_acc'
             ])->whereNull([
                 'dt_finish'
             ])->get();
-        }else{
+        } else {
 
             $this->fees = FeeNumberModel::view()
                 ->whereIn('id', $ids)
@@ -48,7 +48,7 @@ class PengajuanFeeCSV implements FromView, WithCustomCsvSettings
     public function view(): View
     {
         $totalamount = 0;
-        foreach($this->fees as $f){
+        foreach ($this->fees as $f) {
             $totalamount += doubleval($f?->total ?? 0);
         }
 

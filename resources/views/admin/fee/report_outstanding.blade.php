@@ -53,8 +53,11 @@
             </div>
         </div> <!-- end col -->
     </div> <!-- end row -->
+
+    @livewire('admin.fee.detailfee')
+
 @endsection
 
 @push('script')
-    <script src="{{asset('assets/js/controllers/report-outstanding.js')}}"></script>
+    <script src="{{asset('assets/js/controllers/report-outstanding.js?v=1.1')}}"></script>
 @endpush

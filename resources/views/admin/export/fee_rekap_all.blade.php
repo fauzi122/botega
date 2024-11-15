@@ -25,6 +25,7 @@
         <th>NPWP</th>
         <th>PERIODE PENJUALAN</th>
         <th>NAMA SALES</th>
+        <th>DISKON</th>
         <th>DPP PENJUALAN</th>
         <th>FEE</th>
         <th>PPh 21</th>
@@ -42,6 +43,7 @@
         $total_pph23 = 0;
         $total = 0;
     @endphp
+
     @foreach($data as $row)
         <tr>
             <td>{{$no++}}</td>
@@ -49,6 +51,7 @@
             <td >{{ formatNPWP( $row->npwp ) }}</td>
             <td>{{$row->periode}}</td>
             <td>{{$row->salesname}}</td>
+            <td style="width: 160px" data-width="33">{{ isset($fee_profesional[$row->id]) ? implode(", ",$fee_profesional[$row->id]) : ""  }}</td>
             <td data-format="#,##0">{{$row->dpp_amount}}</td>
             <td data-format="#,##0">{{$row->fee_amount}}</td>
             <td data-format="#,##0">-{{ intval($row->is_perusahaan) == 1 ? '' : $row->pph_amount}} </td>
@@ -70,6 +73,7 @@
         <tr>
             <th></th>
             <th>Total</th>
+            <th></th>
             <th></th>
             <th></th>
             <th></th>

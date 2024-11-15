@@ -20,7 +20,8 @@
     </div>
     <!-- end page title -->
     @php
-        $totalfee = doubleval( $data->sum('fee_amount') - $data->sum('pph_amount') );
+//        $totalfee = doubleval( $data->sum('fee_amount') - $data->sum('pph_amount') );
+        $totalfee = doubleval( $data->sum('total_pembayaran'));
     @endphp
     <div class="row">
         <div class="col-md-12">
@@ -67,11 +68,11 @@
                                     <td>{{ $d->nomor }}</td>
                                     <td>{{ $d->merk}} </td>
                                     <td style="text-align: right">{{ number_format( doubleval( $d->dpp_amount ) ) }}</td>
-                                    <td  style="text-align: right">{{ number_format( doubleval( $d->fee_amount - $d->pph_amount ) ) }}</td>
-                                    <td  style="text-align: right">{{ number_format( doubleval( ( ($d->fee_amount - $d->pph_amount) / $totalfee) * 100 ),2 ) }}%</td>
+                                    <td  style="text-align: right">{{ number_format( doubleval( $d->total_pembayaran ) ) }}</td>
+                                    <td  style="text-align: right">{{ number_format( doubleval( ( ($d->total_pembayaran) / $totalfee) * 100 ),2 ) }}%</td>
                                 </tr>
                                @php
-                                    $coll[$d->merk] = ($coll[$d->merk] ?? 0) + ($d->fee_amount - $d->pph_amount);
+                                    $coll[$d->merk] = ($coll[$d->merk] ?? 0) + ($d->total_pembayaran);
                                @endphp
                             @endforeach
                             @php

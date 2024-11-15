@@ -34,7 +34,7 @@
             <td>TOTAL FEE</td>
             <td style="width: 50px">%</td>
         </tr>
-        @php 
+        @php
             $coll = [];
         @endphp
         @foreach ($data as $d)
@@ -43,11 +43,11 @@
                 <td colspan="2">{{ $d->nomor }}</td>
                 <td>{{ $d->merk }} </td>
                 <td style="text-align: right">{{ number_format( doubleval( $d->dpp_amount ) ) }}</td>
-                <td  style="text-align: right">{{ number_format( doubleval( $d->fee_amount ) ) }}</td>
-                <td  style="text-align: right">{{ number_format( doubleval( ($d->fee_amount / $totalfee) * 100 ), 2 ) }}%</td>
+                <td  style="text-align: right">{{ number_format( doubleval( $d->total_pembayaran ) ) }}</td>
+                <td  style="text-align: right">{{ number_format( doubleval( ($d->total_pembayaran / $totalfee) * 100 ), 2 ) }}%</td>
             </tr>
-            @php 
-                $coll[$d->merk] = ($coll[$d->merk] ?? 0) + $d->fee_amount;
+            @php
+                $coll[$d->merk] = ($coll[$d->merk] ?? 0) + $d->total_pembayaran;
             @endphp
         @endforeach
 
