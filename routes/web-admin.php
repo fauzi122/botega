@@ -12,17 +12,17 @@ Route::get('testemplate', function () {
 
 use App\Jobs\SyncSendEmailUlangTahunJob;
 
-Route::get('/send-birthday-email', function () {
-    SyncSendEmailUlangTahunJob::dispatch();
-    return "Email ulang tahun telah dikirim!";
-});
+// Route::get('/send-birthday-email', function () {
+//     SyncSendEmailUlangTahunJob::dispatch();
+//     return "Email ulang tahun telah dikirim!";
+// });
 Route::get('konfirmasi-hadir-event/{token}', [EventController::class, 'konfirmasi'])->name('konfirmasi-hadir-event');
 
 
 Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
     Route::prefix("admin")->group(function () {
-
+        include __DIR__ . '/jobs/route_jobs.php';
         Route::get('penjualan/cariso', function () {
             $r = new APIAccurate();
             $noso = request('so');

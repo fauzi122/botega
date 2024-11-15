@@ -580,7 +580,6 @@ function buildTable() {
         ]
     });
 */
-
     $("#jd-table-setujui").DataTable({
         dom: "Bfrtp",
         lengthMenu: [

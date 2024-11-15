@@ -1,0 +1,14 @@
+{
+    "name": "vendor_name/Exports",
+    "description": "description",
+    "minimum-stability": "stable",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Agung Sasongko",
+            "email": "email@example.com"
+        }
+    ],
+    "require": {
+    }
+}
