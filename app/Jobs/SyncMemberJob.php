@@ -18,7 +18,7 @@ use Matrix\Exception;
 class SyncMemberJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    private $mode;// mode =0 all, mode=1 syncfromaccurate, mode=2 synctoaccurate
+    private $mode; // mode =0 all, mode=1 syncfromaccurate, mode=2 synctoaccurate
     /**
      * Create a new job instance.
      */
@@ -32,24 +32,25 @@ class SyncMemberJob implements ShouldQueue
      */
     public function handle(): void
     {
-        if($this->mode == 0) {
+        if ($this->mode == 0) {
             $this->syncFromAccurate();
             $this->synctoAccurate();
-        }else if($this->mode == 1){
+        } else if ($this->mode == 1) {
             $this->syncFromAccurate();
-        }else if($this->mode == 3){
+        } else if ($this->mode == 3) {
             echo "mode 3";
             $this->syncMemberKategoriNull();
-        }else{
+        } else {
             $this->synctoAccurate();
         }
     }
 
-    public function synctoAccurate(){
+    public function synctoAccurate()
+    {
         $api = new APIAccurate();
         $us = UserModel::where('user_type', 'member')->whereNull('id_accurate')->get();
         $url = '/api/customer/save.do';
-        foreach($us as $u){
+        foreach ($us as $u) {
             $r = $api->post($url, [
 
                 'name' => $u->first_name . ' ' . $u->last_name,
@@ -66,20 +67,21 @@ class SyncMemberJob implements ShouldQueue
                 'shipStreet' => $u->home_addr,
                 'shipCountry' => $u->country,
             ]);
-            if($r->status() == 200) {
+            if ($r->status() == 200) {
                 $result = json_decode($r->body(), true);
                 var_dump($result);
                 try {
                     $r = $result['r'] ?? [];
-                    UserModel::where('id', $u->id)->update(['id_accurate'=> $r['id']]);
-                }catch (\Exception $e){
+                    UserModel::where('id', $u->id)->update(['id_accurate' => $r['id']]);
+                } catch (\Exception $e) {
                     echo $e->getMessage();
                 }
             }
         }
     }
 
-    private function getKategoriMember($categoryID){
+    private function getKategoriMember($categoryID)
+    {
         try {
             $r = KategoriMemberModel::query()->where("id_accurate", $categoryID)->first();
             $api = new \App\Library\APIAccurate();
@@ -105,19 +107,20 @@ class SyncMemberJob implements ShouldQueue
                 KategoriMemberModel::query()->where("id", $r->id)->update($data);
                 return $r->id;
             }
-        }catch (Exception $e){
-            print("error ".$e->getMessage());
+        } catch (Exception $e) {
+            print("error " . $e->getMessage());
         }
         return null;
     }
 
-    public function syncMemberKategoriNull(){
+    public function syncMemberKategoriNull()
+    {
         $r = UserModel::query()->whereNull("kategori_id")->get();
-        echo "data : ".$r->count()."\n";
+        echo "data : " . $r->count() . "\n";
         $api = new APIAccurate();
         try {
             foreach ($r as $u) {
-                echo "cus no : ".$u->id_no." ID ".$u->id." | idaccurate : ".$u->id_accurate."\n";
+                echo "cus no : " . $u->id_no . " ID " . $u->id . " | idaccurate : " . $u->id_accurate . "\n";
                 $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&filter.keywords.op=EQUAL&filter.keywords.val[0]=' . urlencode($u->id_no) . '&sp.sort=id|desc';
                 $hasil = $api->get($url);
                 $json = json_decode($hasil->body(), true);
@@ -129,25 +132,26 @@ class SyncMemberJob implements ShouldQueue
                     ];
                     echo "data " . json_encode($data) . " id = " . $u->id . "\n";
                     UserModel::query()->where("id", $u->id)->update($data);
-                }else{
+                } else {
                     echo json_encode($data);
                 }
             }
-        }catch (Exception $e){
-            echo "error ".$e->getMessage();
+        } catch (Exception $e) {
+            echo "error " . $e->getMessage();
         }
     }
 
 
-    public function syncFromAccurate(){
+    public function syncFromAccurate()
+    {
         $r = new APIAccurate();
-        $idmember = UserModel::where('user_type','member')->max('id_accurate');
+        $idmember = UserModel::where('user_type', 'member')->max('id_accurate');
         $page = 1;
-        $lvlmemberid = LevelMemberModel::query()->orderBy('level','asc')->first();
+        $lvlmemberid = LevelMemberModel::query()->orderBy('level', 'asc')->first();
 
         do {
             $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&sp.page=' . $page . '&sp.sort=id|desc';
-            echo $url."\n\m";
+            echo $url . "\n\m";
 
             $response = $r->get($url);
             $json = json_decode($response->body(), true);
@@ -155,10 +159,10 @@ class SyncMemberJob implements ShouldQueue
             $data = $json['d'];
             $bulk = [];
 
-            foreach ($data as $idx=>$v){
-                $splname = explode(' ',$v['name']);
+            foreach ($data as $idx => $v) {
+                $splname = explode(' ', $v['name']);
                 $lastname  = '';
-                if(count($splname) > 1) {
+                if (count($splname) > 1) {
                     $lastname = implode(' ', array_slice($splname, 1));
                 }
                 $bulk = [
@@ -173,28 +177,68 @@ class SyncMemberJob implements ShouldQueue
                     "kategori_id" => $this->getKategoriMember($v['category']['id']),
                     'created_at' => Carbon::now()
                 ];
-                if($bulk['id_no'] == 'VA.24041') {
-//                    echo $bulk['id_no'] . " = " . $bulk['first_name'] . " " . $v['id'] . " kategori: " . $bulk['kategori_id'] . "\n";
+                if ($bulk['id_no'] == 'VA.24041') {
+                    //                    echo $bulk['id_no'] . " = " . $bulk['first_name'] . " " . $v['id'] . " kategori: " . $bulk['kategori_id'] . "\n";
                 }
                 $exist = UserModel::query()->where('id_accurate', $v['id'])->first();
-                if($exist) {
-//                    var_dump($bulk);
+                if ($exist) {
+                    //                    var_dump($bulk);
                     UserModel::query()->where('id_accurate', $v['id'])->update($bulk);
-                }else{
+                } else {
                     $bulk['id_accurate'] = $v['id'];
                     $exist = User::query()->where('id_no', $v['customerNo'])->first();
-                    if($exist){
+                    if ($exist) {
                         UserModel::query()->where('id_no', $exist->id_no)->update($bulk);
-                    }else {
+                    } else {
                         UserModel::query()->insert($bulk);
                     }
                 }
-
             }
 
             $page++;
             $lanjut = $page <= $maxpage;
             echo "($page < $maxpage = $lanjut) \n";
-        }while($lanjut);
+        } while ($lanjut);
+    }
+    public function syncMemberById($id)
+    {
+        $api = new APIAccurate();
+        $user = UserModel::query()->where('id', $id)->first();
+
+        if (!$user) {
+            echo "User dengan ID {$id} tidak ditemukan.\n";
+            return;
+        }
+
+        try {
+            // Mengambil data dari Accurate berdasarkan ID pelanggan (customerNo)
+            $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&filter.keywords.op=EQUAL&filter.keywords.val[0]=' . urlencode($user->id_no) . '&sp.sort=id|desc';
+            $hasil = $api->get($url);
+            $json = json_decode($hasil->body(), true);
+            $data = $json['d'];
+
+            if (count($data) > 0) {
+                $accurateData = $data[0];
+                $category = $accurateData['category'];
+
+                // Memperbarui data user berdasarkan data dari Accurate
+                $updateData = [
+                    'first_name' => explode(' ', $accurateData['name'])[0],
+                    'last_name' => implode(' ', array_slice(explode(' ', $accurateData['name']), 1)),
+                    'email' => $accurateData['email'] ?? $user->email,
+                    'npwp' => $accurateData['npwpNo'] ?? $user->npwp,
+                    'kategori_id' => $this->getKategoriMember($category['id']),
+                    'updated_at' => Carbon::now()
+                ];
+
+                UserModel::query()->where('id', $id)->update($updateData);
+
+                // echo "Data user dengan ID {$id} berhasil disinkronisasi.\n";
+            } else {
+                // echo "Data user dengan ID Accurate {$user->id_no} tidak ditemukan di Accurate.\n";
+            }
+        } catch (Exception $e) {
+            echo "Terjadi kesalahan: " . $e->getMessage() . "\n";
+        }
     }
 }

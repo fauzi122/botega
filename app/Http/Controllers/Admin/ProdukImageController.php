@@ -11,36 +11,40 @@ use Illuminate\Support\Facades\Storage;
 
 class ProdukImageController extends Controller
 {
-    public function index($id){
+    public function index($id)
+    {
         $produk = ProductModel::query()->find($id);
-        return view('admin.produkimage.table',[
+        return view('admin.produkimage.table', [
             'produk' => $produk
         ]);
     }
 
-    public function image($id){
+    public function image($id)
+    {
         $pi = ProductImageModel::find($id);
-        if($pi == null) abort(404);
+        if ($pi == null) abort(404);
 
         $fn = 'produk/' . $pi->id . '.png';
-        if(!Storage::exists($fn)){
+        if (!Storage::exists($fn)) {
             abort(404);
         }
         $content = Storage::get($fn);
         return response($content, headers: [
-            'Content-type'=>'image/png'
+            'Content-type' => 'image/png'
         ]);
     }
 
-    public function datasource(){
+    public function datasource()
+    {
         $id = \request('id');
-        $r = datatables(ProductImageModel::query()->where('product_id', $id))->make(true);
-        $js = json_decode( json_encode($r), true );
-        $origin = $js['original'];
+        $origin = datatables(ProductImageModel::query()->where('product_id', $id))->toArray();
+        //        $js = json_decode( json_encode($r), true );
+        //        $origin = $js['original'];
+
         $data = [];
-        foreach($origin['data'] as $r){
-            if(Storage::exists( $r['path_file'] ?? '--' ) ){
-                $r['path_file'] = url('admin/produk-image/image/'.$r['id'].'.png');
+        foreach ($origin['data'] as $r) {
+            if (Storage::exists($r['path_file'] ?? '--')) {
+                $r['path_file'] = url('admin/produk-image/image/' . $r['id'] . '.png');
             }
 
             $data[] = $r;
@@ -49,22 +53,25 @@ class ProdukImageController extends Controller
         return $origin;
     }
 
-    private function hapusimage(){
+    private function hapusimage()
+    {
         $id = \request('id');
         $imgs = ProductImageModel::query()->whereIn('id', $id)->get();
-        foreach($imgs as $img){
+        foreach ($imgs as $img) {
             try {
                 Storage::delete($img->path_file);
-            }catch (\Exception $e){}
+            } catch (\Exception $e) {
+            }
         }
     }
 
-    public function delete(){
+    public function delete()
+    {
         $id = \request('id');
         $this->hapusimage();
         $r = ProductModel::query()->whereIn('id', $id)->delete();
         return response()->json([
-            'data'=>$r
+            'data' => $r
         ]);
     }
 }
