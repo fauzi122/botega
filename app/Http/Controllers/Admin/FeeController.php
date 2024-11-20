@@ -126,7 +126,6 @@ class FeeController extends Controller
             ->toJson(true);
     }
 
-
     public function delete()
     {
 
