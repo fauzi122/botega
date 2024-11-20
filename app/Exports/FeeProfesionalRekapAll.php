@@ -26,32 +26,36 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
     {
         $this->status = $status;
         $v = FeeProfessionalModel::view();
-        if($this->status == ''){
+        if ($this->status == '') {
             $v = $v->whereNull(['dt_pengajuan',  'dt_acc', 'dt_finish']);
-
-        }else if($this->status == 'pengajuan'){
+        } else if ($this->status == 'pengajuan') {
             $v = $v->whereNotNull('dt_pengajuan')
-                   ->whereNull([ 'dt_acc', 'dt_finish']);
-
-        }else if($this->status == 'acc'){
+                ->whereNull(['dt_acc', 'dt_finish']);
+        } else if ($this->status == 'acc') {
             $v = $v->whereNotNull(['dt_pengajuan',  'dt_acc'])
-                   ->whereNull('dt_finish');
-        }else{
+                ->whereNull('dt_finish');
+        } else {
             $v = $v->whereNotNull(['dt_acc', 'dt_finish']);
         }
         $this->data = $v->groupBy(['member_user_id', 'periode'])
-                         ->select([
-                             'member_user_id', 'first_name', 'last_name', 'id_no', 'npwp',
-                             \DB::raw('DATE_FORMAT( concat(periode,"-01"), "%b %y" ) as periode'),
-                             'salesname',
-                             \DB::raw("sum(dpp_amount) as dpp_amount"),
-                             \DB::raw("sum(fee_amount) as fee_amount"),
-                             \DB::raw("sum(pph_amount) as pph_amount"),
-                             \DB::raw("sum(total_pembayaran) as total_pembayaran"),
-                             'is_perusahaan',
-                             'nama_bank', 'no_rekening', 'an_rekening'
-                         ])->get();
-
+            ->select([
+                'nomor',
+                'member_user_id',
+                'first_name',
+                'last_name',
+                'id_no',
+                'npwp',
+                \DB::raw('DATE_FORMAT( concat(periode,"-01"), "%b %y" ) as periode'),
+                'salesname',
+                \DB::raw("sum(dpp_amount) as dpp_amount"),
+                \DB::raw("sum(fee_amount) as fee_amount"),
+                \DB::raw("sum(pph_amount) as pph_amount"),
+                \DB::raw("sum(total_pembayaran) as total_pembayaran"),
+                'is_perusahaan',
+                'nama_bank',
+                'no_rekening',
+                'an_rekening'
+            ])->get();
     }
 
     public function __construct($status = '')
@@ -59,53 +63,65 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
 
         $this->status = $status;
         $v = FeeNumberModel::view();
-        if($this->status == ''){
+        if ($this->status == '') {
             $v = $v->whereNull(['dt_pengajuan',  'dt_acc', 'dt_finish']);
-
-        }else if($this->status == 'pengajuan'){
+        } else if ($this->status == 'pengajuan') {
             $v = $v->whereNotNull('dt_pengajuan')
-                ->whereNull([ 'dt_acc', 'dt_finish']);
-
-        }else if($this->status == 'acc'){
+                ->whereNull(['dt_acc', 'dt_finish']);
+        } else if ($this->status == 'acc') {
             $v = $v->whereNotNull(['dt_pengajuan',  'dt_acc'])
                 ->whereNull('dt_finish');
-        }else{
+        } else {
             $v = $v->whereNotNull(['dt_acc', 'dt_finish']);
         }
-        $v->where('fee','>', 0);
+        $v->where('fee', '>', 0);
         $v->select([
             'id',
-            'member_user_id', 'first_name', 'last_name', 'id_no', 'npwp',
-            'periode', 'dpp_amount', 'fee_amount', 'pph_amount', 'total_pembayaran',
-            'is_perusahaan', 'payment_made', 'pph21', 'pph23',
-            'nama_bank', 'no_rekening', 'an_rekening'
+            'nomor',
+            'member_user_id',
+            'first_name',
+            'last_name',
+            'id_no',
+            'npwp',
+            'periode',
+            'dpp_amount',
+            'fee_amount',
+            'pph_amount',
+            'total_pembayaran',
+            'is_perusahaan',
+            'payment_made',
+            'pph21',
+            'pph23',
+            'nama_bank',
+            'no_rekening',
+            'an_rekening'
         ]);
 
         $this->data = $v->get();
         $feenumberids = $v->pluck("id");
         $diskon = [];
         FeeProfessionalModel::query()->with(["detailTransaction"])
-                    ->whereIn("fee_number_id", $feenumberids)->get()
-                    ->mapToGroups(function ($item) use (&$diskon) {
-                        if(!empty($item->detailTransaction?->item_disc_percent)){
-                            $diskon[$item->fee_number_id][$item->detailTransaction?->item_disc_percent] = $item->detailTransaction?->item_disc_percent;
-                        }
-                        return [$item->fee_number_id => $item];
-                    });
+            ->whereIn("fee_number_id", $feenumberids)->get()
+            ->mapToGroups(function ($item) use (&$diskon) {
+                if (!empty($item->detailTransaction?->item_disc_percent)) {
+                    $diskon[$item->fee_number_id][$item->detailTransaction?->item_disc_percent] = $item->detailTransaction?->item_disc_percent;
+                }
+                return [$item->fee_number_id => $item];
+            });
         $this->fee_profesional = $diskon;
     }
 
     public function title(): string
     {
-        return 'SUMMARY FEE '. $this->strPeriode;
+        return 'SUMMARY FEE ' . $this->strPeriode;
     }
 
     public function registerEvents(): array
     {
-        $cellRange      = 'A6:N'.$this->data->count() + 7;
+        $cellRange      = 'A6:N' . $this->data->count() + 7;
 
         return [
-            AfterSheet::class => function(AfterSheet $event)use($cellRange){
+            AfterSheet::class => function (AfterSheet $event) use ($cellRange) {
                 $style = $event->sheet->getStyle($cellRange);
                 $style->applyFromArray([
                     'borders' => [
@@ -115,9 +131,9 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
                         ],
                     ],
                 ])->getAlignment()->setWrapText(false);
-                $event->sheet->getStyle("F7:F".$this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $event->sheet->getStyle("L7:L".$this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $event->sheet->getStyle("M7:M".$this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle("F7:F" . $this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle("L7:L" . $this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle("M7:M" . $this->data->count() + 7)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 $event->sheet->getStyle('A6:N6')->applyFromArray([
                     'fill' => [
@@ -128,7 +144,6 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
                     ],
                 ]);
                 $event->sheet->autoSize();
-
             }
         ];
     }
@@ -142,6 +157,4 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
             'periode' => $this->strPeriode
         ]);
     }
-
-
 }

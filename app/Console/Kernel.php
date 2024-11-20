@@ -10,6 +10,7 @@ use App\Jobs\SyncNoFakturFeeMemberJob;
 use App\Jobs\SyncPenjualanJob;
 use App\Jobs\SyncSaleReturnJob;
 use App\Jobs\SyncSendEmailUlangTahunJob;
+use App\Jobs\ManagePointsJob;
 use Carbon\Carbon;
 use Dotenv\Dotenv;
 use Illuminate\Console\Scheduling\Schedule;
@@ -27,32 +28,35 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
-        if(env('APP_DEBUG') == 1){
+        if (env('APP_DEBUG') == 1) {
             return;
         }
+        $schedule->call(function () {
+            ManagePointsJob::dispatch('update');
+        })->dailyAt('04:00');
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             CalcMemberExpenseJob::dispatch()->onConnection('sync');
         })->everyFifteenMinutes();
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             SyncNoFakturFeeMemberJob::dispatch()->onConnection('sync');
         })->everyThreeHours();
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             SyncMemberJob::dispatch(1);
             SyncMemberJob::dispatch(2);
             SyncMemberJob::dispatch(3);
         })->dailyAt('01:00');
 
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             SyncMemberJob::dispatch(0)->onConnection('sync');
         })->dailyAt('11:00');
 
 
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             $tgl1 = Carbon::now()->subDays(3)->format('d/m/Y');
             SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
 
@@ -63,7 +67,7 @@ class Kernel extends ConsoleKernel
             SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
         })->dailyAt('04:10');
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             $tgl1 = Carbon::now()->subMonths(7)->format('d/m/Y');
             $tgl2 = Carbon::now()->subMonths(5)->format('d/m/Y');
             SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
@@ -79,10 +83,9 @@ class Kernel extends ConsoleKernel
             $tgl1 = Carbon::now()->subMonths(3)->format('d/m/Y');
             $tgl2 = Carbon::now()->subMonths(2)->format('d/m/Y');
             SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
-
         })->dailyAt('02:34')->timezone('Asia/Jakarta');
 
-        $schedule->call(function(){
+        $schedule->call(function () {
 
             $tgl1 = Carbon::now()->subMonths(2)->format('d/m/Y');
             $tgl2 = Carbon::now()->subMonths()->format('d/m/Y');
@@ -98,25 +101,25 @@ class Kernel extends ConsoleKernel
                 ->onConnection('sync');
         })->dailyAt('11:40');
 
-        $schedule->call(function(){
-            SyncSaleReturnJob::dispatch(Carbon::now()->subMonths(3)->format('d/m/Y') );
+        $schedule->call(function () {
+            SyncSaleReturnJob::dispatch(Carbon::now()->subMonths(3)->format('d/m/Y'));
         })->dailyAt('05:00');
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             ResumeDashboarJob::dispatch()->onConnection('sync');
         })->everyFourMinutes();
 
-        $schedule->call(function(){
-           ResetPointPenjualangJob::dispatch()->onConnection('sync');
+        $schedule->call(function () {
+            ResetPointPenjualangJob::dispatch()->onConnection('sync');
         })->timezone('Asia/Jakarta')->cron("59 23 31 12");
 
-        $schedule->call(function(){
+        $schedule->call(function () {
             SyncSendEmailUlangTahunJob::dispatch()->onConnection('sync');
         })->dailyAt('07:30');
 
-//        $schedule->call(function(){
-//            SyncPenjualanJob::dispatch(Carbon::now()->subDays(60)->format('d/m/Y'), false )->onConnection('sync');
-//        })->dailyAt('00:00');
+        //        $schedule->call(function(){
+        //            SyncPenjualanJob::dispatch(Carbon::now()->subDays(60)->format('d/m/Y'), false )->onConnection('sync');
+        //        })->dailyAt('00:00');
 
     }
 
@@ -125,7 +128,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

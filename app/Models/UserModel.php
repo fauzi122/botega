@@ -110,4 +110,14 @@ class UserModel extends Model
         // Jika `is_perusahaan` bernilai `0`, artinya pengguna adalah individu
         return !empty(trim($this->npwp)) ? 2.5 : 3; // Individu: 2.5% dengan NPWP, 3% tanpa NPWP
     }
+
+    public function memberPoints()
+    {
+        return $this->hasMany(MemberPointModel::class, 'user_id', 'id');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(TransactionModel::class, 'member_user_id', 'id');
+    }
 }
