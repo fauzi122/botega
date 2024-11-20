@@ -34,8 +34,8 @@ class Form extends Component
     {
         $this->lm = MemberRewardModel::view()->find($id);
         $this->editform = $this->lm != null;
-        $this->member = $this->lm?->first_name . ' ' . $this->lm?->last_name . ' ('.$this->lm?->id_no.')';
-        $this->reward = $this->lm?->reward_code . ' ' . $this->lm?->reward . ' ('.$this->lm?->reward_point.')';
+        $this->member = $this->lm?->first_name . ' ' . $this->lm?->last_name . ' (' . $this->lm?->id_no . ')';
+        $this->reward = $this->lm?->reward_code . ' ' . $this->lm?->reward . ' (' . $this->lm?->reward_point . ')';
         $this->user_id = $this->lm?->user_id ?? '';
         $this->point = $this->lm?->point ?? '';
         $this->reward_id = $this->lm?->reward_id ?? '';
@@ -44,16 +44,18 @@ class Form extends Component
         $this->status = $this->lm?->status ?? 0;
 
         $this->notes = $this->lm?->notes ?? '';
-        if($this->approved_at != ''){
+        if ($this->approved_at != '') {
             $this->approved_at = Carbon::parse($this->approved_at)->format('Y-m-d');
         }
     }
 
-    public function newForm(){
+    public function newForm()
+    {
         $this->edit(0);
     }
 
-    private function validasi(){
+    private function validasi()
+    {
         $v = $this->validate([
             'user_id' => 'required',
             'point' => 'required|numeric',
@@ -67,54 +69,57 @@ class Form extends Component
             'reward_id' => 'Reward harus diisikan',
             'notes' => 'Notes boleh kosong',
         ]);
-        foreach ($v as $k=>$val){
-            if($val == ''){
+        foreach ($v as $k => $val) {
+            if ($val == '') {
                 unset($v[$k]);
             }
         }
         $v['pengelola_user_id'] = session('admin')->id;
 
-        if($this->status == 2){
+        if ($this->status == 2) {
             $v['approved_at'] = Carbon::now();
-        }else{
+        } else {
             $v['approved_at'] = null;
         }
 
         return $v;
     }
 
-    public function showPoint($idreward){
+    public function showPoint($idreward)
+    {
         $r = RewardModel::find($idreward);
         $this->point = $r?->point;
     }
 
-    public function save(){
-        if($this->isPointCukup() || $this->confirm == true  ) {
+    public function save()
+    {
+        if ($this->isPointCukup() || $this->confirm == true) {
             $this->confirm = false;
             if ($this->editform) {
                 $this->update();
             } else {
                 $this->store();
             }
-
         }
     }
 
-    private function isPointCukup(){
+    private function isPointCukup()
+    {
         $this->pesan = '';
-        if($this->status !=2 )return true;
+        if ($this->status != 2) return true;
 
         $user = UserModel::find($this->user_id);
 
-        if($user->point > $this->point){
+        if ($user->point > $this->point) {
             return true;
         }
 
-        $this->pesan = 'Point member tidak mencukupi. Point yang diusulkan '.$this->point.' namun member hanya memiliki '.($user->points ?? 0).' point.';
+        $this->pesan = 'Point member tidak mencukupi. Point yang diusulkan ' . $this->point . ' namun member hanya memiliki ' . ($user->points ?? 0) . ' point.';
         return false;
     }
 
-    private function accRedeemPoint($memberrewardid){
+    private function accRedeemPoint($memberrewardid)
+    {
         $data = [
             'points' => $this->point * -1,
             'notes' => 'Redeem point reward ',
@@ -123,61 +128,59 @@ class Form extends Component
         ];
 
         $cek = MemberPointModel::where([
-            'user_id'=>$this->user_id,
+            'user_id' => $this->user_id,
             'member_reward_id' => $memberrewardid
         ])->first();
-        if($cek == null){
-            $u = UserModel::find($this->user_id );
+        if ($cek == null) {
+            $u = UserModel::find($this->user_id);
             $u->points = ($u->points ?? 0) - doubleval($this->point);
             $u->save();
         }
 
         MemberPointModel::updateOrInsert([
-                'user_id'=>$this->user_id,
-                'member_reward_id' => $memberrewardid
-            ], $data);
+            'user_id' => $this->user_id,
+            'member_reward_id' => $memberrewardid
+        ], $data);
 
         LogController::writeLog(ValidatedPermission::UBAH_DATA_REDEEM_POINT, 'Redeem Point di setujui', $data, 0, $this->user_id);
-
     }
 
-    private function retractRedeemPoint($memberrewardid){
+    private function retractRedeemPoint($memberrewardid)
+    {
         $data = [
-            'user_id'=>$this->user_id,
+            'user_id' => $this->user_id,
             'member_reward_id' => $memberrewardid
         ];
 
         $cek = MemberPointModel::where($data)->first();
-        if($cek != null){
-            $u = UserModel::find($this->user_id );
+        if ($cek != null) {
+            $u = UserModel::find($this->user_id);
             $u->points = ($u->points ?? 0) + doubleval($this->point);
             $u->save();
             MemberPointModel::where($data)->delete();
             LogController::writeLog(ValidatedPermission::UBAH_DATA_REDEEM_POINT, 'Pembatalan persetujuan Redeem Point', $data, 0, $this->user_id);
-
-
         }
-
-
     }
-    public function store(){
+    public function store()
+    {
         $v = $this->validasi();
         $v['created_at'] = Carbon::now();
         try {
             $lastid = MemberRewardModel::query()->insertGetId($v);
             session()->flash('success', 'Data berhasil di simpan');
             $this->dispatch('refreshData');
-            if($this->status == 2){
+            if ($this->status == 2) {
                 $this->accRedeemPoint($lastid);
-            }else{
+            } else {
                 $this->retractRedeemPoint($lastid);
             }
-        }catch (\Exception $e){
-            session()->flash('error', 'Data Gagal disimpan'.$e->getMessage());
+        } catch (\Exception $e) {
+            session()->flash('error', 'Data Gagal disimpan' . $e->getMessage());
         }
     }
 
-    public function update(){
+    public function update()
+    {
         $v = $this->validasi();
         $v['updated_at'] = Carbon::now();
         try {
@@ -185,13 +188,13 @@ class Form extends Component
             $m = MemberRewardModel::query()->where('id', $lastid)->update($v);
             session()->flash('success', 'Data berhasil diubah');
             $this->dispatch('refreshData');
-            if($this->status == 2){
+            if ($this->status == 2) {
                 $this->accRedeemPoint($lastid);
-            }else{
+            } else {
                 $this->retractRedeemPoint($lastid);
             }
-        }catch (\Exception $e){
-            session()->flash('error', 'Data Gagal diubah'.$e->getMessage());
+        } catch (\Exception $e) {
+            session()->flash('error', 'Data Gagal diubah' . $e->getMessage());
         }
     }
     public function render()

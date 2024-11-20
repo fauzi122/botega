@@ -5,6 +5,9 @@ use App\Library\APIAccurate;
 use App\Models\UserModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\MemberPointController;
+use \App\Jobs\ManagePointsJob;
+
 
 Route::get('testemplate', function () {
     return view('frontend.emails.tess');
@@ -326,6 +329,25 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::post("/", "PromoController@create");
                 Route::delete("/", "PromoController@delete");
             });
+            Route::prefix('member-points')->group(function () {
+                Route::get('/', [MemberPointController::class, 'index'])->name('admin.member-points.index');
+                Route::get('/data', [MemberPointController::class, 'getData'])->name('admin.member-points.datasource');
+                Route::get('/details/{id}', [MemberPointController::class, 'memberDetail'])->name('admin.member-points.details');
+
+                // Tambahkan route untuk reset dan update
+                Route::post('/reset', function () {
+                    $job = new ManagePointsJob('reset');
+                    $job->handle(); // Jalankan langsung tanpa antrean
+                    return response()->json(['status' => 'success', 'message' => 'Proses reset poin berhasil dijalankan.']);
+                })->name('admin.member-points.reset');
+                Route::post('/update', function () {
+                    $job = new ManagePointsJob('update');
+                    $job->handle();
+                    return response()->json(['status' => 'success', 'message' => 'Proses pembaruan poin berhasil dijalankan.']);
+                })->name('admin.member-points.update');
+            });
+
+
 
             Route::prefix("reward")->group(function () {
                 Route::get("/", "RewardController@index");

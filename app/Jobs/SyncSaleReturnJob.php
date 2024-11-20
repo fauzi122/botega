@@ -33,7 +33,6 @@ class SyncSaleReturnJob implements ShouldQueue
     public function __construct($tglTransaksi = '')
     {
         $this->tglTransaksi = $tglTransaksi == '' ?  Carbon::now()->subMonths(1)->format('d/m/Y') : $tglTransaksi;
-
     }
 
     /**
@@ -45,18 +44,18 @@ class SyncSaleReturnJob implements ShouldQueue
         $transDate = $this->tglTransaksi;
         $page = 1;
         do {
-            $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page='.$page.'&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]='.$transDate.'&sp.sort=id|desc';
-//            $url = '/api/sales-return/list.do?sp.page='.$page.'&filter.number.op=EQUAL&filter.number.val[0]='.urlencode( 'SOJ/24/01/00183').'&sp.sort=id|desc';
-//            echo $url."\n\n";
+            $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . $transDate . '&sp.sort=id|desc';
+            //            $url = '/api/sales-return/list.do?sp.page='.$page.'&filter.number.op=EQUAL&filter.number.val[0]='.urlencode( 'SOJ/24/01/00183').'&sp.sort=id|desc';
+            //            echo $url."\n\n";
             $response = $r->get($url);
             $json = json_decode($response->body(), true);
-//            var_dump($json);
+            //            var_dump($json);
             try {
                 $maxpage = (int)$json['sp']['pageCount'];
                 $data = $json['d'];
                 $bulk = [];
                 foreach ($data as $idx => $v) {
-                    if($v['approvalStatus'] == 'APPROVED') {
+                    if ($v['approvalStatus'] == 'APPROVED') {
                         $response2 = $r->get('/api/sales-return/detail.do?id=' . $v['id']);
                         echo $v['id'] . '--';
                         $json2 = json_decode($response2->body(), true);
@@ -65,19 +64,19 @@ class SyncSaleReturnJob implements ShouldQueue
                         $this->saveDetail($id, $d['number'],  $d['detailItem']);
                     }
                 }
-            }catch (\Exception $e){
-                echo "error ".$e->getMessage().' '.$e->getLine(). ' ' . $e->getFile();
+            } catch (\Exception $e) {
+                echo "error " . $e->getMessage() . ' ' . $e->getLine() . ' ' . $e->getFile();
             }
 
             $page++;
             $lanjut = $page < $maxpage;
-        }while($lanjut);
-
+        } while ($lanjut);
     }
 
-    private function saveDetail($idretur, $noretur, $detail){
+    private function saveDetail($idretur, $noretur, $detail)
+    {
 
-        foreach ($detail as $baris){
+        foreach ($detail as $baris) {
             $nomorso = $baris['salesOrder']['number'];
             $productid = $this->getProductID($baris['item']);
             $idaccurate = $baris['id'];
@@ -106,20 +105,20 @@ class SyncSaleReturnJob implements ShouldQueue
 
                 $this->syncDetailDeliveryOrder($noretur, $baris);
 
-                $trx = TransactionModel::query()->where('nomor_so', $nomorso )->first();
-                if($trx != null){
+                $trx = TransactionModel::query()->where('nomor_so', $nomorso)->first();
+                if ($trx != null) {
                     $dod =  $baris['deliveryOrderDetail'] ?? [];
                     $unitPrice = $dod['unitPrice'] ?? 0;
 
-                    echo "\nMulai update Trxid : ".$trx->id."\n";
+                    echo "\nMulai update Trxid : " . $trx->id . "\n";
                     echo  'sale_price ' . $unitPrice;
-                    if($unitPrice > 0){
+                    if ($unitPrice > 0) {
                         $kriteria = [
                             'transaction_id' => $trx->id,
                             'product_id' => $productid,
                             'sale_price' => $unitPrice
                         ];
-                    }else{
+                    } else {
                         $kriteria = [
                             'transaction_id' => $trx->id,
                             'product_id' => $productid,
@@ -131,29 +130,30 @@ class SyncSaleReturnJob implements ShouldQueue
                             'retur_no' => $noretur,
                             'retur_qty' => $baris['quantity'],
                         ]);
-                    echo "\nUpdate sukses trxid ".$trx->id."\n product :".$productid."\n retur : ".$baris['quantity']." saleprice : ".$baris['deliveryOrderDetail']['unitPrice'];
-
+                    echo "\nUpdate sukses trxid " . $trx->id . "\n product :" . $productid . "\n retur : " . $baris['quantity'] . " saleprice : " . $baris['deliveryOrderDetail']['unitPrice'];
                 }
-
-            }catch (\Exception $e){}
+            } catch (\Exception $e) {
+            }
         }
     }
 
-    private function syncDetailDeliveryOrder($returNo, $detail){
+    private function syncDetailDeliveryOrder($returNo, $detail)
+    {
         $deliveryOrderID = $detail['deliveryOrderDetailId'];
-        echo "\nDelivery order : ".$deliveryOrderID;
+        echo "\nDelivery order : " . $deliveryOrderID;
 
         $d = DetailDeliveryOrderModel::query()->where("id_accurate", $deliveryOrderID)->first();
-        if($d == null)return;
+        if ($d == null) return;
         $d->retur_qty = $detail['quantityDefault'];
         $d->retur_no = $returNo;
         $d->save();
     }
 
-    private function getProductID($item){
+    private function getProductID($item)
+    {
         $id = $item['id'];
         $r = ProductModel::query()->where('id_accurate', $id)->first();
-        if($r != null){
+        if ($r != null) {
             return $r->id;
         }
         $data = [
@@ -168,11 +168,12 @@ class SyncSaleReturnJob implements ShouldQueue
         return ProductModel::query()->insertGetId($data);
     }
 
-    private function saveData($d){
+    private function saveData($d)
+    {
         $inv = $d['invoice'] ?? [];
         $data = [
             'id_accurate' => $d['id'],
-//            'no_so' => $d['sales_order']['number'],
+            //            'no_so' => $d['sales_order']['number'],
             'member_user_id' => $this->getCustomer($d),
             'retur_at' =>  Carbon::createFromFormat('d/m/Y', $d['transDate']),
             'no_retur' => $d['number'],
@@ -193,48 +194,48 @@ class SyncSaleReturnJob implements ShouldQueue
                 ReturPenjualanModel::query()->where('id_accurate', $d['id'])
                     ->update($data);
                 $idretur = ReturPenjualanModel::query()->where('id_accurate', $d['id'])->first()?->id;
-
             }
-        }catch (\Exception $e){
-            echo "Keslaahan save : ".$e->getMessage();
+        } catch (\Exception $e) {
+            echo "Keslaahan save : " . $e->getMessage();
         }
 
-//        $this->syncReturToPaymentMade($idretur);
+        //        $this->syncReturToPaymentMade($idretur);
 
         return $idretur;
     }
 
-    private function syncReturToPaymentMade($idRetur){
+    private function syncReturToPaymentMade($idRetur)
+    {
         $rp = ReturPenjualanModel::query()->where("id_accurate", $idRetur)->first();
-//        echo "Sync returtoPayment rp : ($idRetur) ";
-//        var_dump($rp);
-        if($rp == null)return;
+        //        echo "Sync returtoPayment rp : ($idRetur) ";
+        //        var_dump($rp);
+        if ($rp == null) return;
 
         $n = ProsesHistoryModel::query()->where('history_number', $rp->number_src)->first();
-        echo "\nProseshistory = ".$rp->number_src;
-//        var_dump($n);
-        if($n == null)return;
+        echo "\nProseshistory = " . $rp->number_src;
+        //        var_dump($n);
+        if ($n == null) return;
 
         $trx = ProsesHistoryModel::query()->where('transactions_id', $n->transactions_id)->first();
-        echo "\nTransaksi id = ".$n->transactions_id;
-        if($trx == null)return;
+        echo "\nTransaksi id = " . $n->transactions_id;
+        if ($trx == null) return;
 
         $feeprop = FeeProfessionalModel::view()->where('transaction_id', $n->transactions_id)->get();
-//        echo "Feeprof by trxid = ".$n->transactions_id." \n";
-        foreach($feeprop as $k=>$v){
+        //        echo "Feeprof by trxid = ".$n->transactions_id." \n";
+        foreach ($feeprop as $k => $v) {
             echo "\nisi feeprop . ";
-            if($v->sj_number == '' || $v->invoice_number == ''){
+            if ($v->sj_number == '' || $v->invoice_number == '') {
                 continue;
             }
-//            var_dump($v);
+            //            var_dump($v);
             $n = FeePaymentMadeModel::query()->where([
                 'member_user_id' => $v->member_user_id,
                 'no_so' => $v->nomor_so,
                 'no_sj' => $v->sj_number,
                 'no_inv' => $v->invoice_number,
             ])->first();
-            echo "fee payment made : ".$v->nomor_so. " " .$v->nomor_sj.' ' .$v->invoice_no;
-            if($n == null){
+            echo "fee payment made : " . $v->nomor_so . " " . $v->nomor_sj . ' ' . $v->invoice_no;
+            if ($n == null) {
                 FeePaymentMadeModel::query()->insertGetId([
                     'member_user_id' => $v->member_user_id,
                     'no_so' => $v->nomor_so,
@@ -242,34 +243,34 @@ class SyncSaleReturnJob implements ShouldQueue
                     'no_inv' => $v->invoice_number,
                     'nominal' => $v->total_pembayaran,
                     'fee_date' => $v->dt_acc,
-                    'keterangan' => 'Fee yang telah terbayarkan namun transaksi telah di retur dengan nomor '.$rp->no_retur. ' sejumlah '.number_format( $rp->returndp)
+                    'keterangan' => 'Fee yang telah terbayarkan namun transaksi telah di retur dengan nomor ' . $rp->no_retur . ' sejumlah ' . number_format($rp->returndp)
                 ]);
-            }else{
-                FeePaymentMadeModel::query()->where('id',$n->id)->update([
+            } else {
+                FeePaymentMadeModel::query()->where('id', $n->id)->update([
                     'nominal' => $v->total_pembayaran,
                     'fee_date' => $v->dt_acc,
-                    'keterangan' => 'Fee yang telah terbayarkan namun transaksi telah di retur dengan nomor '.$rp->no_retur. ' sejumlah '.number_format( $rp->returndp)
+                    'keterangan' => 'Fee yang telah terbayarkan namun transaksi telah di retur dengan nomor ' . $rp->no_retur . ' sejumlah ' . number_format($rp->returndp)
                 ]);
-
             }
         }
     }
 
-    private function getCustomer($data){
+    private function getCustomer($data)
+    {
         $c = UserModel::query()->where('id_accurate', $data['customerId'])->first();
-        if($c == null){
+        if ($c == null) {
             $customer = $data['customer'];
-            $name = explode(' ' , $customer['name']);
+            $name = explode(' ', $customer['name']);
             $listaddress = $customer['shipAddressList'];
             $cla = count($listaddress);
             $address = [];
-            if($cla > 0){
-                $address = $listaddress[ $cla - 1 ];
+            if ($cla > 0) {
+                $address = $listaddress[$cla - 1];
             }
 
-            $lvlmember = LevelMemberModel::query()->orderBy('level','asc')->first();
+            $lvlmember = LevelMemberModel::query()->orderBy('level', 'asc')->first();
 
-            $data= [
+            $data = [
                 'first_name' => $name[0],
                 'last_name' =>  implode(' ', array_slice($name, 1)),
                 'id_no' => $customer['customerNo'],
@@ -281,7 +282,7 @@ class SyncSaleReturnJob implements ShouldQueue
                 'created_at' => Carbon::now()
             ];
             return UserModel::query()->insertGetId($data);
-        }else{
+        } else {
             return $c->id;
         }
     }

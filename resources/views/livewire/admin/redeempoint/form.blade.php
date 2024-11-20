@@ -5,20 +5,20 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Redeem Point</h5>
-                    <button type="button" class="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close" >
+                    <button type="button" class="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     @if(session()->has('success'))
-                        <div class="alert alert-border-left alert-label-icon alert-success alert-dismissible fade show">
-                            {{session('success')}}
-                        </div>
+                    <div class="alert alert-border-left alert-label-icon alert-success alert-dismissible fade show">
+                        {{session('success')}}
+                    </div>
                     @endif
                     @if(session()->has('error'))
-                        <div class="alert alert-border-left alert-danger alert-label-icon alert-dismissible fade show">
-                            {{session('error')}}
-                        </div>
+                    <div class="alert alert-border-left alert-danger alert-label-icon alert-dismissible fade show">
+                        {{session('error')}}
+                    </div>
                     @endif
 
                     <form id="form_data" wire:submit.prevent>
@@ -28,8 +28,7 @@
                                 <select class="select2bind"
                                     name="user_id"
                                     data-url="{{url('admin/member/select2')}}"
-                                    data-parent="#modalform"
-                                >
+                                    data-parent="#modalform">
 
                                 </select>
                             </div>
@@ -45,10 +44,9 @@
                             <div wire:ignore>
                                 <label for="reward_id">Reward</label>
                                 <select class="select2bind"
-                                        name="reward_id"
-                                        data-url="{{url('admin/reward/select2')}}"
-                                        data-parent="#modalform"
-                                ></select>
+                                    name="reward_id"
+                                    data-url="{{url('admin/reward/select2')}}"
+                                    data-parent="#modalform"></select>
                             </div>
                             <input type="hidden" class="@error('reward_id') is-invalid @enderror" />
 
@@ -95,7 +93,7 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button  type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button wire:loading.attr="disabled" onclick="save()" type="button" class="btn btn-primary">{{$editform ? 'Simpan Perubahan' : 'Simpan Baru'}}</button>
                 </div>
             </div>
