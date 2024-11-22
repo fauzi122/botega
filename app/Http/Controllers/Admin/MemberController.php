@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Storage;
 
 class MemberController extends Controller
 {
+    public function getPoints($userId)
+    {
+        $user = UserModel::find($userId);
+        return response()->json(['points' => $user->points ?? 0]);
+    }
+
     public function listapproval()
     {
         LogsModel::where('actions', 'Update Profile')->update(['status' => 1]);

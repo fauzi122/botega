@@ -84,23 +84,32 @@ class ManagePointsJob implements ShouldQueue
 
         // Update points in users table by deducting redeemed points from member_rewards
         DB::update("
-            UPDATE users u
-            JOIN (
-                SELECT 
-                    up.user_id, 
-                    SUM(up.total_point) - COALESCE(SUM(CASE WHEN mr.status != 3 THEN mr.point ELSE 0 END), 0) AS final_points
-                FROM 
-                    user_points up
-                LEFT JOIN 
-                    member_rewards mr ON up.user_id = mr.user_id
-                GROUP BY 
-                    up.user_id
-            ) AS points_summary ON u.id = points_summary.user_id
-            SET 
-                u.points = points_summary.final_points
-        ");
-
-
+    UPDATE users u
+    JOIN (
+        SELECT 
+            up.user_id, 
+            SUM(up.total_point) AS total_points, -- Total points yang dimiliki
+            COALESCE(SUM(
+                CASE 
+                    WHEN mr.status != 3 THEN 
+                        r.point -- Langsung mengakses poin dari tabel rewards
+                    ELSE 0
+                END
+            ), 0) AS redeemed_points -- Poin yang sudah diredeem
+        FROM 
+            user_points up
+        LEFT JOIN 
+            member_rewards mr ON up.user_id = mr.user_id
+        LEFT JOIN 
+            rewards r ON r.id = mr.reward_id
+        WHERE 
+            mr.id = (SELECT MAX(id) FROM member_rewards WHERE user_id = mr.user_id) -- Memilih record terbaru dari member_rewards
+        GROUP BY 
+            up.user_id
+    ) AS points_summary ON u.id = points_summary.user_id
+    SET 
+        u.points = points_summary.total_points - points_summary.redeemed_points
+");
 
         // Log the action
         CatatanPrivateModel::query()->insert([
