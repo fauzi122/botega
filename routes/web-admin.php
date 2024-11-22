@@ -302,6 +302,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/select2prof", "MemberController@select2profesional");
                 Route::get("/select2", "MemberController@select2");
                 Route::get("/data-source", "MemberController@datasource");
+                Route::get("/get-points/{userId}", "MemberController@getPoints");
                 Route::get("/info/{id}", "MemberController@info");
                 Route::get("foto/{id}", "MemberController@foto");
                 Route::get("/{id}", "MemberController@edit");
@@ -353,6 +354,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/", "RewardController@index");
                 Route::get("/select2", "RewardController@select2");
                 Route::get("/data-source", "RewardController@datasource");
+                Route::get("/get-points/{rewardId}", "RewardController@getPoints");
                 Route::get("/pic/{id}", "RewardController@getPic");
                 Route::get("/{id}", "RewardController@edit");
                 Route::post("/", "RewardController@create");

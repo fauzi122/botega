@@ -13,56 +13,76 @@ use Illuminate\Http\Request;
 
 class RewardController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         return view('admin.reward.table');
+    }
+    public function getPoints($rewardId)
+    {
+        $reward = RewardModel::find($rewardId);
+        return response()->json(['points' => $reward->point ?? 0]);
     }
 
 
-    public function datasource(){
-        if(!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_REWARD)){
+    public function datasource()
+    {
+        if (!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_REWARD)) {
             return [];
         }
         $id = \request('id');
-        return datatables(RewardModel::query() )
-                ->editColumn('expired_at', function($r){
-                    if($r['expired_at'] == null || $r['expired_at'] == ''){
-                        return '';
-                    }
-                    return Carbon::parse($r['expired_at'])->translatedFormat('l, d M Y');
-                })
-                ->editColumn('path_image', function($e){
-                    if($e['path_image'] == null || $e['path_image'] == ''){return '';}
-                    return url('admin/reward/pic/'.$e['id'].'.png');
-                })
-                ->toJson();
+        return datatables(RewardModel::query())
+            ->editColumn('expired_at', function ($r) {
+                if ($r['expired_at'] == null || $r['expired_at'] == '') {
+                    return '';
+                }
+                return Carbon::parse($r['expired_at'])->translatedFormat('l, d M Y');
+            })
+            ->editColumn('path_image', function ($e) {
+                if ($e['path_image'] == null || $e['path_image'] == '') {
+                    return '';
+                }
+                return url('admin/reward/pic/' . $e['id'] . '.png');
+            })
+            ->toJson();
     }
 
-    public function getPic($id){
+    public function getPic($id)
+    {
         $rw = RewardModel::query()->find($id);
-        if($rw == null){
+        if ($rw == null) {
             return response(
-                file_get_contents('assets/images/bottega-brown.png'), 200,[
+                file_get_contents('assets/images/bottega-brown.png'),
+                200,
+                [
                     'Content-Type' => 'image/png'
-                ] );
+                ]
+            );
         }
         return response(
-            \Storage::get($rw->path_image), 200, [
+            \Storage::get($rw->path_image),
+            200,
+            [
                 'Content-Type' => 'image/png'
-            ]);
+            ]
+        );
     }
 
 
-    public function select2(){
+    public function select2()
+    {
         $q = \request('q');
-        $r = QueryBuilderExt::whereFilter(RewardModel::query(), ['first_name', 'last_name', 'id_no'],
+        $r = QueryBuilderExt::whereFilter(
+            RewardModel::query(),
+            ['first_name', 'last_name', 'id_no'],
             $q
         )->paginate(10);
-        $ret[] = ['id'=>'', 'text'=>'--'];
-        foreach($r as $k){
-            $ret[] = ['id'=>$k->id,
-                      'text'=>$k->code . ' ' . $k->name . ' ('.$k->point.')',
-                      'point' => $k->point
-                ];
+        $ret[] = ['id' => '', 'text' => '--'];
+        foreach ($r as $k) {
+            $ret[] = [
+                'id' => $k->id,
+                'text' => $k->code . ' ' . $k->name . ' (' . $k->point . ')',
+                'point' => $k->point
+            ];
         }
         return response()->json([
             'items' => $ret,
@@ -72,8 +92,8 @@ class RewardController extends Controller
 
     public function delete()
     {
-        if(!ValidatedPermission::authorize(ValidatedPermission::HAPUS_DATA_REWARD)){
-            return ;
+        if (!ValidatedPermission::authorize(ValidatedPermission::HAPUS_DATA_REWARD)) {
+            return;
         }
 
         $id = \request('id');

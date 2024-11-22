@@ -250,7 +250,7 @@ class FeeController extends Controller
             'selesai' => 'dt_finish'
         ];
         $stt = $mapStatus[$status];
-        dd($stt . ' - ' . $status);
+        // dd($stt . ' - ' . $status);
         if ($stt == null) return \response()->json(['data' => "404"], 404);
         return $this->gantiStatus($stt, $status);
     }
