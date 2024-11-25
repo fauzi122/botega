@@ -62,10 +62,22 @@ class MemberPointController extends Controller
             'detail_transactions.sale_price',
             'detail_transactions.dpp_amount',
             'detail_transactions.retur_qty',
-            'detail_retur_penjualan.return_amount as amount_retur',
+            \DB::raw('
+            CASE 
+                WHEN detail_retur_penjualan.return_amount = 0 AND detail_transactions.retur_qty > 0 THEN
+                    ROUND((detail_transactions.dpp_amount / detail_transactions.qty) * detail_transactions.retur_qty, 2)
+                ELSE
+                    detail_retur_penjualan.return_amount
+            END as amount_retur
+        '),
             \DB::raw('ROUND((
             detail_transactions.dpp_amount - 
-            IFNULL(detail_retur_penjualan.return_amount, 0)
+            CASE 
+                WHEN detail_retur_penjualan.return_amount = 0 AND detail_transactions.retur_qty > 0 THEN
+                    (detail_transactions.dpp_amount / detail_transactions.qty) * detail_transactions.retur_qty
+                ELSE
+                    IFNULL(detail_retur_penjualan.return_amount, 0)
+            END
         ) / 1000, 0) as points')
         )
             ->join('transactions', 'transactions.id', '=', 'member_points.transaction_id')

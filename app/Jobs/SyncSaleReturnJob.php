@@ -73,6 +73,37 @@ class SyncSaleReturnJob implements ShouldQueue
         } while ($lanjut);
     }
 
+    // public function handle(): void
+    // {
+    //     $r = new \App\Library\APIAccurate();
+    //     $page = 1;
+    //     do {
+    //         // Hilangkan filter berdasarkan tanggal
+    //         $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&sp.sort=id|desc';
+    //         $response = $r->get($url);
+    //         $json = json_decode($response->body(), true);
+
+    //         try {
+    //             $maxpage = (int)$json['sp']['pageCount'];
+    //             $data = $json['d'];
+    //             foreach ($data as $idx => $v) {
+    //                 if ($v['approvalStatus'] == 'APPROVED') {
+    //                     $response2 = $r->get('/api/sales-return/detail.do?id=' . $v['id']);
+    //                     $json2 = json_decode($response2->body(), true);
+    //                     $d = $json2['d'];
+    //                     $id = $this->saveData($d);
+    //                     $this->saveDetail($id, $d['number'],  $d['detailItem']);
+    //                 }
+    //             }
+    //         } catch (\Exception $e) {
+    //             echo "error " . $e->getMessage() . ' ' . $e->getLine() . ' ' . $e->getFile();
+    //         }
+
+    //         $page++;
+    //         $lanjut = $page < $maxpage;
+    //     } while ($lanjut);
+    // }
+
     private function saveDetail($idretur, $noretur, $detail)
     {
 

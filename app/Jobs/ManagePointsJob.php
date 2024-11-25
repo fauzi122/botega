@@ -47,33 +47,48 @@ class ManagePointsJob implements ShouldQueue
         // Truncate the member_points table
         DB::table('member_points')->truncate();
 
-        // Recalculate points and insert into member_points
+        // Insert recalculated points into member_points
+        // Insert recalculated points into member_points
         DB::insert("
-           INSERT INTO member_points (user_id, transaction_id, points, notes, received_at, created_at)
-           SELECT 
-               u.id AS user_id,
-               t.id AS transaction_id,
-               ROUND((COALESCE(dt.dpp_amount, 0) - (COALESCE(dt.retur_qty, 0) * COALESCE(dt.sale_price, 0))) / 1000) AS points,
-               'Poin dari transaksi' AS notes,
-               NOW() AS received_at,
-               NOW() AS created_at
-           FROM 
-               users u
-           JOIN 
-               transactions t ON u.id = t.member_user_id
-           JOIN 
-               detail_transactions dt ON t.id = dt.transaction_id
+        INSERT INTO member_points (user_id, transaction_id, product_id, points, notes, received_at, created_at)
+        SELECT 
+            u.id AS user_id,
+            t.id AS transaction_id,
+            dt.product_id AS product_id, -- Simpan product_id
+            ROUND((
+                COALESCE(dt.dpp_amount, 0) - 
+                CASE 
+                    WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0) -- Hitung jika return_amount = 0
+                    ELSE 
+                        COALESCE(dr.return_amount, 0) -- Gunakan return_amount jika tersedia
+                END
+            ) / 1000) AS points, -- Hitung poin
+            'Poin dari transaksi' AS notes,
+            NOW() AS received_at,
+            NOW() AS created_at
+        FROM 
+            users u
+        JOIN 
+            transactions t ON u.id = t.member_user_id
+        JOIN 
+            detail_transactions dt ON t.id = dt.transaction_id
+        LEFT JOIN 
+            detail_retur_penjualan dr ON dr.so_number = t.nomor_so AND dr.product_id = dt.product_id
         ");
 
-        // Truncate user_points table to clear old data
+
+
+
+        // Truncate user_points table
         DB::table('user_points')->truncate();
 
-        // Insert new calculated total points into user_points
+        // Insert recalculated total points into user_points
         DB::insert("
             INSERT INTO user_points (user_id, total_point, created_at, updated_at)
             SELECT 
                 mp.user_id,
-                ROUND(SUM(mp.points)) AS total_point, -- Pastikan nilai dibulatkan
+                ROUND(SUM(mp.points)) AS total_point,
                 NOW() AS created_at,
                 NOW() AS updated_at
             FROM 
@@ -81,35 +96,27 @@ class ManagePointsJob implements ShouldQueue
             GROUP BY 
                 mp.user_id
         ");
-
-        // Update points in users table by deducting redeemed points from member_rewards
         DB::update("
-    UPDATE users u
-    JOIN (
-        SELECT 
-            up.user_id, 
-            SUM(up.total_point) AS total_points, -- Total points yang dimiliki
-            COALESCE(SUM(
-                CASE 
-                    WHEN mr.status != 3 THEN 
-                        r.point -- Langsung mengakses poin dari tabel rewards
-                    ELSE 0
-                END
-            ), 0) AS redeemed_points -- Poin yang sudah diredeem
-        FROM 
-            user_points up
-        LEFT JOIN 
-            member_rewards mr ON up.user_id = mr.user_id
-        LEFT JOIN 
-            rewards r ON r.id = mr.reward_id
-        WHERE 
-            mr.id = (SELECT MAX(id) FROM member_rewards WHERE user_id = mr.user_id) -- Memilih record terbaru dari member_rewards
-        GROUP BY 
-            up.user_id
-    ) AS points_summary ON u.id = points_summary.user_id
-    SET 
-        u.points = points_summary.total_points - points_summary.redeemed_points
-");
+        UPDATE users u
+        JOIN (
+            SELECT 
+                up.user_id, 
+                SUM(up.total_point) AS total_points, -- Total poin dari transaksi
+                COALESCE(SUM(r.point), 0) AS total_rewards_points -- Total poin dari rewards
+            FROM 
+                user_points up
+            LEFT JOIN 
+                member_rewards mr ON up.user_id = mr.user_id
+            LEFT JOIN 
+                rewards r ON mr.reward_id = r.id
+            GROUP BY 
+                up.user_id
+        ) AS points_summary ON u.id = points_summary.user_id
+        SET 
+            u.points = points_summary.total_points - points_summary.total_rewards_points
+    ");
+
+
 
         // Log the action
         CatatanPrivateModel::query()->insert([
