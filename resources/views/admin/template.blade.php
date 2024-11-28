@@ -27,7 +27,7 @@
     <!-- Icons Css -->
     <link href="{{asset('')}}assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <!-- App Css-->
-    <link href="{{asset('assets/css/app.min.css?v=1.2')}}" id="app-style" rel="stylesheet" type="text/css" />
+    <link href="{{asset('assets/css/app.min.css?v=1.3')}}" id="app-style" rel="stylesheet" type="text/css" />
     <link href="{{asset('')}}assets01/node_modules/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet">
 
