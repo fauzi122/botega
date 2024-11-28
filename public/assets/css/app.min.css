@@ -989,10 +989,12 @@ body[data-layout=horizontal] .footer {
 }
 
 .mm-active > a {
+    background-color: var(--custom-primary-bg-color);
     color: var(--bs-sidebar-menu-item-active-color) !important
 }
 
 .mm-active > a i {
+    background-color: var(--custom-primary-bg-color);
     color: var(--bs-sidebar-menu-item-active-color) !important
 }
 
@@ -1918,9 +1920,10 @@ body[data-layout=horizontal][data-layout-size=boxed] .container-fluid, body[data
     --bs-sidebar-menu-sub-item-color: #545a6d;
     --bs-sidebar-menu-item-icon-color: #545a6d;
     --bs-sidebar-menu-item-icon-effact-color: rgba(84, 90, 109, 0.2);
-    --bs-sidebar-menu-item-hover-color: #5156be;
+    --bs-sidebar-menu-item-hover-color: #6043c9;
     --bs-sidebar-menu-item-hover-effact-color: rgba(81, 86, 190, 0.2);
-    --bs-sidebar-menu-item-active-color: #5156be;
+    --bs-sidebar-menu-item-active-color: #080808;
+    --custom-primary-bg-color: #4686cb;
     --bs-sidebar-menu-item-active-effact-color: rgba(81, 86, 190, 0.2);
     --bs-sidebar-border-color: #e9e9ef;
     --bs-sidebar-menu-item-active-bg-color: #f3f8fb;
@@ -1982,9 +1985,9 @@ body[data-layout=horizontal][data-layout-size=boxed] .container-fluid, body[data
     --bs-sidebar-menu-sub-item-color: #7b8198;
     --bs-sidebar-menu-item-icon-color: #666b7f;
     --bs-sidebar-menu-item-icon-effact-color: rgba(133, 141, 152, 0.2);
-    --bs-sidebar-menu-item-hover-color: #5b73e8;
+    --bs-sidebar-menu-item-hover-color: #ee0808;
     --bs-sidebar-menu-item-hover-effact-color: rgba(255, 255, 255, 0.2);
-    --bs-sidebar-menu-item-active-color: #5b73e8;
+    --bs-sidebar-menu-item-active-color: #f80744;
     --bs-sidebar-menu-item-active-effact-color: rgba(255, 255, 255, 0.2);
     --bs-sidebar-border-color: #373c39;
     --bs-sidebar-menu-item-active-bg-color: #34415d;
