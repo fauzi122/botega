@@ -31,15 +31,21 @@ class SyncNoFakturFeeMemberJob implements ShouldQueue
     public function handle(): void
     {
         $fee = FeeNumberModel::query()->whereNotNull([
-                        'dt_pengajuan', 'dt_acc'
-                    ])->whereNull([
-                        'dt_finish', 'no_faktur'
-                    ])->get();
-        foreach ($fee as $f){
-//            $r = $this->findFaktur($f->nomor);
-            $r = $this->findFaktur($f->kode_merger);
-            if($r != null){
-                if($f->kode_merger == $r['charField1'] && $r['approvalStatus'] == 'APPROVED'){
+            'dt_pengajuan',
+            'dt_acc'
+        ])->whereNull([
+            'dt_finish',
+            'no_faktur'
+        ])->get();
+        foreach ($fee as $f) {
+            //            $r = $this->findFaktur($f->nomor);
+            // $r = $this->findFaktur($f->kode_merger);
+            $no = ($f->kode_merger ?? '');
+            $no = $no == '' ? $f->nomor : $no;
+            $r = $this->findFaktur($no);
+            if ($r != null) {
+                if ($no == $r['charField1'] && $r['approvalStatus'] == 'APPROVED') {
+                    // if ($f->kode_merger == $r['charField1'] && $r['approvalStatus'] == 'APPROVED') {
                     $nofaktur = $r['number'];
                     FeeProfessionalModel::query()->where('fee_number_id', $f->id)
                         ->update([
@@ -57,17 +63,18 @@ class SyncNoFakturFeeMemberJob implements ShouldQueue
         }
     }
 
-    private function findfaktur($nomorFee){
+    private function findfaktur($nomorFee)
+    {
         if ($nomorFee != null) {
             $r = new APIAccurate();
             $keyword = urlencode($nomorFee);
-            $response = $r->get('/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=1&sp.sort=id|desc&filter.keywords.op=CONTAIN&filter.keywords.val[0]='.$keyword);
-            if($response->status() != 200)return null;
+            $response = $r->get('/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=1&sp.sort=id|desc&filter.keywords.op=CONTAIN&filter.keywords.val[0]=' . $keyword);
+            if ($response->status() != 200) return null;
             $json = $response->json();
-            if(count($json['d']) <= 0 )return null;
+            if (count($json['d']) <= 0) return null;
 
-            foreach($json['d'] as $item){
-                if( strtolower($item['charField1']) == strtolower($nomorFee) ){
+            foreach ($json['d'] as $item) {
+                if (strtolower($item['charField1']) == strtolower($nomorFee)) {
                     return $item;
                 }
             }
