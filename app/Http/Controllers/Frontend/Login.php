@@ -263,10 +263,6 @@ class Login extends Controller
     public function logout()
     {
         \session()->flush();
-
-        // Gunakan HTTPS untuk redirect
-        return redirect()->to(URL::previous(), 302, [], true);
-        // \session()->flush();
-        // return redirect()->to(URL::previous());
+        return redirect()->to(URL::previous());
     }
 }
