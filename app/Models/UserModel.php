@@ -55,16 +55,22 @@ class UserModel extends Model
     {
         // Mendapatkan persentase PPH (21 atau 23) berdasarkan status `is_perusahaan` dan `npwp`
         $pphPercent = $this->calculatePphPercent();
+
+        // Ambil semua FeeNumber yang dt_finish nya masih kosong
         $feeNumbers = FeeNumberModel::where('member_user_id', $this->id)
             ->whereNull('dt_finish')
             ->get();
 
+        // Jika tidak ada FeeNumber yang dt_finish nya kosong, maka hentikan proses
         if ($feeNumbers->isEmpty()) {
             return;
         }
 
         foreach ($feeNumbers as $feeNumber) {
-            $feeProfessionals = FeeProfessionalModel::where('fee_number_id', $feeNumber->id)->whereNull('dt_finish')->get();
+            // Ambil semua FeeProfessional yang dt_finish nya masih kosong
+            $feeProfessionals = FeeProfessionalModel::where('fee_number_id', $feeNumber->id)
+                ->whereNull('dt_finish')
+                ->get();
 
             foreach ($feeProfessionals as $fee) {
                 // Perbarui `pph_percent` dan `pph_amount` berdasarkan apakah perusahaan atau individu
