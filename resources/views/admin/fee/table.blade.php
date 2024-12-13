@@ -22,14 +22,14 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <!-- <div class="card-header">
                 <h4 class="card-title">Fee Member</h4>
                 <p class="card-title-desc">
                     Mengisi data fee member berdasarkan invoice member.
                 </p>
-            </div>
+            </div> -->
             <div class="card-body">
-                <ul class="nav nav-tabs-custom card-header-tabs border-top mt-4" id="pills-tab" role="tablist">
+                <ul class="nav nav-tabs-custom card-header-tabs" id="pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <a class="nav-link px-3 active" data-bs-toggle="tab" href="#tab-resume" role="tab" aria-selected="true">Baru <span id="badge-info-0" class="badge bg-danger rounded-pill"></span></a>
 

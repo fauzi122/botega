@@ -53,30 +53,29 @@ class ManagePointsJob implements ShouldQueue
         SELECT 
             u.id AS user_id,
             t.id AS transaction_id,
-            dt.product_id AS product_id, -- Simpan product_id
+            dt.product_id AS product_id,
             ROUND((
                 COALESCE(dt.dpp_amount, 0) - 
                 CASE 
                     WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0) -- Hitung jika return_amount = 0
+                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
                     ELSE 
-                        COALESCE(dr.return_amount, 0) -- Gunakan return_amount jika tersedia
+                        COALESCE(dr.return_amount, 0)
                 END
-            ) / 1000) AS points, -- Hitung poin
+            ) / 1000) AS points,
             'Poin dari transaksi' AS notes,
             NOW() AS received_at,
             NOW() AS created_at
         FROM 
             users u
         JOIN 
-            transactions t ON u.id = t.member_user_id
+            transactions t ON u.id = t.member_user_id COLLATE utf8mb4_unicode_ci
         JOIN 
-            detail_transactions dt ON t.id = dt.transaction_id
+            detail_transactions dt ON t.id = dt.transaction_id COLLATE utf8mb4_unicode_ci
         LEFT JOIN 
-            detail_retur_penjualan dr ON dr.so_number = t.nomor_so AND dr.product_id = dt.product_id
-        ");
-
-
+            detail_retur_penjualan dr ON dr.so_number = t.nomor_so COLLATE utf8mb4_unicode_ci
+            AND dr.product_id = dt.product_id COLLATE utf8mb4_unicode_ci
+    ");
 
 
         // Truncate user_points table
@@ -95,27 +94,27 @@ class ManagePointsJob implements ShouldQueue
             GROUP BY 
                 mp.user_id
         ");
+
+        // Update the users table with total points
         DB::update("
-        UPDATE users u
-        JOIN (
-            SELECT 
-                up.user_id, 
-                SUM(up.total_point) AS total_points, -- Total poin dari transaksi
-                COALESCE(SUM(r.point), 0) AS total_rewards_points -- Total poin dari rewards
-            FROM 
-                user_points up
-            LEFT JOIN 
-                member_rewards mr ON up.user_id = mr.user_id
-            LEFT JOIN 
-                rewards r ON mr.reward_id = r.id
-            GROUP BY 
-                up.user_id
-        ) AS points_summary ON u.id = points_summary.user_id
-        SET 
-            u.points = points_summary.total_points - points_summary.total_rewards_points
-    ");
-
-
+            UPDATE users u
+            JOIN (
+                SELECT 
+                    up.user_id, 
+                    SUM(up.total_point) AS total_points, -- Total poin dari transaksi
+                    COALESCE(SUM(r.point), 0) AS total_rewards_points -- Total poin dari rewards
+                FROM 
+                    user_points up
+                LEFT JOIN 
+                    member_rewards mr ON up.user_id = mr.user_id
+                LEFT JOIN 
+                    rewards r ON mr.reward_id = r.id
+                GROUP BY 
+                    up.user_id
+            ) AS points_summary ON u.id = points_summary.user_id
+            SET 
+                u.points = points_summary.total_points - points_summary.total_rewards_points
+        ");
 
         // Log the action
         CatatanPrivateModel::query()->insert([
@@ -123,6 +122,7 @@ class ManagePointsJob implements ShouldQueue
             'created_at' => Carbon::now(),
         ]);
     }
+
     /**
      * Update points if there are changes in transactions or returns within the last 7 days.
      */

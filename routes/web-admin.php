@@ -40,7 +40,6 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             $url = '/api/customer/save.do';
             foreach ($us as $u) {
                 $r = $api->post($url, [
-
                     'name' => $u->first_name . ' ' . $u->last_name,
                     'transDate' => Carbon::parse($u->created_at)->format('d/m/Y'),
                     'email' => $u->email,
@@ -54,7 +53,6 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                     'shipZipCode' => $u->zip_code,
                     'shipStreet' => $u->home_addr,
                     'shipCountry' => $u->country
-
                 ]);
                 if ($r->status() == 200) {
                     $result = json_decode($r->body(), true);
@@ -111,10 +109,12 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             if ($keyword != null) {
                 $keyword = urlencode($keyword);
                 $response = $r->get('/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=1&sp.sort=id|desc&filter.keywords.op=CONTAIN&filter.keywords.val[0]=' . $keyword);
+                return $response->json()['d'];
             } else if ($id == null) {
-                $response = $r->get('/api/purchase-payment/list.do?fields=' . urlencode('id') . '&sp.page=1&sp.sort=id|desc');
+                $response = $r->get('/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1') . '&sp.page=1&sp.sort=id|desc');
             } else {
                 $response = $r->get('/api/purchase-payment/detail.do?id=' . $id);
+                return $response->json()['d'];
             }
 
             return $response->json()['d'][0];

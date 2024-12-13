@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\UserModel;
 use App\Models\MemberPointModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class MemberPointController extends Controller
 {
@@ -54,7 +56,6 @@ class MemberPointController extends Controller
     }
     public function memberDetail($id)
     {
-        // Query join antara member_points, transactions, detail_transactions, dan detail_retur_penjualan
         $details = MemberPointModel::select(
             'transactions.nomor_so as nomor_so',
             'detail_transactions.notes as nama_barang',
@@ -63,28 +64,30 @@ class MemberPointController extends Controller
             'detail_transactions.dpp_amount',
             'detail_transactions.retur_qty',
             \DB::raw('
-            CASE 
-                WHEN detail_retur_penjualan.return_amount = 0 AND detail_transactions.retur_qty > 0 THEN
-                    ROUND((detail_transactions.dpp_amount / detail_transactions.qty) * detail_transactions.retur_qty, 2)
-                ELSE
-                    detail_retur_penjualan.return_amount
-            END as amount_retur
-        '),
+        CASE 
+            WHEN COALESCE(detail_retur_penjualan.return_amount, 0) = 0 
+                 AND COALESCE(detail_transactions.retur_qty, 0) > 0 THEN
+                ROUND((detail_transactions.dpp_amount / NULLIF(detail_transactions.qty, 0)) * detail_transactions.retur_qty, 2)
+            ELSE
+                COALESCE(detail_retur_penjualan.return_amount, 0)
+        END as amount_retur
+    '),
             \DB::raw('ROUND((
-            detail_transactions.dpp_amount - 
-            CASE 
-                WHEN detail_retur_penjualan.return_amount = 0 AND detail_transactions.retur_qty > 0 THEN
-                    (detail_transactions.dpp_amount / detail_transactions.qty) * detail_transactions.retur_qty
-                ELSE
-                    IFNULL(detail_retur_penjualan.return_amount, 0)
-            END
-        ) / 1000, 0) as points')
+        detail_transactions.dpp_amount - 
+        CASE 
+            WHEN COALESCE(detail_retur_penjualan.return_amount, 0) = 0 
+                 AND COALESCE(detail_transactions.retur_qty, 0) > 0 THEN
+                (detail_transactions.dpp_amount / NULLIF(detail_transactions.qty, 0)) * detail_transactions.retur_qty
+            ELSE
+                COALESCE(detail_retur_penjualan.return_amount, 0)
+        END
+    ) / 1000, 0) as points')
         )
             ->join('transactions', 'transactions.id', '=', 'member_points.transaction_id')
             ->join('detail_transactions', 'detail_transactions.transaction_id', '=', 'transactions.id')
             ->leftJoin('detail_retur_penjualan', function ($join) {
-                $join->on('detail_retur_penjualan.so_number', '=', 'transactions.nomor_so')
-                    ->on('detail_retur_penjualan.product_id', '=', 'detail_transactions.product_id');
+                $join->on(DB::raw('detail_retur_penjualan.so_number COLLATE utf8mb4_unicode_ci'), '=', DB::raw('transactions.nomor_so COLLATE utf8mb4_unicode_ci'))
+                    ->on(DB::raw('detail_retur_penjualan.product_id COLLATE utf8mb4_unicode_ci'), '=', DB::raw('detail_transactions.product_id COLLATE utf8mb4_unicode_ci'));
             })
             ->where('member_points.user_id', $id)
             ->groupBy(
@@ -98,7 +101,6 @@ class MemberPointController extends Controller
             )
             ->get();
 
-        // Jika tidak ada data, kembalikan respons error
         if ($details->isEmpty()) {
             return response()->json([
                 'status' => 'error',
@@ -106,7 +108,6 @@ class MemberPointController extends Controller
             ], 503);
         }
 
-        // Kembalikan respons JSON jika data ditemukan
         return response()->json([
             'status' => 'success',
             'details' => $details

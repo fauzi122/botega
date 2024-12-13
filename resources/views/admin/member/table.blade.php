@@ -22,13 +22,13 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <!-- <div class="card-header">
                 <h4 class="card-title">Member</h4>
                 <p class="card-title-desc">Data Member untuk mengelola data personalisasi member.
                 </p>
-            </div>
+            </div> -->
             <div class="card-body">
-                <div class="table-responsive table-responsive-md m-t-40">
+                <div class="table-responsive table-responsive-md">
                     <table id="jd-table"
                         width="100%"
                         data-urlaction="{{url('admin/member')}}"
