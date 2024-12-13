@@ -68,9 +68,13 @@ class SyncNoFakturFeeMemberJob implements ShouldQueue
         if ($nomorFee != null) {
             $r = new APIAccurate();
             $keyword = urlencode($nomorFee);
-            $response = $r->get('/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=1&sp.sort=id|desc&filter.keywords.op=CONTAIN&filter.keywords.val[0]=' . $keyword);
+            $url = '/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=1&sp.sort=id|desc&filter.keywords.op=CONTAIN&filter.keywords.val[0]=' . $keyword;
+            echo "Keyword : $keyword <br/>";
+            echo $url;
+            $response = $r->get($url);
             if ($response->status() != 200) return null;
             $json = $response->json();
+            echo "Json : " . json_encode($json);
             if (count($json['d']) <= 0) return null;
 
             foreach ($json['d'] as $item) {

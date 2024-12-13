@@ -84,6 +84,7 @@ $periode = implode(', ', $prd);
     <tfoot>
         <tr>
             <th></th>
+            <th></th>
             <th>Total</th>
             <th></th>
             <th></th>
