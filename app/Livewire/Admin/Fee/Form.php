@@ -171,10 +171,10 @@ class Form extends Component
     private function checkClaim($id, $type)
     {
         $hassplit = null;
-
         if ($type == 'DD') {
 
             $ddo = DetailDeliveryOrderModel::query()->where('id', $id)->first();
+
             $cit = ClaimItemTransactionModel::query()->where([
                 'member_user_id' => $this->member_user_id,
                 'detail_delivery_order_id' => $id,
@@ -187,8 +187,8 @@ class Form extends Component
             //                    'detail_transactions_id' => $ddo->detail_transaction_id
             //                ])->first();
             //            }
-
             if ($cit != null) {
+                dd($cit);
                 $hassplit = FeeSplitModel::hasSplit($this->member_user_id, $cit->detail_transactions_id, $cit->detail_delivery_order_id);
                 if ($hassplit === false) {
                     session()->flash('error', 'Item transaksi sudah pernah diajukan claim');
@@ -288,12 +288,16 @@ class Form extends Component
         $attr1 = [
             'member_user_id' => $this->member_user_id,
             'detail_transaction_id' => $this->detail_transaction_id,
+            'detail_delivery_id' => null
         ];
         $attr2 = [
             'member_user_id' => $this->member_user_id,
             'detail_delivery_id' => $idDetailDelivery,
         ];
-        return [$attr, $v, $attr1, $attr2];
+
+        if ($attr1 == true)
+
+            return [$attr, $v, $attr1, $attr2];
     }
 
     private function catatLogClaim($type, $id, $idfee, $dt)
@@ -328,13 +332,12 @@ class Form extends Component
     {
         $splitfee = $this->checkClaim($id, $type);
         $ffee = null;
-
         if ($splitfee === false) return false;
         $this->sttsf = 'BB';
 
         if ($type == 'DD') {
             $dt = DetailDeliveryOrderModel::view()->where('id', $id)->first();
-
+            // dd($splitfee);
             $this->detail_transaction_id = $dt->detail_transaction_id;
         } else {
             $dt = DetailTransactionModel::view()->where('id', $id)->first();
@@ -350,18 +353,32 @@ class Form extends Component
         [$attr, $v, $attr1, $attr2] = $this->prepareData($v, $type, $dt);
 
         $this->debugs = json_encode($attr);
-
+        // $attr = [
+        //     'member_user_id' => $this->member_user_id,
+        //     'detail_transaction_id' => $this->detail_transaction_id,
+        //     'detail_delivery_id' => $idDetailDelivery,
+        // ];
+        // $attr1 = [
+        //     'member_user_id' => $this->member_user_id,
+        //     'detail_transaction_id' => $this->detail_transaction_id,
+        //     'detail_delivery_id' => null
+        // ];
+        // $attr2 = [
+        //     'member_user_id' => $this->member_user_id,
+        //     'detail_delivery_id' => $idDetailDelivery,
+        // ];
         $tffee = FeeProfessionalModel::query()->where($attr1)->orderBy('num_split', 'asc')->get();
-        if ($tffee == null) {
-            $tffee = FeeProfessionalModel::query()->where($attr2)->orderBy('num_split', 'asc')->get();
-        }
 
+        // dd($tffee);
+        if ($tffee->count() == 0) {
+            $tffee = FeeProfessionalModel::query()->where($attr)->orderBy('num_split', 'asc')->get();
+        }
         if ($tffee->count() >= 2) {
             session()->flash('error', "Item tidak bisa ditambahkan lagi");
             return false;
         } else if ($tffee->count() <= 0) {
         } else if ($tffee->count() == 1) {
-
+            // dd($splitfee);
             if ($splitfee != null) {
                 if ($splitfee->id->percentage >= 100) {
                     session()->flash('error', "Pengajuan item  ini sudah dilakukan.");

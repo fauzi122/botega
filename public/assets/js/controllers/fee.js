@@ -815,6 +815,20 @@ function buildTable() {
                     }</span>`;
                 },
             },
+            {
+                data: null, // Karena hanya tombol, gunakan `null`
+                render: function (data, type, row, meta) {
+                    let route =
+                        baseurl() +
+                        `/admin/fee/proses-dp/${row["fee_number_id"]}`; // Pastikan `fee_number_id` sesuai dengan data dari server
+                    return `<button class="btn btn-sm btn-rounded btn-warning" onclick="prosesDP('${row["nomor"]}', '${route}')">
+                                <i class="mdi mdi-arrow-right-bold"></i> Proses DP
+                            </button>`;
+                },
+                sortable: false, // Tidak perlu sorting
+                width: "80px", // Atur lebar sesuai kebutuhan
+                className: "text-center", // Untuk memposisikan tombol di tengah
+            },
 
             { data: "no_rekening", visible: false },
 
@@ -992,4 +1006,43 @@ function editdata(id) {
 function showDetailFee(fee_number_id) {
     wireDetail.set("fee_number_id", fee_number_id);
     $("div#modalformDetail").modal("show");
+}
+function prosesDP(nomor, route) {
+    console.log(route);
+    Swal.fire({
+        title: `Proses DP untuk nomor ${nomor}?`,
+        text: "Pastikan semua data sudah benar sebelum melanjutkan.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Proses",
+        cancelButtonText: "Batal",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $("#jd-table-setujui_processing").css("display", "block");
+            $.post(route, {
+                _token: csrf_token(),
+            })
+                .done(() => {
+                    Swal.fire(
+                        "Berhasil!",
+                        "Proses DP telah berhasil dilakukan.",
+                        "success"
+                    );
+                    // Reload tabel dan refresh data
+                    $("table#jd-table-setujui").DataTable().ajax.reload();
+                    $("table#jd-table-pengajuan").DataTable().ajax.reload();
+                    refreshDataSUM();
+                })
+                .fail(() => {
+                    Swal.fire(
+                        "Gagal!",
+                        "Terjadi kesalahan saat memproses data.",
+                        "error"
+                    );
+                })
+                .always(() => {
+                    $("#jd-table-setujui_processing").css("display", "none");
+                });
+        }
+    });
 }

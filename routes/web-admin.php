@@ -132,7 +132,8 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             } else if ($id === null) {
                 $response = $r->get('/api/sales-return/list.do?fields=' . urlencode('id') . '&sp.page=1&sp.sort=id|desc');
             } else {
-                $response = $r->get('/api/sales-return/detail.do?id=' . $id);
+                $response = $r->get('/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus,customerId') . '&sp.page=1&filter.customerId.op=GREATER_EQUAL_THAN&filter.customerId.val[0]=' . urlencode('53353') . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . urlencode('05/10/2024') . '&sp.sort=id|desc');
+                // $response = $r->get('/api/sales-return/detail.do?id=' . $id);
             }
 
             return $response->json();
@@ -504,6 +505,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::delete("/remove/{status}", "FeeController@remove_status");
                 Route::delete("/", "FeeController@delete");
                 Route::patch('/buatresume', 'FeeController@buatResume');
+                Route::get("/proses-dp/{id}", "FeeController@prosesDP");
             });
 
 
