@@ -156,6 +156,7 @@
                                 <th>PPH23</th>
                                 <th>TOTAL</th>
                                 <th>PEMBAYARAN</th>
+                                <th>DP</th>
                             </tr>
                         </thead>
                         <tbody></tbody>

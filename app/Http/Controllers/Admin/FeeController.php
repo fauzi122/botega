@@ -96,6 +96,7 @@ class FeeController extends Controller
         //            $item['payment_made'] = $pm->payment_made;
         //            return $item;
         //        }, $r['data']);
+        // dd($r);
         return response()->json($r);
     }
 
@@ -375,5 +376,20 @@ class FeeController extends Controller
         }
         return FeeProfessionalModel::resume()
             ->whereNotNull('dt_finish')->get()->sum('total_pembayaran');
+    }
+
+    public function prosesDP($id)
+    {
+        $fee = FeeNumberModel::find($id);
+        dd($fee);
+
+        // if (!$fee) {
+        //     return redirect()->back()->with('error', 'Fee tidak ditemukan.');
+        // }
+
+        // $fee->dp_processed = true;
+        // $fee->save();
+
+        // return redirect()->back()->with('success', 'Proses DP berhasil.');
     }
 }

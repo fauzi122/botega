@@ -43,13 +43,17 @@ class SyncSaleReturnJob implements ShouldQueue
         $r = new \App\Library\APIAccurate();
         $transDate = $this->tglTransaksi;
         $page = 1;
+        $dateToday = Carbon::now()->format('d/m/Y');
+
+        // dd('/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&filter.transDate.op=BETWEEN&filter.transDate.val[0]=' . urlencode($transDate) . '&filter.transDate.val[1]=' . urlencode($dateToday) . '&sp.sort=id|desc');
         do {
-            $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . $transDate . '&sp.sort=id|desc';
+            // $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . $transDate . '&sp.sort=id|desc';
+            // $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&filter.transDate.op=BETWEEN&filter.transDate.val[0]=' . urlencode($transDate) . '&filter.transDate.val[1]=' . urlencode($dateToday) . '&sp.sort=id|desc';
+            $url = '/api/sales-return/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=' . $page . '&sp.sort=id|desc';
             //            $url = '/api/sales-return/list.do?sp.page='.$page.'&filter.number.op=EQUAL&filter.number.val[0]='.urlencode( 'SOJ/24/01/00183').'&sp.sort=id|desc';
             //            echo $url."\n\n";
             $response = $r->get($url);
             $json = json_decode($response->body(), true);
-            //            var_dump($json);
             try {
                 $maxpage = (int)$json['sp']['pageCount'];
                 $data = $json['d'];

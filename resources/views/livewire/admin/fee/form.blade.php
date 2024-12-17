@@ -200,7 +200,7 @@
                                     @php
                                     $pengurang = 0;
                                     @endphp
-                                    {{$debugs}}
+                                    <!-- {{$debugs}} -->
                                     <table style="width:2000px" class="table table-hover table-bordered table-striped table-responsive ">
                                         <thead>
                                             <tr>

@@ -82,11 +82,13 @@ class SyncPenjualanJob implements ShouldQueue
         $page = 1;
         $maxpage = 0;
         $starttime = time();
+        $dateToday = Carbon::now()->format('d/m/Y');
 
         $detail = '';
         do {
             if ($this->tgl2 != null) {
-                $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=BETWEEN&filter.transDate.val[0]=' . urlencode($this->tglTransaksi) . '&filter.transDate.val[1]=' . urlencode($this->tgl2) . '&sp.sort=transDate|asc';
+                $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&sp.sort=transDate|asc';
+                // $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=BETWEEN&filter.transDate.val[0]=' . urlencode($this->tglTransaksi) . '&filter.transDate.val[1]=' . urlencode($dateToday) . '&sp.sort=transDate|asc';
                 //
             } else {
                 $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . $transDate . '&sp.sort=transDate|asc';
