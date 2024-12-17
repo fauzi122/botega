@@ -57,14 +57,14 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->call(function () {
-            $tgl1 = Carbon::now()->subDays(3)->format('d/m/Y');
+            $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
             SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
 
-            $tgl1 = Carbon::now()->subDays(2)->format('d/m/Y');
-            SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
+            // $tgl1 = Carbon::now()->subDays(2)->format('d/m/Y');
+            // SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
 
-            $tgl1 = Carbon::now()->subDays()->format('d/m/Y');
-            SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
+            // $tgl1 = Carbon::now()->subDays()->format('d/m/Y');
+            // SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
         })->dailyAt('04:10');
 
         $schedule->call(function () {
@@ -102,7 +102,7 @@ class Kernel extends ConsoleKernel
         })->dailyAt('11:40');
 
         $schedule->call(function () {
-            SyncSaleReturnJob::dispatch(Carbon::now()->subMonths(3)->format('d/m/Y'));
+            SyncSaleReturnJob::dispatch(Carbon::now()->subDays(14)->format('d/m/Y'));
         })->dailyAt('05:00');
 
         $schedule->call(function () {
