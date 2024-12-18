@@ -486,26 +486,32 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::delete("/detail", "PenjualanProdukController@delete_detail");
                 Route::delete("/", "PenjualanProdukController@delete");
             });
-            Route::get('/sync-all', function () {
+            Route::get('/sync-all/{tgl1}/{tgl2}', function ($tgl1, $tgl2) {
                 try {
-                    $tgl1 = Carbon::now()->subYears(2)->format('d/m/Y'); // Menarik semua data dari 5 tahun lalu
-                    $tgl2 = Carbon::now()->format('d/m/Y');
+                    // Validasi format tanggal
+                    $carbonTgl1 = Carbon::createFromFormat('d-m-Y', $tgl1);
+                    $carbonTgl2 = Carbon::createFromFormat('d-m-Y', $tgl2);
 
-                    SyncPenjualanJob::dispatch($tgl1, true, '', $tgl2);
+                    // Dispatch job
+                    SyncPenjualanJob::dispatch($carbonTgl1->format('d/m/Y'), true, '', $carbonTgl2->format('d/m/Y'));
 
                     return response()->json([
                         'status' => 'success',
                         'message' => 'Sinkronisasi semua data berhasil dimulai.'
                     ]);
                 } catch (\Exception $e) {
-                    Log::error("Error dalam sinkronisasi semua data: {$e->getMessage()}", ['file' => $e->getFile(), 'line' => $e->getLine()]);
+                    Log::error("Error dalam sinkronisasi semua data: {$e->getMessage()}", [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ]);
 
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Terjadi kesalahan saat memulai sinkronisasi.'
+                        'message' => 'Terjadi kesalahan saat memulai sinkronisasi.',
                     ], 500);
                 }
             })->name('sync-all');
+
 
             Route::prefix("fee")->group(function () {
                 Route::get("/", "FeeController@index");
