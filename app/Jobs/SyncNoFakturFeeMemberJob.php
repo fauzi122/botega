@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Jobs;
@@ -37,15 +36,13 @@ class SyncNoFakturFeeMemberJob implements ShouldQueue
             'dt_finish',
             'no_faktur'
         ])->get();
+
         foreach ($fee as $f) {
-            //            $r = $this->findFaktur($f->nomor);
-            // $r = $this->findFaktur($f->kode_merger);
             $no = ($f->kode_merger ?? '');
             $no = $no == '' ? $f->nomor : $no;
             $r = $this->findFaktur($no);
             if ($r != null) {
                 if ($no == $r['charField1'] && $r['approvalStatus'] == 'APPROVED') {
-                    // if ($f->kode_merger == $r['charField1'] && $r['approvalStatus'] == 'APPROVED') {
                     $nofaktur = $r['number'];
                     FeeProfessionalModel::query()->where('fee_number_id', $f->id)
                         ->update([
@@ -69,12 +66,9 @@ class SyncNoFakturFeeMemberJob implements ShouldQueue
             $r = new APIAccurate();
             $keyword = urlencode($nomorFee);
             $url = '/api/purchase-payment/list.do?fields=' . urlencode('id,number,charField1,approvalStatus') . '&sp.page=1&sp.sort=id|desc&filter.keywords.op=CONTAIN&filter.keywords.val[0]=' . $keyword;
-            echo "Keyword : $keyword <br/>";
-            echo $url;
             $response = $r->get($url);
             if ($response->status() != 200) return null;
             $json = $response->json();
-            echo "Json : " . json_encode($json);
             if (count($json['d']) <= 0) return null;
 
             foreach ($json['d'] as $item) {
