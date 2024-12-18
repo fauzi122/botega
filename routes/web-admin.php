@@ -4,9 +4,11 @@ use App\Http\Controllers\Admin\EventController;
 use App\Library\APIAccurate;
 use App\Models\UserModel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\MemberPointController;
 use \App\Jobs\ManagePointsJob;
+use App\Jobs\SyncPenjualanJob;
 
 
 Route::get('testemplate', function () {
@@ -483,6 +485,26 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::post("/", "PenjualanProdukController@create");
                 Route::delete("/detail", "PenjualanProdukController@delete_detail");
                 Route::delete("/", "PenjualanProdukController@delete");
+                Route::post('/sync-all', function () {
+                    try {
+                        $tgl1 = Carbon::now()->subYears(5)->format('d/m/Y'); // Menarik semua data dari 5 tahun lalu
+                        $tgl2 = Carbon::now()->format('d/m/Y');
+
+                        SyncPenjualanJob::dispatch($tgl1, true, '', $tgl2);
+
+                        return response()->json([
+                            'status' => 'success',
+                            'message' => 'Sinkronisasi semua data berhasil dimulai.'
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Error dalam sinkronisasi semua data: {$e->getMessage()}", ['file' => $e->getFile(), 'line' => $e->getLine()]);
+
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Terjadi kesalahan saat memulai sinkronisasi.'
+                        ], 500);
+                    }
+                })->name('sync-all');
             });
 
             Route::prefix("fee")->group(function () {
