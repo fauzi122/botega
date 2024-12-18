@@ -70,7 +70,9 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             $id = request('id');
 
             if ($id == null) {
-                $response = $r->get('/api/delivery-order/list.do?fields=' . urlencode('id') . '&sp.page=1&sp.sort=id|desc');
+
+                $response = $r->get('/api/sales-order/list.do?fields=id%2CcustomerNo%2CtransDate&sp.page=1&filter.transDate.op=BETWEEN&filter.transDate.val[0]=18%2F12%2F2019&filter.transDate.val[1]=18%2F12%2F2024&sp.sort=transDate|asc');
+                // $response = $r->get('/api/delivery-order/list.do?fields=' . urlencode('id') . '&sp.page=1&sp.sort=id|desc');
             } else {
                 $response = $r->get('/api/delivery-order/detail.do?id=' . $id);
             }
@@ -488,7 +490,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             });
             Route::get('/sync-all', function () {
                 try {
-                    $tgl1 = Carbon::now()->subYears(5)->format('d/m/Y'); // Menarik semua data dari 5 tahun lalu
+                    $tgl1 = Carbon::now()->subYears(2)->format('d/m/Y'); // Menarik semua data dari 5 tahun lalu
                     $tgl2 = Carbon::now()->format('d/m/Y');
 
                     SyncPenjualanJob::dispatch($tgl1, true, '', $tgl2);
