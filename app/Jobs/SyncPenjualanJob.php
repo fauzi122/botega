@@ -82,55 +82,74 @@ class SyncPenjualanJob implements ShouldQueue
         $page = 1;
         $maxpage = 0;
         $starttime = time();
+        $dateToday = Carbon::now()->format('d/m/Y');
 
         $detail = '';
         do {
             if ($this->tgl2 != null) {
-                $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=BETWEEN&filter.transDate.val[0]=' . urlencode($this->tglTransaksi) . '&filter.transDate.val[1]=' . urlencode($this->tgl2) . '&sp.sort=transDate|asc';
+                // $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&sp.sort=transDate|asc';
+                $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate')
+                    . '&sp.page=' . $page
+                    . '&filter.transDate.op=BETWEEN'
+                    . '&filter.transDate.val[0]=' . urlencode($transDate)
+                    . '&filter.transDate.val[1]=' . urlencode($this->tgl2)
+                    . '&sp.sort=transDate|asc';
                 //
             } else {
                 $url = '/api/sales-order/list.do?fields=' . urlencode('id,customerNo,transDate') . '&sp.page=' . $page . '&filter.transDate.op=GREATER_EQUAL_THAN&filter.transDate.val[0]=' . $transDate . '&sp.sort=transDate|asc';
             }
             //            $url = '/api/sales-order/list.do?sp.page='.$page.'&filter.number.op=EQUAL&filter.number.val[0]='.urlencode( 'SOJ/24/01/00259').'&sp.sort=id|desc';
             //            echo $url."\n\n";
+            // Panggil API Accurate
             $response = $r->get($url);
             if ($response == "") {
-            } else {
-                $detail .= "Url : $url \n";
-                $json = json_decode($response->body(), true);
-                //            var_dump($json);
+                // Jika respons kosong, keluar dari loop
+                $detail .= "Response kosong pada page $page.\n";
+                break;
+            }
+
+            $json = json_decode($response->body(), true);
+            if (isset($json['d']) && is_array($json['d'])) {
                 try {
-                    $maxpage = (int)$json['sp']['pageCount'];
-                    $data = $json['d'];
-                    $bulk = [];
+                    $maxpage = (int)$json['sp']['pageCount']; // Total halaman
+                    $data = $json['d']; // Data hasil filter
                     $nomor = 0;
                     $nogagal = 0;
+
                     foreach ($data as $idx => $v) {
-                        $detail .= "Response : " . $v['id'] . " -- \n";
+                        $detail .= "Processing SO ID: " . $v['id'] . "\n";
                         $response2 = $r->get('/api/sales-order/detail.do?id=' . $v['id']);
                         if ($response2 == '') {
                             $nogagal++;
+                            $detail .= "Gagal mengambil detail untuk SO ID: " . $v['id'] . "\n";
                         } else {
-                            //                    echo $v['id'] . '--';
                             $json2 = json_decode($response2->body(), true);
-                            $d = $json2['d'];
-                            $this->setupSaving($d);
-                            $nomor++;
+                            if (isset($json2['d'])) {
+                                $this->setupSaving($json2['d']);
+                                $nomor++;
+                            } else {
+                                $nogagal++;
+                                $detail .= "Data SO ID " . $v['id'] . " tidak valid.\n";
+                            }
                         }
                     }
-                    $detail .= "Total $nomor response berhasil dan $nogagal Gagal";
+                    $detail .= "Total sukses: $nomor, Total gagal: $nogagal.\n";
                 } catch (\Exception $e) {
+                    $detail .= "Error pada proses data: " . $e->getMessage() . "\n";
                 }
+            } else {
+                $detail .= "Tidak ada data pada page $page.\n";
             }
 
             $page++;
-            $lanjut = $page <= $maxpage;
+            $lanjut = $page <= $maxpage; // Lanjutkan jika masih ada halaman
         } while ($lanjut);
+
         $endtime = time();
         $lama = $endtime - $starttime;
 
         CatatanPrivateModel::query()->insertGetId([
-            'catatan' => "Proses getNewData selesai dilakukan selama $lama detik sebanyak $maxpage halaman. \n $detail",
+            'catatan' => "Proses getNewData selesai. Durasi: $lama detik, Total halaman: $maxpage.\nDetail: $detail",
             'created_at' => Carbon::now()
         ]);
     }

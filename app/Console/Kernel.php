@@ -58,7 +58,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->call(function () {
             $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
-            SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
+            $tgl2 = Carbon::now()->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, true, '', $tgl2);
 
             // $tgl1 = Carbon::now()->subDays(2)->format('d/m/Y');
             // SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
