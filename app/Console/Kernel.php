@@ -56,56 +56,50 @@ class Kernel extends ConsoleKernel
 
 
 
-        // $schedule->call(function () {
-        //     $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
-
-        //     $tgl1 = Carbon::now()->subDays(2)->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
-
-        //     $tgl1 = Carbon::now()->subDays()->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
-        // })->dailyAt('04:10');
-
-        // $schedule->call(function () {
-        //     $tgl1 = Carbon::now()->subMonths(7)->format('d/m/Y');
-        //     $tgl2 = Carbon::now()->subMonths(5)->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
-
-        //     $tgl1 = Carbon::now()->subMonths(5)->format('d/m/Y');
-        //     $tgl2 = Carbon::now()->subMonths(4)->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
-
-        //     $tgl1 = Carbon::now()->subMonths(4)->format('d/m/Y');
-        //     $tgl2 = Carbon::now()->subMonths(3)->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
-
-        //     $tgl1 = Carbon::now()->subMonths(3)->format('d/m/Y');
-        //     $tgl2 = Carbon::now()->subMonths(2)->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
-        // })->dailyAt('02:34')->timezone('Asia/Jakarta');
-
-        // $schedule->call(function () {
-
-        //     $tgl1 = Carbon::now()->subMonths(2)->format('d/m/Y');
-        //     $tgl2 = Carbon::now()->subMonths()->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2)
-        //         ->onConnection('sync');
-
-        //     $tgl1 = Carbon::now()->subMonths()->format('d/m/Y');
-        //     $tgl2 = Carbon::now()->format('d/m/Y');
-        //     SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2)
-        //         ->onConnection('sync');
-
-        //     SyncPenjualanJob::dispatch('', true, '', '')
-        //         ->onConnection('sync');
-        // })->dailyAt('11:40');
         $schedule->call(function () {
             $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
-            $tgl2 = Carbon::now()->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
 
-            SyncPenjualanJob::dispatch($tgl1, true, '', $tgl2);
-        })->dailyAt('04:00');
+            // $tgl1 = Carbon::now()->subDays(2)->format('d/m/Y');
+            // SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
+
+            // $tgl1 = Carbon::now()->subDays()->format('d/m/Y');
+            // SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
+        })->dailyAt('04:10');
+
+        $schedule->call(function () {
+            $tgl1 = Carbon::now()->subMonths(7)->format('d/m/Y');
+            $tgl2 = Carbon::now()->subMonths(5)->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
+
+            $tgl1 = Carbon::now()->subMonths(5)->format('d/m/Y');
+            $tgl2 = Carbon::now()->subMonths(4)->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
+
+            $tgl1 = Carbon::now()->subMonths(4)->format('d/m/Y');
+            $tgl2 = Carbon::now()->subMonths(3)->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
+
+            $tgl1 = Carbon::now()->subMonths(3)->format('d/m/Y');
+            $tgl2 = Carbon::now()->subMonths(2)->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
+        })->dailyAt('02:34')->timezone('Asia/Jakarta');
+
+        $schedule->call(function () {
+
+            $tgl1 = Carbon::now()->subMonths(2)->format('d/m/Y');
+            $tgl2 = Carbon::now()->subMonths()->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2)
+                ->onConnection('sync');
+
+            $tgl1 = Carbon::now()->subMonths()->format('d/m/Y');
+            $tgl2 = Carbon::now()->format('d/m/Y');
+            SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2)
+                ->onConnection('sync');
+
+            SyncPenjualanJob::dispatch('', true, '', '')
+                ->onConnection('sync');
+        })->dailyAt('11:40');
 
         $schedule->call(function () {
             SyncSaleReturnJob::dispatch(Carbon::now()->subDays(14)->format('d/m/Y'));
