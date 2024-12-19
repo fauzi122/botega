@@ -10,6 +10,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
 
 class CalcMemberExpenseJob implements ShouldQueue
 {
@@ -28,6 +30,7 @@ class CalcMemberExpenseJob implements ShouldQueue
      */
     public function handle(): void
     {
+        Log::info('CalcMemberExpenseJob executed at: ' . now());
         $sql = "update users
                 left join ( SELECT member_user_id, sum(dpp_amount)as total from transactions WHERE YEAR(tgl_invoice)=?
                             GROUP BY member_user_id
