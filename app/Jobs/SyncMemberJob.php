@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Matrix\Exception;
+use Illuminate\Support\Facades\Log;
 
 class SyncMemberJob implements ShouldQueue
 {
@@ -115,31 +116,42 @@ class SyncMemberJob implements ShouldQueue
 
     public function syncMemberKategoriNull()
     {
-        $r = UserModel::query()->whereNull("kategori_id")->get();
-        echo "data : " . $r->count() . "\n";
         $api = new APIAccurate();
-        try {
-            foreach ($r as $u) {
-                echo "cus no : " . $u->id_no . " ID " . $u->id . " | idaccurate : " . $u->id_accurate . "\n";
-                $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&filter.keywords.op=EQUAL&filter.keywords.val[0]=' . urlencode($u->id_no) . '&sp.sort=id|desc';
-                $hasil = $api->get($url);
-                $json = json_decode($hasil->body(), true);
-                $data = $json['d'];
-                if (count($data) > 0) {
-                    $category = $data[0]['category'];
-                    $data = [
-                        'kategori_id' => $category['id']
-                    ];
-                    echo "data " . json_encode($data) . " id = " . $u->id . "\n";
-                    UserModel::query()->where("id", $u->id)->update($data);
-                } else {
-                    echo json_encode($data);
+
+        UserModel::query()->whereNull("kategori_id")->chunk(100, function ($users) use ($api) {
+            foreach ($users as $u) {
+                try {
+                    if (empty($u->id_no)) {
+                        Log::warning("User ID {$u->id} has no id_no.");
+                        continue;
+                    }
+
+                    echo "cus no : " . $u->id_no . " ID " . $u->id . " | idaccurate : " . $u->id_accurate . "\n";
+
+                    $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&filter.keywords.op=EQUAL&filter.keywords.val[0]=' . urlencode($u->id_no) . '&sp.sort=id|desc';
+                    $hasil = $api->get($url);
+                    $json = json_decode($hasil->body(), true);
+                    $data = $json['d'] ?? [];
+
+                    if (isset($data[0]['category']) && isset($data[0]['category']['id'])) {
+                        $category = $data[0]['category'];
+                        $dataToUpdate = ['kategori_id' => $category['id']];
+                        UserModel::query()->where("id", $u->id)->update($dataToUpdate);
+                        echo "Updated kategori_id for user ID: " . $u->id . "\n";
+                    } else {
+                        echo "No category data found for user ID: " . $u->id . "\n";
+                        Log::warning("No category data found for user ID: " . $u->id);
+                    }
+                } catch (Exception $e) {
+                    Log::error("Error syncing kategori_id for user ID {$u->id}: " . $e->getMessage());
+                    echo "Error: " . $e->getMessage() . "\n";
                 }
             }
-        } catch (Exception $e) {
-            echo "error " . $e->getMessage();
-        }
+        });
+
+        echo "Sync completed.\n";
     }
+
 
 
     public function syncFromAccurate()
@@ -149,57 +161,55 @@ class SyncMemberJob implements ShouldQueue
         $page = 1;
         $lvlmemberid = LevelMemberModel::query()->orderBy('level', 'asc')->first();
 
+        $existingAccurateIds = UserModel::pluck('id_accurate')->toArray();
+        $existingCustomerNos = UserModel::pluck('id_no')->toArray();
+
         do {
-            $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&sp.page=' . $page . '&sp.sort=id|desc';
-            echo $url . "\n\m";
+            try {
+                $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&sp.page=' . $page . '&sp.sort=id|desc';
+                Log::info("Fetching data from API: $url");
 
-            $response = $r->get($url);
-            $json = json_decode($response->body(), true);
-            $maxpage = (int)$json['sp']['pageCount'];
-            $data = $json['d'];
-            $bulk = [];
+                $response = $r->get($url);
+                $json = json_decode($response->body(), true);
+                $maxpage = (int)$json['sp']['pageCount'];
+                $data = $json['d'];
+            } catch (\Exception $e) {
+                Log::error("Error fetching data from API: " . $e->getMessage());
+                break;
+            }
 
-            foreach ($data as $idx => $v) {
-                $splname = explode(' ', $v['name']);
-                $lastname  = '';
-                if (count($splname) > 1) {
-                    $lastname = implode(' ', array_slice($splname, 1));
-                }
+            foreach ($data as $v) {
+                $splname = explode(' ', $v['name'] ?? '');
+                $lastname = count($splname) > 1 ? implode(' ', array_slice($splname, 1)) : '';
+
                 $bulk = [
-                    'id_no' => $v['customerNo'],
-                    'first_name' => $splname[0],
+                    'id_no' => $v['customerNo'] ?? '',
+                    'first_name' => $splname[0] ?? '',
                     'last_name' => $lastname,
                     'user_type' => 'member',
                     'level_member_id' => $lvlmemberid?->id,
-                    'email' => $v['email'],
-                    'npwp' => $v['npwpNo'],
-
-                    "kategori_id" => $this->getKategoriMember($v['category']['id']),
-                    'created_at' => Carbon::now()
+                    'email' => $v['email'] ?? '',
+                    'npwp' => $v['npwpNo'] ?? '',
+                    'kategori_id' => $this->getKategoriMember($v['category']['id'] ?? null),
+                    'created_at' => Carbon::now(),
                 ];
-                if ($bulk['id_no'] == 'VA.24041') {
-                    //                    echo $bulk['id_no'] . " = " . $bulk['first_name'] . " " . $v['id'] . " kategori: " . $bulk['kategori_id'] . "\n";
-                }
-                $exist = UserModel::query()->where('id_accurate', $v['id'])->first();
-                if ($exist) {
-                    //                    var_dump($bulk);
+
+                if (in_array($v['id'], $existingAccurateIds)) {
                     UserModel::query()->where('id_accurate', $v['id'])->update($bulk);
+                } elseif (in_array($v['customerNo'], $existingCustomerNos)) {
+                    UserModel::query()->where('id_no', $v['customerNo'])->update($bulk);
                 } else {
                     $bulk['id_accurate'] = $v['id'];
-                    $exist = User::query()->where('id_no', $v['customerNo'])->first();
-                    if ($exist) {
-                        UserModel::query()->where('id_no', $exist->id_no)->update($bulk);
-                    } else {
-                        UserModel::query()->insert($bulk);
-                    }
+                    UserModel::query()->insert($bulk);
                 }
             }
 
             $page++;
-            $lanjut = $page <= $maxpage;
-            echo "($page < $maxpage = $lanjut) \n";
-        } while ($lanjut);
+        } while ($page <= $maxpage);
+
+        Log::info("Sync completed");
     }
+
     public function syncMemberById($id)
     {
         $api = new APIAccurate();
