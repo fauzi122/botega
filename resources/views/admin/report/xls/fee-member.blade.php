@@ -1,10 +1,30 @@
 <div>
     @php
-    $totalfee = $data->sum("fee_amount");
+    $totalfee = 0;
     $kategori = [];
     $kategoriPercent = [];
     $totalPercentRounded = 0;
+
+    foreach ($data as $d) {
+    $totalfee += $d->total_pembayaran; // Gunakan total pembayaran dari iterasi
+    $kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->total_pembayaran;
+    }
+
+    foreach ($kategori as $k => $v) {
+    $percent = ($v / $totalfee) * 100;
+    $kategoriPercent[$k] = round($percent, 2);
+    $totalPercentRounded += $kategoriPercent[$k];
+    }
+
+    // Hitung selisih persentase untuk memastikan total 100%
+    $diffPercent = round(100 - $totalPercentRounded, 2);
+    if ($diffPercent != 0 && count($kategoriPercent) > 0) {
+    $firstCategory = array_key_first($kategoriPercent);
+    $kategoriPercent[$firstCategory] += $diffPercent;
+    }
     @endphp
+
+
     <table>
         <tr>
             <td colspan="2">Nama Professional</td>
@@ -19,8 +39,9 @@
         <tr>
             <td colspan="2">Total Fee</td>
             <td>:</td>
-            <td colspan="4">IDR {{ number_format($totalfee, 2) }}</td>
+            <td colspan="4">IDR {{ number_format($totalfee, 2) }}</td> <!-- Konsisten dengan iterasi -->
         </tr>
+
         <tr>
             <td colspan="7">&nbsp;</td>
         </tr>
@@ -36,9 +57,7 @@
         @foreach ($data as $d)
         @php
         $percent = doubleval(($d->total_pembayaran / $totalfee) * 100);
-        $percentRounded = ceil($percent * 100) / 100; // Membulatkan ke atas 2 desimal
-        $kategoriPercent[$d->category] = ($kategoriPercent[$d->category] ?? 0) + $percentRounded;
-        $totalPercentRounded += $percentRounded;
+        $percentRounded = round($percent, 2);
         @endphp
         <tr>
             <td>{{ \Illuminate\Support\Carbon::parse($d->dt_acc)->format("d/m/Y") }}</td>
@@ -48,18 +67,7 @@
             <td style="text-align: right">{{ number_format($d->total_pembayaran, 2) }}</td>
             <td style="text-align: right">{{ number_format($percentRounded, 2) }}%</td>
         </tr>
-        @php
-        $kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->total_pembayaran;
-        @endphp
         @endforeach
-
-        @php
-        $diffPercent = 100 - $totalPercentRounded; // Hitung selisih persen untuk menjadi 100%
-        if ($diffPercent > 0 && count($kategoriPercent) > 0) {
-        $firstCategory = array_key_first($kategoriPercent);
-        $kategoriPercent[$firstCategory] += $diffPercent;
-        }
-        @endphp
 
         @foreach($kategori as $k => $v)
         <tr>
