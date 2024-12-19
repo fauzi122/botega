@@ -28,9 +28,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
-        if (env('APP_DEBUG') == 1) {
-            return;
-        }
+        // if (env('APP_DEBUG') == 1) {
+        //     return;
+        // }
         $schedule->call(function () {
             ManagePointsJob::dispatch('update');
         })->dailyAt('04:00');
@@ -120,9 +120,9 @@ class Kernel extends ConsoleKernel
         })->everyFourMinutes();
 
         $schedule->call(function () {
-            // ResetPointPenjualangJob::dispatch()->onConnection('sync');
             ResetPointPenjualangJob::dispatch();
-        })->timezone('Asia/Jakarta')->cron("59 23 31 12");
+        })->cron("59 23 31 12 *");
+
 
         $schedule->call(function () {
             // SyncSendEmailUlangTahunJob::dispatch()->onConnection('sync');
