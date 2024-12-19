@@ -20,10 +20,30 @@
 </div>
 <!-- end page title -->
 @php
-$totalfee = doubleval( $data->sum("fee_amount") );
-$totalPercentRounded = 0;
+$totalfee = 0; // Reset total fee
+$kategori = [];
 $kategoriPercent = [];
+$totalPercentRounded = 0;
+
+foreach ($data as $d) {
+$totalfee += $d->total_pembayaran; // Gunakan total pembayaran dari iterasi
+$kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->total_pembayaran;
+}
+
+foreach ($kategori as $k => $v) {
+$percent = ($v / $totalfee) * 100;
+$kategoriPercent[$k] = round($percent, 2);
+$totalPercentRounded += $kategoriPercent[$k];
+}
+
+// Hitung selisih persentase untuk memastikan total 100%
+$diffPercent = round(100 - $totalPercentRounded, 2);
+if ($diffPercent != 0 && count($kategoriPercent) > 0) {
+$firstCategory = array_key_first($kategoriPercent);
+$kategoriPercent[$firstCategory] += $diffPercent;
+}
 @endphp
+
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -41,9 +61,8 @@ $kategoriPercent = [];
                 </div>
                 <div class="form-group">
                     <label class="control-label col-md-2">Total Fee</label>
-                    <label class="control-label col-md-3">: IDR {{ number_format( $totalfee, 2 )  }}</label>
+                    <label class="control-label col-md-3">: IDR {{ number_format($totalfee, 2) }}</label>
                 </div>
-
                 <table class="table table-bordered table-centered mb-0 table-hover table-striped">
                     <thead>
                         <tr>
