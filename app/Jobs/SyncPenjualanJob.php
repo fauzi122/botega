@@ -118,7 +118,7 @@ class SyncPenjualanJob implements ShouldQueue
 
                     foreach ($data as $idx => $v) {
                         $detail .= "Processing SO ID: " . $v['id'] . "\n";
-                        $response2 = $r->get('/api/sales-order/detail.do?id=' . $v['id']);
+                        $response2 = $r->get('/api/sales-order/detail.do?id=31102');
                         if ($response2 == '') {
                             $nogagal++;
                             $detail .= "Gagal mengambil detail untuk SO ID: " . $v['id'] . "\n";
@@ -489,8 +489,10 @@ class SyncPenjualanJob implements ShouldQueue
                 //var_dump($d);
                 //                echo "\nsimpan detail_transaction : ".$idaccurate;
                 $taxable = (int)($d['taxable'] ?? true);
+                $useTax1 = (bool) ($dt['useTax1'] ?? true);
                 //                echo "nilai taxable " . $taxable . "\n branch :";
-                //                echo $d['branchId'];
+                dump("tes-" . $useTax1);
+                // echo "tes-" . $dt;
                 //                echo " \n dppamount " . $dt['dppAmount'];
                 $dppAmount = $dt['dppAmount'] ?? 0;
                 if ($taxable == 0) {
@@ -499,6 +501,11 @@ class SyncPenjualanJob implements ShouldQueue
                     $grossAmount = floatval($dt['salesAmount'] ?? 0);
                     //                    $disc = $itemDiscPercent / 100 * $grossAmount;
                     echo "dppamount_taxable = 0 " . $grossAmount;
+                    $dppAmount = $grossAmount; // - $disc;
+                }
+                if ($useTax1 != 1) {
+
+                    $grossAmount = floatval($dt['salesAmount'] ?? 0);
                     $dppAmount = $grossAmount; // - $disc;
                 }
 
