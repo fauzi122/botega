@@ -36,11 +36,13 @@ class Kernel extends ConsoleKernel
         })->dailyAt('04:00');
 
         $schedule->call(function () {
-            CalcMemberExpenseJob::dispatch()->onConnection('sync');
+            // CalcMemberExpenseJob::dispatch()->onConnection('sync');
+            CalcMemberExpenseJob::dispatch();
         })->everyFifteenMinutes();
 
         $schedule->call(function () {
-            SyncNoFakturFeeMemberJob::dispatch()->onConnection('sync');
+            // SyncNoFakturFeeMemberJob::dispatch()->onConnection('sync');
+            SyncNoFakturFeeMemberJob::dispatch();
         })->everyThreeHours();
 
         $schedule->call(function () {
@@ -51,7 +53,8 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->call(function () {
-            SyncMemberJob::dispatch(0)->onConnection('sync');
+            // SyncMemberJob::dispatch(0)->onConnection('sync');
+            SyncMemberJob::dispatch(0);
         })->dailyAt('11:00');
 
 
@@ -107,15 +110,18 @@ class Kernel extends ConsoleKernel
         })->dailyAt('05:00');
 
         $schedule->call(function () {
-            ResumeDashboarJob::dispatch()->onConnection('sync');
+            // ResumeDashboarJob::dispatch()->onConnection('sync');
+            ResumeDashboarJob::dispatch();
         })->everyFourMinutes();
 
         $schedule->call(function () {
-            ResetPointPenjualangJob::dispatch()->onConnection('sync');
+            // ResetPointPenjualangJob::dispatch()->onConnection('sync');
+            ResetPointPenjualangJob::dispatch();
         })->timezone('Asia/Jakarta')->cron("59 23 31 12");
 
         $schedule->call(function () {
-            SyncSendEmailUlangTahunJob::dispatch()->onConnection('sync');
+            // SyncSendEmailUlangTahunJob::dispatch()->onConnection('sync');
+            SyncSendEmailUlangTahunJob::dispatch();
         })->dailyAt('07:30');
 
         //        $schedule->call(function(){
