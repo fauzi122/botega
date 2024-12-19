@@ -77,4 +77,6 @@
         </tr>
         @endforeach
     </table>
+
+    <p style="margin-top: 20px; font-style: italic;">*Sumber: fee tahap disetujui dan selesai</p>
 </div>
