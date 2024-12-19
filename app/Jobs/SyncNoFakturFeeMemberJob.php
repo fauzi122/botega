@@ -36,7 +36,6 @@ class SyncNoFakturFeeMemberJob implements ShouldQueue
             'dt_finish',
             'no_faktur'
         ])->get();
-
         foreach ($fee as $f) {
             $no = ($f->kode_merger ?? '');
             $no = $no == '' ? $f->nomor : $no;
