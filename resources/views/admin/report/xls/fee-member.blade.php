@@ -1,7 +1,9 @@
 <div>
     @php
-        $totalfee = $data->sum("fee_amount");
-        $kategori = [];
+    $totalfee = $data->sum("fee_amount");
+    $kategori = [];
+    $kategoriPercent = [];
+    $totalPercentRounded = 0;
     @endphp
     <table>
         <tr>
@@ -17,14 +19,14 @@
         <tr>
             <td colspan="2">Total Fee</td>
             <td>:</td>
-            <td colspan="4">IDR {{  number_format( $totalfee )  }}</td>
+            <td colspan="4">IDR {{ number_format($totalfee, 2) }}</td>
         </tr>
         <tr>
             <td colspan="7">&nbsp;</td>
         </tr>
         <tr>
             <td>TANGGAL</td>
-            <td  style="width: 100px;" colspan="2">NOMOR FEE</td>
+            <td style="width: 100px;" colspan="2">NOMOR FEE</td>
             <td>KATEGORI</td>
             <td>TOTAL DPP</td>
             <td>TOTAL FEE</td>
@@ -32,25 +34,39 @@
         </tr>
 
         @foreach ($data as $d)
-            <tr>
-                <td>{{ \Illuminate\Support\Carbon::parse( $d->dt_acc )->format("d/m/Y") }}</td>
-                <td colspan="2">{{ $d->nomor }}</td>
-                <td>{{ $d->category }}</td>
-                <td style="text-align: right">{{ number_format( doubleval( $d->dpp_amount ) ) }}</td>
-                <td  style="text-align: right">{{ number_format( doubleval( $d->total_pembayaran ) ) }}</td>
-                <td  style="text-align: right">{{ number_format( doubleval( ($d->total_pembayaran / $totalfee) * 100 ) ) }}%</td>
-            </tr>
-            @php
-                $kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->total_pembayaran;
-            @endphp
-        @endforeach
-        @foreach($kategori as $k => $v)
-            <tr>
-                <td colspan="5">Total Kategori {{$k}} </td>
-                <td style="text-align: right">IDR {{  number_format( doubleval( $v ))  }}</td>
-                <td style="text-align: right">{{ number_format( doubleval( ($v / $totalfee) * 100 ) ) }}%</td>
-            </tr>
+        @php
+        $percent = doubleval(($d->total_pembayaran / $totalfee) * 100);
+        $percentRounded = ceil($percent * 100) / 100; // Membulatkan ke atas 2 desimal
+        $kategoriPercent[$d->category] = ($kategoriPercent[$d->category] ?? 0) + $percentRounded;
+        $totalPercentRounded += $percentRounded;
+        @endphp
+        <tr>
+            <td>{{ \Illuminate\Support\Carbon::parse($d->dt_acc)->format("d/m/Y") }}</td>
+            <td colspan="2">{{ $d->nomor }}</td>
+            <td>{{ $d->category }}</td>
+            <td style="text-align: right">{{ number_format($d->dpp_amount, 2) }}</td>
+            <td style="text-align: right">{{ number_format($d->total_pembayaran, 2) }}</td>
+            <td style="text-align: right">{{ number_format($percentRounded, 2) }}%</td>
+        </tr>
+        @php
+        $kategori[$d->category] = ($kategori[$d->category] ?? 0) + $d->total_pembayaran;
+        @endphp
         @endforeach
 
+        @php
+        $diffPercent = 100 - $totalPercentRounded; // Hitung selisih persen untuk menjadi 100%
+        if ($diffPercent > 0 && count($kategoriPercent) > 0) {
+        $firstCategory = array_key_first($kategoriPercent);
+        $kategoriPercent[$firstCategory] += $diffPercent;
+        }
+        @endphp
+
+        @foreach($kategori as $k => $v)
+        <tr>
+            <td colspan="5">Total Kategori {{$k}}</td>
+            <td style="text-align: right">IDR {{ number_format($v, 2) }}</td>
+            <td style="text-align: right">{{ number_format($kategoriPercent[$k] ?? 0, 2) }}%</td>
+        </tr>
+        @endforeach
     </table>
 </div>
