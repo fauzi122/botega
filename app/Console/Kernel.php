@@ -40,10 +40,6 @@ class Kernel extends ConsoleKernel
             CalcMemberExpenseJob::dispatch();
         })->everyFifteenMinutes();
 
-        $schedule->call(function () {
-            CalcMemberExpenseJob::dispatch();
-        })->everyMinute();
-
 
         $schedule->call(function () {
             // SyncNoFakturFeeMemberJob::dispatch()->onConnection('sync');
