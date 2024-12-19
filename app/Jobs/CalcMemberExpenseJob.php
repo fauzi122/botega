@@ -33,26 +33,26 @@ class CalcMemberExpenseJob implements ShouldQueue
                             GROUP BY member_user_id
                         )as tbl on users.id=tbl.member_user_id
                 set users.total_spent = tbl.total
-                where users.id=tbl.member_user_id ";
+                where users.id=tbl.member_user_id";
         echo "Jalan hitung";
-       \DB::update($sql, [date('Y')]);
+        \DB::update($sql, [date('Y')]);
 
-       $sql = "DELETE FROM member_spent WHERE tahun=?";
-       \DB::delete($sql, [date('Y')]);
+        $sql = "DELETE FROM member_spent WHERE tahun=?";
+        \DB::delete($sql, [date('Y')]);
 
-       $sql = "INSERT INTO member_spent (user_id, tahun, total_spent, created_at)
-                (SELECT id, ?, total_spent, now() from users";
-       \DB::insert($sql, [date('Y')]);
+        $sql = "INSERT INTO member_spent (user_id, tahun, total_spent, created_at)
+        SELECT id, ?, total_spent, NOW() FROM users";
+        \DB::insert($sql, [date('Y')]);
 
-       $lvlmember = LevelMemberModel::query()->orderBy('level', 'asc')->get();
-       $lvls = [];
-       for ($i=0; $i < count($lvlmember)-1; $i++){
-           $lvl = $lvlmember[$i];
-           $next = $lvlmember[$i+1];
-           UserModel::query()
-               ->whereBetween('total_spent', [$lvl->limit_transaction, $next->limit_transaction])
-               ->update(['level_member_id'=>$next->id]);
-       }
 
+        $lvlmember = LevelMemberModel::query()->orderBy('level', 'asc')->get();
+        $lvls = [];
+        for ($i = 0; $i < count($lvlmember) - 1; $i++) {
+            $lvl = $lvlmember[$i];
+            $next = $lvlmember[$i + 1];
+            UserModel::query()
+                ->whereBetween('total_spent', [$lvl->limit_transaction, $next->limit_transaction])
+                ->update(['level_member_id' => $next->id]);
+        }
     }
 }
