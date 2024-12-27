@@ -49,6 +49,9 @@
                         <a class="nav-link px-3" data-bs-toggle="tab" href="#tab-finish" role="tab" aria-selected="false" tabindex="-1">Selesai <span id="badge-info-3" class="badge bg-danger rounded-pill"></span></a>
 
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link px-3" data-bs-toggle="tab" href="#tab-dp" role="tab" aria-selected="false" tabindex="-1">DP <span id="badge-info-4" class="badge bg-danger rounded-pill"></span></a>
+                    </li>
                 </ul>
                 <div class="tab-content" style="padding-top: 50px">
                     <div class="tab-pane active" role="tabpanel" id="tab-resume">
@@ -170,6 +173,34 @@
                         width="100%"
                         data-urlaction="{{url('admin/fee')}}"
                         data-datasource="{{url('admin/fee/data-source-selesai')}}"
+                        class="display nowrap table table-hover table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th> <input type="checkbox" id="checkall"> NO</th>
+                                <th style="width: 60px">AKSI</th>
+                                <th>NOMOR FEE</th>
+                                <th>PERIODE</th>
+                                <th>NAMA PROFESSIONAL</th>
+                                <th>NPWP</th>
+                                <th>DPP PENJUALAN</th>
+                                <th>FEE</th>
+                                <th>PPH21</th>
+                                <th>PPH23</th>
+                                <th>TOTAL</th>
+                                <th>NO FAKTUR</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane " role="tabpanel" id="tab-dp">
+                <span class="rata-kanan font-size-20 mb-3" id="sum-info-4"></span>
+                <div class="table-responsive table-responsive-md m-t-40">
+                    <table id="jd-table-dp"
+                        width="100%"
+                        data-urlaction="{{url('admin/fee')}}"
+                        data-datasource="{{url('admin/fee/data-source-dp')}}"
                         class="display nowrap table table-hover table-striped table-bordered">
                         <thead>
                             <tr>

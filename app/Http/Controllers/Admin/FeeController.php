@@ -9,11 +9,13 @@ use App\Exports\PengajuanFeeCSV;
 use App\Exports\ResumeFeeExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendNotifFeeJob;
+use App\Jobs\SendDownPaymentJob;
 use App\Library\ValidatedPermission;
 use App\Models\ClaimItemTransactionModel;
 use App\Models\DetailDeliveryOrderModel;
 use App\Models\DetailTransactionModel;
 use App\Models\FeeNumberModel;
+use App\Models\FeeNumberDP;
 use App\Models\FeePaymentMadeModel;
 use App\Models\FeeProfessionalModel;
 use App\Models\FeeSplitModel;
@@ -25,6 +27,7 @@ use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Excel;
+use Illuminate\Support\Facades\Log;
 
 class FeeController extends Controller
 {
@@ -82,7 +85,7 @@ class FeeController extends Controller
         $r = datatables(
             FeeProfessionalModel::resumeRekening()
                 ->whereNotNull('dt_acc')
-                ->whereNull('dt_finish')
+                ->whereNull(['dt_finish', 'dt_dp'])
         )->toArray();
         //        $id = array_map(function($item){
         //            return $item['fee_number_id'];
@@ -110,6 +113,20 @@ class FeeController extends Controller
         return datatables(
             FeeProfessionalModel::resumeRekening()
                 ->whereNotNull('dt_finish')
+                ->whereNull('dt_dp')
+        )->toJson(true);
+    }
+
+    public function datasource_dp()
+    {
+
+        if (!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_FEE)) {
+            return [];
+        }
+
+        return datatables(
+            FeeProfessionalModel::resumeRekening()
+                ->whereNotNull(['dt_dp'])
         )->toJson(true);
     }
 
@@ -201,32 +218,52 @@ class FeeController extends Controller
             $ss = explode("|", $ii);
             $userid = $ss[0];
             $feenumberid = $ss[1];
-            $data = [
-                'admin_user_id' => session('admin')?->id,
-                'updated_at' => Carbon::now(),
-                $fieldName => Carbon::now()
-            ];
-
-            if ($fieldName == 'dt_finish') {
-                $data['harus_dibayar'] = 0;
-            } else {
-                $data['harus_dibayar'] = \DB::raw('total_pembayaran');
-            }
 
             $r = FeeProfessionalModel::query()
                 ->where('member_user_id', $userid)
                 ->where('fee_number_id', $feenumberid)
                 ->whereNull($fieldName)
-                ->update($data);
+                ->update([
+                    'admin_user_id' => session('admin')?->id,
+                    'updated_at' => now(),
+                    $fieldName => now(),
+                    'harus_dibayar' => $fieldName === 'dt_finish' ? 0 : \DB::raw('total_pembayaran'),
+                ]);
 
             FeeNumberModel::query()
                 ->where('id', $feenumberid)
                 ->whereNull($fieldName)
                 ->update([
                     'admin_user_id' => session('admin')?->id,
-                    $fieldName => Carbon::now(),
-                    'updated_at' => Carbon::now()
+                    $fieldName => now(),
+                    'updated_at' => now(),
                 ]);
+            // Kirim data ke API jika status adalah `dt_dp`
+            if ($fieldName === 'dt_dp') {
+                // Ambil data dari tabel `fee_number` dan `users`
+                $feeNumber = FeeNumberModel::find($feenumberid);
+                $user = UserModel::find($userid);
+
+                if ($feeNumber && $user) {
+                    // Data untuk API
+                    $dpData = [
+                        'customerNo' => $user->id_no,
+                        'transDate' => now()->format('d/m/Y'),
+                        'poNumber' => $feeNumber->nomor,
+                        'dpAmount' => round($feeNumber->total), // Membulatkan ke bilangan bulat terdekat
+                        'branchName' => 'Jakarta',
+                        'charField1' => 'baicircle.id',
+                        'toAddress' => $user->home_addr,
+                        'status' => 'Draf',
+                        'inclusiveTax' => true,
+                        'isTaxable' => true,
+                    ];
+
+
+                    // Dispatch job
+                    SendDownPaymentJob::dispatch(null, null, $dpData, null)->onConnection('sync');
+                }
+            }
             if ($fieldName == 'dt_pengajuan') {
                 FeePaymentMadeModel::hitungPaymentMade($feenumberid);
             }
@@ -248,7 +285,8 @@ class FeeController extends Controller
             'pengajuan' => 'dt_pengajuan',
             //                'proses' => 'dt_proses',
             'acc' => 'dt_acc',
-            'selesai' => 'dt_finish'
+            'selesai' => 'dt_finish',
+            'dp' => 'dt_dp'
         ];
         $stt = $mapStatus[$status];
         // dd($stt . ' - ' . $status);
@@ -261,9 +299,9 @@ class FeeController extends Controller
         $id = \request('id');
         $mapStatus = [
             'pengajuan' => 'dt_pengajuan',
-            //            'proses' => 'dt_proses',
             'acc' => 'dt_acc',
-            'selesai' => 'dt_finish'
+            'selesai' => 'dt_finish',
+            'dp' => 'dt_dp'
         ];
 
         $fieldName = $mapStatus[$status];
@@ -275,38 +313,82 @@ class FeeController extends Controller
             $ss = explode("|", $ii);
             $userid = $ss[0];
             $feenumberid = $ss[1];
+
+            // Cek status fee_number_dp terlebih dahulu
+            if ($fieldName === 'dt_dp') {
+                $feeDP = FeeNumberDP::query()
+                    ->where('fee_number_id', $feenumberid)
+                    ->first();
+
+                if ($feeDP && $feeDP->status === 'APPROVED') {
+                    return response()->json([
+                        'message' => 'Tidak dapat menghapus status DP karena sudah disetujui.',
+                        'fee_number_id' => $feenumberid,
+                        'dp_id' => $feeDP->dp_id,
+                    ], 403);
+                }
+            }
+            // Update FeeProfessionalModel
+            $updateDataProfessional = [
+                'admin_user_id' => session('admin')->id,
+                'updated_at' => Carbon::now(),
+                'harus_dibayar' => \DB::raw('total_pembayaran'),
+                $fieldName => null
+            ];
+
+            // Jika status adalah dp, null-kan juga dt_finish
+            if ($fieldName === 'dt_dp') {
+                $updateDataProfessional['dt_finish'] = null;
+            }
+
             $r += FeeProfessionalModel::query()
                 ->where('member_user_id', $userid)
                 ->where('fee_number_id', $feenumberid)
                 ->whereNotNull($fieldName)
-                ->update([
-                    'admin_user_id' => session('admin')->id,
-                    'updated_at' => Carbon::now(),
-                    'harus_dibayar' => \DB::raw('total_pembayaran'),
-                    $fieldName => null
-                ]);
+                ->update($updateDataProfessional);
+
+            // Update FeeNumberModel
+            $updateDataNumber = [
+                'admin_user_id' => session('admin')?->id,
+                'updated_at' => Carbon::now(),
+                $fieldName => null
+            ];
+
+            // Jika status adalah dp, null-kan juga dt_finish
+            if ($fieldName === 'dt_dp') {
+                $updateDataNumber['dt_finish'] = null;
+            }
 
             FeeNumberModel::query()
                 ->where('id', $feenumberid)
                 ->whereNotNull($fieldName)
-                ->update([
-                    'admin_user_id' => session('admin')?->id,
-                    $fieldName => null,
-                    'updated_at' => Carbon::now()
-                ]);
+                ->update($updateDataNumber);
+
+            // Jika status adalah pengajuan, hapus juga pembayaran terkait
             if ($fieldName == 'dt_pengajuan') {
                 FeePaymentMadeModel::removePaymentMade($feenumberid);
             }
+            if ($fieldName === 'dt_dp') {
+                if ($feeDP && $feeDP->dp_id) {
+                    // Dispatch job untuk menghapus data di Accurate API
+                    SendDownPaymentJob::dispatch(null, null, null, $feeDP->dp_id)->onConnection('sync');
+
+                    // Log penghapusan dp_id
+                    Log::info('Menghapus Down Payment melalui API', [
+                        'dp_id' => $feeDP->dp_id,
+                        'fee_number_id' => $feenumberid,
+                    ]);
+                }
+            }
         }
 
-
-
-
         LogController::writeLog(ValidatedPermission::UBAH_DATA_FEE, 'Ganti status fee  ' . $status, $id);
+
         return response()->json([
             'data' => $r
         ]);
     }
+
 
     public function unduhCSV($status = '')
     {
@@ -355,9 +437,14 @@ class FeeController extends Controller
             return FeeProfessionalModel::resume()
                 ->whereNotNull('dt_acc')
                 ->whereNull('dt_finish')->get()->count();
+        } else if ($step == 3) {
+            return FeeProfessionalModel::resume()
+                ->whereNotNull('dt_finish')
+                ->whereNull('dt_dp')->get()->count();
         }
+
         return FeeProfessionalModel::resume()
-            ->whereNotNull('dt_finish')->get()->count();
+            ->whereNotNull('dt_dp')->get()->count();
     }
 
     public function sumTab($step = 0)
@@ -373,9 +460,13 @@ class FeeController extends Controller
             return FeeProfessionalModel::resume()
                 ->whereNotNull('dt_acc')
                 ->whereNull('dt_finish')->get()->sum('total_pembayaran');
+        } else if ($step == 3) {
+            return FeeProfessionalModel::resume()
+                ->whereNotNull('dt_finish')
+                ->whereNull('dt_dp')->get()->sum('total_pembayaran');
         }
         return FeeProfessionalModel::resume()
-            ->whereNotNull('dt_finish')->get()->sum('total_pembayaran');
+            ->whereNotNull('dt_dp')->get()->sum('total_pembayaran');
     }
 
     public function prosesDP($id)

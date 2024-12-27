@@ -24,21 +24,22 @@ class ResumeFeeExport implements WithMultipleSheets
         FeeNumberModel::fixData();
         $r = FeeProfessionalModel::view();
 
-        if($this->mode == ''){
+        if ($this->mode == '') {
             $r = $r->whereNull('dt_pengajuan');
-        }else if($this->mode == 'pengajuan'){
+        } else if ($this->mode == 'pengajuan') {
             $r = $r->whereNotNull('dt_pengajuan')->whereNull('dt_acc');
-        }else if($this->mode == 'acc') {
+        } else if ($this->mode == 'acc') {
             $r = $r->whereNotNull('dt_acc')->whereNull('dt_finish');
-        }else{
+        } else {
             $r = $r->whereNotNull('dt_finish');
+            $r = $r->whereNotNull('dt_dp');
         }
 
         $sheet = [];
         $sheet[] = new FeeProfesionalRekapAll($this->mode);
 
         $data = $r->groupBy(['fee_number_id'])->get();
-        foreach($data as $d){
+        foreach ($data as $d) {
             $sheet[] = new FeeProfessionalPerUser($d);
         }
 

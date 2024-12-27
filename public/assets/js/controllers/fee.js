@@ -66,6 +66,9 @@ function refreshDataSUM() {
     $.get(baseurl() + "/admin/fee/count-tab/3").done(function (e) {
         $("#badge-info-3").html(e);
     });
+    $.get(baseurl() + "/admin/fee/count-tab/4").done(function (e) {
+        $("#badge-info-4").html(e);
+    });
 
     $.get(baseurl() + "/admin/fee/sum-tab/0").done(function (e) {
         $("#sum-info-0").html("Total Bayar : IDR " + formatUang(Number(e)));
@@ -78,6 +81,9 @@ function refreshDataSUM() {
     });
     $.get(baseurl() + "/admin/fee/sum-tab/3").done(function (e) {
         $("#sum-info-3").html("Total Bayar : IDR " + formatUang(Number(e)));
+    });
+    $.get(baseurl() + "/admin/fee/sum-tab/4").done(function (e) {
+        $("#sum-info-4").html("Total Bayar : IDR " + formatUang(Number(e)));
     });
 }
 
@@ -818,12 +824,11 @@ function buildTable() {
             {
                 data: null, // Karena hanya tombol, gunakan `null`
                 render: function (data, type, row, meta) {
-                    let route =
-                        baseurl() +
-                        `/admin/fee/proses-dp/${row["fee_number_id"]}`; // Pastikan `fee_number_id` sesuai dengan data dari server
-                    return `<button class="btn btn-sm btn-rounded btn-warning" onclick="prosesDP('${row["nomor"]}', '${route}')">
-                                <i class="mdi mdi-arrow-right-bold"></i> Proses DP
-                            </button>`;
+                    return `<button class="btn btn-sm btn-rounded btn-warning proses-dp-btn"
+                    data-nomor="${row["nomor"]}" 
+                    data-ids="${row["member_user_id"]}|${row["fee_number_id"]}">
+                <i class="mdi mdi-arrow-right-bold"></i> Proses DP
+            </button>`;
                 },
                 sortable: false, // Tidak perlu sorting
                 width: "80px", // Atur lebar sesuai kebutuhan
@@ -918,7 +923,15 @@ function buildTable() {
                     return `<button class="btn btn-sm btn-rounded btn-info" onclick="showDetailFee('${data}')"><i class="mdi mdi-pencil-circle"></i></button>`;
                 },
             },
-            { data: "nomor" },
+            {
+                data: "nomor",
+                render: (data, type, row, meta) => {
+                    return `${data}<br/>
+                            <small class="badge badge-soft-success">${
+                                row["kode_merger"] ?? ""
+                            }</small>`;
+                },
+            },
             { data: "periode" },
             {
                 data: "first_name",
@@ -928,9 +941,7 @@ function buildTable() {
                     })<br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>
-                            <small class="badge badge-soft-success">${
-                                row["kode_merger"] ?? ""
-                            }</small>`;
+                            `;
                 },
             },
             {
@@ -981,6 +992,228 @@ function buildTable() {
             },
         ],
     });
+
+    $("#jd-table-dp").DataTable({
+        dom: "Bfrtp",
+        lengthMenu: [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"],
+        ],
+        pageLength: 100,
+
+        buttons: [
+            "csv",
+            "copy",
+            {
+                // text: '<i class="mdi mdi-file-excel"></i>',
+                // action: (e, dt, node, c) => {
+                //     window.open(
+                //         baseurl() + "/admin/fee/download/fee-finish.xls",
+                //         "frame-download"
+                //     );
+                // },
+                // className: "btn-success",
+            },
+            {
+                extend: "pdfHtml5",
+                orientation: "landscape", // Mengatur orientasi menjadi landscape
+                pageSize: "A4", // Mengatur ukuran halaman menjadi A4
+                text: "Export PDF",
+                title: "Fee Professional Selesai",
+                titleAttr: "PDF",
+                exportOptions: {
+                    columns: ":visible:not(:last-child)",
+                },
+            },
+            "print",
+            {
+                text: '<i class="mdi mdi-trash-can-outline"></i> Hapus',
+                action: (e, dt, node, c) => {
+                    let url =
+                        $("#jd-table-dp").data("urlaction") + "/remove/dp";
+                    showConfirmHapus("jd-table-dp", url, () => {
+                        $("table#jd-table-dp").DataTable().ajax.reload();
+                        $("table#jd-table-setujui").DataTable().ajax.reload();
+                        refreshDataSUM();
+                        l;
+                    });
+                },
+                className: "btn-danger",
+            },
+        ],
+        initComplete: function (settings, json) {
+            $(".dt-button").addClass("btn btn-sm btn-primary");
+            $(".dt-button").removeClass("dt-button");
+        },
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: $("table#jd-table-dp").data("datasource"),
+            method: "GET",
+        },
+        order: [[1, "asc"]],
+        columnDefs: [{ targets: [5, 6, 7, 8, 9, 10], className: "dt-right" }],
+        columns: [
+            {
+                data: "member_user_id",
+                sortable: false,
+                width: "20px",
+                target: 0,
+                searchable: false,
+                render: function (data, type, row, meta) {
+                    return (
+                        App.tableCheckID(data + "|" + row["fee_number_id"]) +
+                        (meta.row + 1 + meta.settings._iDisplayStart)
+                    );
+                },
+            },
+            {
+                data: "fee_number_id",
+                render: (data, type, row, meta) => {
+                    let periode = row["periode"];
+                    return `<button class="btn btn-sm btn-rounded btn-info" onclick="showDetailFee('${data}')"><i class="mdi mdi-pencil-circle"></i></button>`;
+                },
+            },
+            {
+                data: "nomor",
+                render: (data, type, row, meta) => {
+                    return `${data} </br>
+                            <small class="badge badge-soft-success">${
+                                row["kode_merger"] ?? ""
+                            }</small>`;
+                },
+            },
+            { data: "periode" },
+            {
+                data: "first_name",
+                render: (data, type, row, meta) => {
+                    return `${data} ${row["last_name"]} (${
+                        row["id_no"]
+                    })<br/><small class="badge badge-soft-info">${
+                        row["kategori"] ?? "-"
+                    }</small>
+                            `;
+                },
+            },
+            {
+                data: "npwp",
+                render: (data, type, row, meta) => {
+                    return data?.length > 7 ? "Ya" : "Tidak";
+                },
+            },
+            {
+                data: "dpp_amount",
+                render: (data, type, row, meta) => {
+                    return formatUang(data);
+                },
+            },
+            {
+                data: "fee_amount",
+                render: (data, type, row, meta) => {
+                    return formatUang(data);
+                },
+            },
+            {
+                data: "pph_amount",
+                render: (data, type, row, meta) => {
+                    return Number(row["is_perusahaan"]) === 1
+                        ? "-"
+                        : formatUang(data);
+                },
+            },
+            {
+                data: "pph_amount",
+                render: (data, type, row, meta) => {
+                    return Number(row["is_perusahaan"]) === 1
+                        ? formatUang(data)
+                        : "-";
+                },
+            },
+            {
+                data: "total_pembayaran",
+                render: (data, type, row, meta) => {
+                    return formatUang(data);
+                },
+            },
+            {
+                data: "no_faktur",
+                render: (data, type, row, meta) => {
+                    return `${row["no_faktur"] ?? "[Unavailable]"}`;
+                },
+            },
+        ],
+    });
+    $("#jd-table-setujui").on("click", ".proses-dp-btn", function () {
+        let rawData = $(this).data("ids");
+        console.log("Data Mentah:", rawData);
+
+        let ids = [rawData]; // Simpan langsung dalam array
+        console.log("Data IDs:", ids);
+
+        let nomor = $(this).data("nomor");
+        let route = baseurl() + `/admin/fee/status/dp`;
+
+        prosesDP(nomor, ids, route);
+    });
+    function prosesDP(nomor, ids, route) {
+        Swal.fire({
+            title: `Proses DP untuk nomor ${nomor}?`,
+            text: "Pastikan semua data sudah benar sebelum melanjutkan.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Proses",
+            cancelButtonText: "Batal",
+        }).then((result) => {
+            if (result.value) {
+                // $("#jd-table-setujui").css("display", "block");
+
+                // Membuat data ID yang akan dikirim
+                const data = {
+                    _token: csrf_token(),
+                    id: ids, // Array ID yang diterima dari parameter
+                };
+                console.log(data);
+                // console.log("Response JSON:", nomor + "-" + ids + "-" + route);
+
+                $.post(route, data)
+                    .done((response) => {
+                        console.log("Response JSON:", response);
+                        if (response.data) {
+                            // Reload tabel dan refresh data
+                            $("table#jd-table-setujui")
+                                .DataTable()
+                                .ajax.reload();
+                            $("table#jd-table-dp").DataTable().ajax.reload();
+                            refreshDataSUM();
+                            Swal.fire(
+                                "Berhasil!",
+                                "Proses DP telah berhasil dilakukan.",
+                                "success"
+                            );
+                        } else {
+                            Swal.fire(
+                                "Gagal!",
+                                "Terjadi kesalahan saat memproses data.",
+                                "error"
+                            );
+                            $("table#jd-table-setujui")
+                                .DataTable()
+                                .ajax.reload();
+                        }
+                    })
+                    .fail(() => {
+                        Swal.fire(
+                            "Gagal!",
+                            "Terjadi kesalahan saat memproses data.",
+                            "error"
+                        );
+                    })
+                    .always(() => {
+                        // $("#jd-table-setujui").css("display", "none");
+                    });
+            }
+        });
+    }
 }
 
 function save() {
@@ -1006,43 +1239,4 @@ function editdata(id) {
 function showDetailFee(fee_number_id) {
     wireDetail.set("fee_number_id", fee_number_id);
     $("div#modalformDetail").modal("show");
-}
-function prosesDP(nomor, route) {
-    console.log(route);
-    Swal.fire({
-        title: `Proses DP untuk nomor ${nomor}?`,
-        text: "Pastikan semua data sudah benar sebelum melanjutkan.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Proses",
-        cancelButtonText: "Batal",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $("#jd-table-setujui_processing").css("display", "block");
-            $.post(route, {
-                _token: csrf_token(),
-            })
-                .done(() => {
-                    Swal.fire(
-                        "Berhasil!",
-                        "Proses DP telah berhasil dilakukan.",
-                        "success"
-                    );
-                    // Reload tabel dan refresh data
-                    $("table#jd-table-setujui").DataTable().ajax.reload();
-                    $("table#jd-table-pengajuan").DataTable().ajax.reload();
-                    refreshDataSUM();
-                })
-                .fail(() => {
-                    Swal.fire(
-                        "Gagal!",
-                        "Terjadi kesalahan saat memproses data.",
-                        "error"
-                    );
-                })
-                .always(() => {
-                    $("#jd-table-setujui_processing").css("display", "none");
-                });
-        }
-    });
 }

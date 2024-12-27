@@ -201,7 +201,7 @@ class Form extends Component
     {
         $v = $this->validasi();
         $v['created_at'] = Carbon::now();
-        dd($v);
+        // dd($v);
         try {
             $v['date_verify_email'] = $this->is_email_verified == "1" ? Carbon::now() : null;
             $m = UserModel::insert($v);

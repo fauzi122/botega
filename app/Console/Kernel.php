@@ -9,6 +9,7 @@ use App\Jobs\SyncMemberJob;
 use App\Jobs\SyncNoFakturFeeMemberJob;
 use App\Jobs\SyncPenjualanJob;
 use App\Jobs\SyncSaleReturnJob;
+use App\Jobs\SendDownPaymentJob;
 use App\Jobs\SyncSendEmailUlangTahunJob;
 use App\Jobs\ManagePointsJob;
 use Carbon\Carbon;
@@ -58,7 +59,12 @@ class Kernel extends ConsoleKernel
             SyncMemberJob::dispatch(0);
         })->dailyAt('11:00');
 
+        $schedule->call(function () {
+            $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
+            $tgl2 = Carbon::now()->format('d/m/Y');
 
+            SendDownPaymentJob::dispatch($tgl1, $tgl2, null, null);
+        })->dailyAt('21:00');
 
         $schedule->call(function () {
             $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
