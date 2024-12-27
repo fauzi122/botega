@@ -22,12 +22,12 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <!-- <div class="card-header">
                 <h4 class="card-title">Gambar Produk {{$produk?->kode ?? '' }} {{ $produk?->name ?? ''  }}s</h4>
                 <p class="card-title-desc">
                     Kelola gambar produk yang ditawarkan
                 </p>
-            </div>
+            </div> -->
             <div class="card-body">
                 <div class="table-responsive table-responsive-md m-t-40">
                     <div id="gridview" data-produkid="{{$produk->id}}"></div>

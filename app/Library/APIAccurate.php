@@ -45,6 +45,20 @@ class APIAccurate
         }
         return "";
     }
+    public function delete($url): \Illuminate\Http\Client\Response|string
+    {
+        $timestamp = Carbon::now('Asia/Jakarta')->getTimestampMs();
+        try {
+            return Http::withHeaders([
+                'Authorization' => 'Bearer ' . self::TOKEN,
+                'X-Api-Timestamp' => $timestamp,
+                'X-Api-Signature' => $this->XAPISignature($timestamp)
+            ])->withOptions(['verify' => false])->delete(self::BASEURL . $url);
+        } catch (\Exception $e) {
+            return "Kesalahan " . $e->getMessage() . ' ' . $e->getFile();
+        }
+    }
+
 
     private function XAPISignature($timestamp)
     {

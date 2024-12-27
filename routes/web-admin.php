@@ -172,6 +172,26 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             return $response->json();
         });
 
+        Route::get('sales-invoice/api', function () {
+            $r = new APIAccurate();
+
+            // Retrieve the "number" parameter from the request
+            $number = request('number');
+            $id = request('id');
+            // dd($number);
+            if ($id != null) {
+                // If no "number" parameter is provided, return a default list of sales invoices with DP
+                // $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true');
+                $response = $r->get('/api/sales-invoice/detail.do?id=' . urlencode($id));
+            } else {
+                // If "number" is provided, filter the sales invoices by the provided "number"
+                // $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true&filter.number.val[0]=' . urlencode($number));
+                $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true&filter.transDate.val[0]=24/12/2024');
+            }
+
+            // Return the JSON response
+            return $response->json();
+        });
 
         Route::get('shipment/api', function () {
             $r = new APIAccurate();
@@ -522,6 +542,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/data-source-proses", "FeeController@datasource_proses");
                 Route::get("/data-source-setujui", "FeeController@datasource_setujui");
                 Route::get("/data-source-selesai", "FeeController@datasource_selesai");
+                Route::get("/data-source-dp", "FeeController@datasource_dp");
                 Route::get("/data-source-outstanding", "FeeController@datasource_outstanding");
                 Route::get("/report-outstanding", "FeeController@report_outstanding");
                 Route::get("/image/{id}.png", "FeeController@image");
