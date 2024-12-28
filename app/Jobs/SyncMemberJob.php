@@ -5,8 +5,9 @@ namespace App\Jobs;
 use App\Library\APIAccurate;
 use App\Models\KategoriMemberModel;
 use App\Models\LevelMemberModel;
-use App\Models\User;
+use App\Models\UserRekeningModel;
 use App\Models\UserModel;
+use App\Models\BankModel;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -88,7 +89,6 @@ class SyncMemberJob implements ShouldQueue
             $api = new \App\Library\APIAccurate();
 
             $response = $api->get("/api/customer-category/detail.do?id=" . $categoryID);
-
             if ($response?->status() != 200) {
                 return null;
             }
@@ -96,6 +96,7 @@ class SyncMemberJob implements ShouldQueue
             $json2 = json_decode($response->body(), true);
 
             $category = $json2['d'];
+            return $category;
             $data = [
                 "id_accurate" => $categoryID,
                 "name" => $category['name'],
@@ -225,33 +226,66 @@ class SyncMemberJob implements ShouldQueue
             $url = '/api/customer/detail.do?customerNo=' . urlencode($user->id_no);
             $hasil = $api->get($url);
             $json = json_decode($hasil->body(), true);
-            $data = $json['d'];
 
-            if (count($data) > 0) {
-                $accurateData = $data[0];
-                $category = $accurateData['category'];
+            // Validasi apakah JSON memiliki key 'd' dan apakah bukan null
+            if (!isset($json['d']) || $json['d'] === null) {
+                echo "Data Accurate untuk ID pelanggan {$user->id_no} tidak ditemukan.\n";
+                return;
+            }
 
-                // Memperbarui data user berdasarkan data dari Accurate
-                $updateData = [
+            $accurateData = $json['d']; // Langsung mengambil objek karena JSON hanya memiliki satu elemen
+
+            // Update data user
+            UserModel::query()
+                ->where('id', $id)
+                ->update([
                     'first_name' => explode(' ', $accurateData['name'])[0],
                     'last_name' => implode(' ', array_slice(explode(' ', $accurateData['name']), 1)),
-                    'email' => $accurateData['email'] ?? $user->email,
+                    'email' => $user->email, // Gunakan default jika email tidak ditemukan
                     'npwp' => $accurateData['npwpNo'] ?? $user->npwp,
                     'home_addr' => str_replace("\n", " ", $accurateData['billStreet'] ?? $user->home_addr),
-                    'phone' => isset($accurateData['workPhone']) ? preg_replace('/[^0-9+]/', '', $accurateData['workPhone']) : $user->phone,
-                    'hp' => isset($accurateData['mobilePhone']) ? preg_replace('/[^0-9+]/', '', $accurateData['mobilePhone']) : $user->hp,
-                    'kategori_id' => $this->getKategoriMember($category['id']),
-                    'updated_at' => Carbon::now()
-                ];
+                    'phone' => $user->phone, // Tidak ada data phone di JSON
+                    'hp' => $user->hp, // Tidak ada data mobile phone di JSON
+                    'kategori_id' => $accurateData['category']['id'], // Gunakan ID untuk kategori
+                    'updated_at' => now(),
+                ]);
 
-                UserModel::query()->where('id', $id)->update($updateData);
+            // Menyimpan atau memperbarui data bank
+            $an = $accurateData['charfield6'] ?? null; // Atas Nama
+            $bank_kota = $accurateData['charfield7'] ?? null; // Bank Kota
+            $bankName = $accurateData['charField3'] ?? null; // Nama bank
+            $accountNumber = $accurateData['charField4'] ?? null; // Nomor rekening
 
-                // echo "Data user dengan ID {$id} berhasil disinkronisasi.\n";
+            if ($bankName && $accountNumber) {
+                $bank = BankModel::query()
+                    ->where('akronim', $bankName)
+                    ->select('id')
+                    ->first();
+
+                if ($bank) {
+                    UserRekeningModel::query()->updateOrInsert(
+                        [
+                            'user_id' => $id,
+                            'no_rekening' => $accountNumber, // Kondisi untuk pencarian
+                        ],
+                        [
+                            'bank_id' => $bank->id,
+                            'an' =>  $an,
+                            'bank_kota' =>  $bank_kota,
+                            'updated_at' => now(),
+                            'created_at' => now(), // Hanya digunakan saat insert
+                        ]
+                    );
+
+                    Log::info("Data bank untuk user dengan ID {$id} berhasil disimpan atau diperbarui.");
+                } else {
+                    Log::error("Bank dengan akronim '{$bankName}' tidak ditemukan.");
+                }
             } else {
-                // echo "Data user dengan ID Accurate {$user->id_no} tidak ditemukan di Accurate.\n";
+                Log::error("Data bank untuk user dengan ID {$id} tidak tersedia di Accurate.");
             }
         } catch (Exception $e) {
-            echo "Terjadi kesalahan: " . $e->getMessage() . "\n";
+            Log::error("Terjadi kesalahan: " . $e->getMessage());
         }
     }
 }

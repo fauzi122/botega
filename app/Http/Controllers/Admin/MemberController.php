@@ -218,7 +218,7 @@ class MemberController extends Controller
         }
 
         // Menjalankan job untuk sinkronisasi data member berdasarkan ID
-        \App\Jobs\SyncMemberJob::dispatch()->syncMemberById($id);
+        \App\Jobs\SyncMemberJob::dispatch('sync')->syncMemberById($id);
 
         return response()->json(['message' => 'Sinkronisasi job telah dijalankan'], 200);
     }
