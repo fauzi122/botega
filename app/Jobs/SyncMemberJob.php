@@ -222,7 +222,7 @@ class SyncMemberJob implements ShouldQueue
 
         try {
             // Mengambil data dari Accurate berdasarkan ID pelanggan (customerNo)
-            $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&filter.keywords.op=EQUAL&filter.keywords.val[0]=' . urlencode($user->id_no) . '&sp.sort=id|desc';
+            $url = '/api/customer/detail.do?customerNo=' . urlencode($user->id_no);
             $hasil = $api->get($url);
             $json = json_decode($hasil->body(), true);
             $data = $json['d'];
@@ -237,6 +237,9 @@ class SyncMemberJob implements ShouldQueue
                     'last_name' => implode(' ', array_slice(explode(' ', $accurateData['name']), 1)),
                     'email' => $accurateData['email'] ?? $user->email,
                     'npwp' => $accurateData['npwpNo'] ?? $user->npwp,
+                    'home_addr' => str_replace("\n", " ", $accurateData['billStreet'] ?? $user->home_addr),
+                    'phone' => isset($accurateData['workPhone']) ? preg_replace('/[^0-9+]/', '', $accurateData['workPhone']) : $user->phone,
+                    'hp' => isset($accurateData['mobilePhone']) ? preg_replace('/[^0-9+]/', '', $accurateData['mobilePhone']) : $user->hp,
                     'kategori_id' => $this->getKategoriMember($category['id']),
                     'updated_at' => Carbon::now()
                 ];

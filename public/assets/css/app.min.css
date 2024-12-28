@@ -5783,7 +5783,7 @@ body[data-layout=horizontal] .chat-conversation {
 }
 
 .row .card .card-header {
-    background-image: url(../images/header.jpg);
+    /* background-image: url(../images/header.jpg); */
     background-color: white;
     color: #645141;
 }
