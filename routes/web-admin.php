@@ -155,7 +155,8 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
 
                 $response = $r->get('/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&sp.page=1&sp.sort=id|desc');
             } else {
-                $response = $r->get('/api/customer/detail.do?id=' . $id);
+                // $response = $r->get('/api/customer/detail.do?id=' . $id);
+                $response = $r->get('/api/customer/detail.do?customerNo=' . $id);
             }
             return $response->json();
         });
