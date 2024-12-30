@@ -251,11 +251,11 @@ class SyncMemberJob implements ShouldQueue
                 ]);
 
             // Menyimpan atau memperbarui data bank
-            $an = $accurateData['charfield6'] ?? null; // Atas Nama
-            $bank_kota = $accurateData['charfield7'] ?? null; // Bank Kota
+            $an = $accurateData['charField6'] ?? null; // Atas Nama
+            $bank_kota = $accurateData['charField7'] ?? null; // Bank Kota
             $bankName = $accurateData['charField3'] ?? null; // Nama bank
             $accountNumber = $accurateData['charField4'] ?? null; // Nomor rekening
-
+            // dd($an . '/' . $bank_kota . '/' . $bankName . '/' . $accountNumber);
             if ($bankName && $accountNumber) {
                 $bank = BankModel::query()
                     ->where('akronim', $bankName)
