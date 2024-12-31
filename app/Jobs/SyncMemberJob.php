@@ -158,7 +158,7 @@ class SyncMemberJob implements ShouldQueue
     public function syncFromAccurate()
     {
         $r = new APIAccurate();
-        $idmember = UserModel::where('user_type', 'member')->max('id_accurate');
+        // $idmember = UserModel::where('user_type', 'member')->max('id_accurate');
         $page = 1;
         $lvlmemberid = LevelMemberModel::query()->orderBy('level', 'asc')->first();
 
@@ -183,24 +183,25 @@ class SyncMemberJob implements ShouldQueue
                 $splname = explode(' ', $v['name'] ?? '');
                 $lastname = count($splname) > 1 ? implode(' ', array_slice($splname, 1)) : '';
 
-                // Format tanggal menggunakan Carbon
                 $birthAt = isset($v['dateField1']) ? Carbon::createFromFormat('d/m/Y', $v['dateField1'])->format('Y-m-d') : null;
 
+                $existingUser = UserModel::query()->where('id_accurate', $v['id'])->first();
+
                 $bulk = [
-                    'id_no' => $v['customerNo'] ?? '',
-                    'first_name' => $splname[0] ?? '',
-                    'last_name' => $lastname,
+                    'id_no' => $v['customerNo'] ?? $existingUser?->id_no ?? '',
+                    'first_name' => $splname[0] ?? $existingUser?->first_name ?? '',
+                    'last_name' => $lastname ?: $existingUser?->last_name ?? '',
                     'user_type' => 'member',
                     'level_member_id' => $lvlmemberid?->id,
-                    'email' => $v['email'] ?? '',
-                    'npwp' => $v['npwpNo'] ?? '',
-                    'home_addr' => str_replace("\n", " ", $v['billStreet'] ?? ''),
-                    'phone' => $v['workPhone'] ?? '',
+                    'email' => $v['email'] ?? $existingUser?->email ?? '',
+                    'npwp' => $v['npwpNo'] ?? $existingUser?->npwp ?? '',
+                    'home_addr' => str_replace("\n", " ", $v['billStreet'] ?? $existingUser?->home_addr ?? ''),
+                    'phone' => $v['workPhone'] ?? $existingUser?->phone ?? '',
                     'hp' => isset($v['mobilePhone']) && preg_match('/^[0-9+\-\s]+$/', $v['mobilePhone'])
                         ? $v['mobilePhone']
-                        : null,
-                    'birth_at' => $birthAt,
-                    'kategori_id' => $v['category']['id'],
+                        : $existingUser?->hp ?? '',
+                    'birth_at' => $birthAt ?? $existingUser?->birth_at,
+                    'kategori_id' => $v['category']['id'] ?? $existingUser?->kategori_id ?? null,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ];
@@ -214,28 +215,22 @@ class SyncMemberJob implements ShouldQueue
                     UserModel::query()->insert($bulk);
                 }
 
-                // Menyimpan atau memperbarui data bank
-                $an = $v['charField6'] ?? null; // Atas Nama
-                $bank_kota = $v['charField7'] ?? null; // Bank Kota
-                $bankName = $v['charField3'] ?? null; // Nama bank
-                $accountNumber = $v['charField4'] ?? null;
-                $userId = UserModel::query()
-                    ->where('id_accurate', $v['id'])
-                    ->value('id');
-                // Validasi apakah user_id ditemukan
+                $an = $v['charField6'] ?? null;
+                $bank_kota = $v['charField7'] ?? null;
+                $bankName = $v['charField3'] ?? null;
+                $accountNumber = $v['charField4'] ??  null;
+
+                $userId = $existingUser?->id;
+
                 if ($userId) {
-                    // Simpan atau perbarui data rekening
                     if ($bankName && $accountNumber) {
-                        $bank = BankModel::query()
-                            ->where('akronim', $bankName)
-                            ->select('id')
-                            ->first();
+                        $bank = BankModel::query()->where('akronim', $bankName)->select('id')->first();
 
                         if ($bank) {
                             UserRekeningModel::query()->updateOrInsert(
                                 [
-                                    'user_id' => $userId, // Menggunakan user_id dari tabel `users`
-                                    'no_rekening' => $accountNumber, // Kondisi untuk pencarian
+                                    'user_id' => $userId,
+                                    'no_rekening' => $accountNumber,
                                 ],
                                 [
                                     'bank_id' => $bank->id,
@@ -263,6 +258,7 @@ class SyncMemberJob implements ShouldQueue
 
         Log::info("Sync completed");
     }
+
 
 
     public function syncMemberById($id)
