@@ -241,11 +241,15 @@ class SyncMemberJob implements ShouldQueue
                 ->update([
                     'first_name' => explode(' ', $accurateData['name'])[0],
                     'last_name' => implode(' ', array_slice(explode(' ', $accurateData['name']), 1)),
-                    'email' => $user->email, // Gunakan default jika email tidak ditemukan
+                    'email' => $accurateData['email'] ?? $user->email, // Gunakan default jika email tidak ditemukan
                     'npwp' => $accurateData['npwpNo'] ?? $user->npwp,
                     'home_addr' => str_replace("\n", " ", $accurateData['billStreet'] ?? $user->home_addr),
-                    'phone' => $user->phone, // Tidak ada data phone di JSON
-                    'hp' => $user->hp, // Tidak ada data mobile phone di JSON
+                    'phone' => $accurateData['workPhone'] ?? $user->phone, // Tidak ada data phone di JSON
+                    'hp' => $accurateData['mobilePhone'] ?? $user->hp, // Tidak ada data mobile phone di JSON
+                    'birth_at' => isset($accurateData['dateField1'])
+                        ? Carbon::createFromFormat('d/m/Y', $accurateData['dateField1'])->format('Y-m-d')
+                        : $user->birth_at,
+
                     'kategori_id' => $accurateData['category']['id'], // Gunakan ID untuk kategori
                     'updated_at' => now(),
                 ]);
