@@ -167,7 +167,7 @@ class SyncMemberJob implements ShouldQueue
 
         do {
             try {
-                $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,lastUpdate&sp.page=' . $page . '&sp.sort=id|desc';
+                $url = '/api/customer/list.do?fields=id,name,customerNo,category,email,npwpNo,billStreet,workPhone,mobilePhone,dateField1,charField6,charField7,charField3,charField4,lastUpdate&sp.page=' . $page . '&sp.sort=id|desc';
                 Log::info("Fetching data from API: $url");
 
                 $response = $r->get($url);
@@ -183,6 +183,9 @@ class SyncMemberJob implements ShouldQueue
                 $splname = explode(' ', $v['name'] ?? '');
                 $lastname = count($splname) > 1 ? implode(' ', array_slice($splname, 1)) : '';
 
+                // Format tanggal menggunakan Carbon
+                $birthAt = isset($v['dateField1']) ? Carbon::createFromFormat('d/m/Y', $v['dateField1'])->format('Y-m-d') : null;
+
                 $bulk = [
                     'id_no' => $v['customerNo'] ?? '',
                     'first_name' => $splname[0] ?? '',
@@ -191,8 +194,15 @@ class SyncMemberJob implements ShouldQueue
                     'level_member_id' => $lvlmemberid?->id,
                     'email' => $v['email'] ?? '',
                     'npwp' => $v['npwpNo'] ?? '',
-                    'kategori_id' => $this->getKategoriMember($v['category']['id'] ?? null),
+                    'home_addr' => str_replace("\n", " ", $v['billStreet'] ?? ''),
+                    'phone' => $v['workPhone'] ?? '',
+                    'hp' => isset($v['mobilePhone']) && preg_match('/^[0-9+\-\s]+$/', $v['mobilePhone'])
+                        ? $v['mobilePhone']
+                        : null,
+                    'birth_at' => $birthAt,
+                    'kategori_id' => $v['category']['id'],
                     'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                 ];
 
                 if (in_array($v['id'], $existingAccurateIds)) {
@@ -203,6 +213,49 @@ class SyncMemberJob implements ShouldQueue
                     $bulk['id_accurate'] = $v['id'];
                     UserModel::query()->insert($bulk);
                 }
+
+                // Menyimpan atau memperbarui data bank
+                $an = $v['charField6'] ?? null; // Atas Nama
+                $bank_kota = $v['charField7'] ?? null; // Bank Kota
+                $bankName = $v['charField3'] ?? null; // Nama bank
+                $accountNumber = $v['charField4'] ?? null;
+                $userId = UserModel::query()
+                    ->where('id_accurate', $v['id'])
+                    ->value('id');
+                // Validasi apakah user_id ditemukan
+                if ($userId) {
+                    // Simpan atau perbarui data rekening
+                    if ($bankName && $accountNumber) {
+                        $bank = BankModel::query()
+                            ->where('akronim', $bankName)
+                            ->select('id')
+                            ->first();
+
+                        if ($bank) {
+                            UserRekeningModel::query()->updateOrInsert(
+                                [
+                                    'user_id' => $userId, // Menggunakan user_id dari tabel `users`
+                                    'no_rekening' => $accountNumber, // Kondisi untuk pencarian
+                                ],
+                                [
+                                    'bank_id' => $bank->id,
+                                    'an' => $an,
+                                    'bank_kota' => $bank_kota,
+                                    'updated_at' => Carbon::now(),
+                                    'created_at' => Carbon::now(),
+                                ]
+                            );
+
+                            Log::info("Data bank untuk user dengan ID Accurate {$v['id']} berhasil disimpan atau diperbarui.");
+                        } else {
+                            Log::error("Bank dengan akronim '{$bankName}' tidak ditemukan.");
+                        }
+                    } else {
+                        Log::error("Data bank untuk user dengan ID Accurate {$v['id']} tidak tersedia di Accurate.");
+                    }
+                } else {
+                    Log::error("User dengan ID Accurate {$v['id']} tidak ditemukan di tabel `users`. Tidak dapat menyimpan data rekening.");
+                }
             }
 
             $page++;
@@ -210,6 +263,7 @@ class SyncMemberJob implements ShouldQueue
 
         Log::info("Sync completed");
     }
+
 
     public function syncMemberById($id)
     {
