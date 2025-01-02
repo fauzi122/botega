@@ -86,6 +86,7 @@ class SyncMemberJob implements ShouldQueue
     {
         try {
             $r = KategoriMemberModel::query()->where("id_accurate", $categoryID)->first();
+
             $api = new \App\Library\APIAccurate();
 
             $response = $api->get("/api/customer-category/detail.do?id=" . $categoryID);
@@ -96,7 +97,7 @@ class SyncMemberJob implements ShouldQueue
             $json2 = json_decode($response->body(), true);
 
             $category = $json2['d'];
-            return $category;
+            // return $category;
             $data = [
                 "id_accurate" => $categoryID,
                 "name" => $category['name'],
@@ -187,6 +188,9 @@ class SyncMemberJob implements ShouldQueue
 
                 $existingUser = UserModel::query()->where('id_accurate', $v['id'])->first();
 
+                // Get kategori_id using getKategoriMember
+                $kategoriId = $this->getKategoriMember($v['category']['id'] ?? null);
+
                 $bulk = [
                     'id_no' => $v['customerNo'] ?? $existingUser?->id_no ?? '',
                     'first_name' => $splname[0] ?? $existingUser?->first_name ?? '',
@@ -201,7 +205,7 @@ class SyncMemberJob implements ShouldQueue
                         ? $v['mobilePhone']
                         : $existingUser?->hp ?? '',
                     'birth_at' => $birthAt ?? $existingUser?->birth_at,
-                    'kategori_id' => $v['category']['id'] ?? $existingUser?->kategori_id ?? null,
+                    'kategori_id' => $kategoriId,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ];
@@ -261,6 +265,7 @@ class SyncMemberJob implements ShouldQueue
 
 
 
+
     public function syncMemberById($id)
     {
         $api = new APIAccurate();
@@ -285,6 +290,11 @@ class SyncMemberJob implements ShouldQueue
 
             $accurateData = $json['d']; // Langsung mengambil objek karena JSON hanya memiliki satu elemen
 
+            // Dapatkan atau perbarui kategori menggunakan fungsi getKategoriMember
+            $kategori = $this->getKategoriMember($accurateData['category']['id'] ?? null);
+            $kategoriId = is_numeric($kategori) ? (int)$kategori : null; // Validasi sebagai integer
+
+
             // Update data user
             UserModel::query()
                 ->where('id', $id)
@@ -300,7 +310,7 @@ class SyncMemberJob implements ShouldQueue
                         ? Carbon::createFromFormat('d/m/Y', $accurateData['dateField1'])->format('Y-m-d')
                         : $user->birth_at,
 
-                    'kategori_id' => $accurateData['category']['id'], // Gunakan ID untuk kategori
+                    'kategori_id' => $kategoriId, // Gunakan ID untuk kategori yang diperoleh
                     'updated_at' => now(),
                 ]);
 
@@ -309,7 +319,7 @@ class SyncMemberJob implements ShouldQueue
             $bank_kota = $accurateData['charField7'] ?? null; // Bank Kota
             $bankName = $accurateData['charField3'] ?? null; // Nama bank
             $accountNumber = $accurateData['charField4'] ?? null; // Nomor rekening
-            // dd($an . '/' . $bank_kota . '/' . $bankName . '/' . $accountNumber);
+
             if ($bankName && $accountNumber) {
                 $bank = BankModel::query()
                     ->where('akronim', $bankName)
