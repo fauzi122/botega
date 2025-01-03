@@ -1136,9 +1136,9 @@ function buildTable() {
                 },
             },
             {
-                data: "no_faktur",
+                data: "number",
                 render: (data, type, row, meta) => {
-                    return `${row["no_faktur"] ?? "[Unavailable]"}`;
+                    return `${row["number"] ?? "[Unavailable]"}`;
                 },
             },
         ],

@@ -174,7 +174,6 @@ class Form extends Component
         if ($type == 'DD') {
 
             $ddo = DetailDeliveryOrderModel::query()->where('id', $id)->first();
-
             $cit = ClaimItemTransactionModel::query()->where([
                 'member_user_id' => $this->member_user_id,
                 'detail_delivery_order_id' => $id,
@@ -405,6 +404,7 @@ class Form extends Component
 
         //        if($ffee == null){
         $v['created_at'] = Carbon::now();
+        dd($v);
         $idfee = FeeProfessionalModel::query()->insertGetId($v);
         if ($v['num_split'] == 2) {
             FeeSplitModel::query()->where([

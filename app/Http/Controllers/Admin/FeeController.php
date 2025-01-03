@@ -125,7 +125,7 @@ class FeeController extends Controller
         }
 
         return datatables(
-            FeeProfessionalModel::resumeRekening()
+            FeeProfessionalModel::resumeDP()
                 ->whereNotNull(['dt_dp'])
         )->toJson(true);
     }
@@ -436,7 +436,7 @@ class FeeController extends Controller
         } else if ($step == 2) {
             return FeeProfessionalModel::resume()
                 ->whereNotNull('dt_acc')
-                ->whereNull('dt_finish')->get()->count();
+                ->whereNull(['dt_finish', 'dt_dp'])->get()->count();
         } else if ($step == 3) {
             return FeeProfessionalModel::resume()
                 ->whereNotNull('dt_finish')
