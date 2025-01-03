@@ -127,11 +127,28 @@
         }
     }
 
-    // Update remaining points dynamically
+    // Fungsi untuk memperbarui sisa poin secara dinamis
     function updateRemainingPoints() {
-        const memberPoints = parseFloat(document.getElementById('member-points').textContent) || 0;
-        const rewardPoints = parseFloat(document.getElementById('reward-points').textContent) || 0;
+        const memberPointsElement = document.getElementById('member-points');
+        const rewardPointsElement = document.getElementById('reward-points');
+        const remainingPointsElement = document.getElementById('remaining-points');
+
+        // Ambil nilai poin member dan reward, default ke 0 jika tidak ada nilai
+        const memberPoints = parseFloat(memberPointsElement.textContent) || 0;
+        const rewardPoints = parseFloat(rewardPointsElement.textContent) || 0;
+
+        // Hitung sisa poin
         const remainingPoints = memberPoints - rewardPoints;
-        document.getElementById('remaining-points').textContent = remainingPoints >= 0 ? remainingPoints : 'Poin Tidak Cukup';
+
+        // Tampilkan pesan sesuai kondisi
+        if (remainingPoints >= 0) {
+            remainingPointsElement.textContent = `${remainingPoints} Poin Tersedia`;
+            remainingPointsElement.classList.remove('text-danger');
+            remainingPointsElement.classList.add('text-success');
+        } else {
+            remainingPointsElement.textContent = 'Poin Tidak Cukup';
+            remainingPointsElement.classList.remove('text-success');
+            remainingPointsElement.classList.add('text-danger');
+        }
     }
 </script>
