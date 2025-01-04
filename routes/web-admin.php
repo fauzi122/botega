@@ -186,8 +186,8 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 $response = $r->get('/api/sales-invoice/detail.do?id=' . urlencode($id));
             } else {
                 // If "number" is provided, filter the sales invoices by the provided "number"
-                // $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true&filter.number.val[0]=' . urlencode($number));
-                $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true&filter.transDate.val[0]=24/12/2024');
+                $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true&filter.number.op=EQUAL&filter.number.val[0]=' . urlencode($number) . '&sp.page=1&sp.sort=id|asc');
+                // $response = $r->get('/api/sales-invoice/list.do?fields=' . urlencode('id,number,invoiceDp') . '&filter.invoiceDp=true&filter.transDate.val[0]=24/12/2024');
             }
 
             // Return the JSON response

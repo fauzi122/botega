@@ -33,20 +33,33 @@ class SendEmailResetPassword implements ShouldQueue
      */
     public function handle(): void
     {
-        if($this->attempt >= 3)return;
+        if ($this->attempt >= 3) {
+            \Log::warning("Max retry attempts reached for email: {$this->mail}");
+            return;
+        }
 
         try {
-            $cek =DB::table('users')->where('email', $this->mail)->first();
+            \Log::info("Attempting to send reset password email to: {$this->mail}, Attempt: {$this->attempt}");
 
+            // Check if email exists
+            $cek = DB::table('users')->where('email', $this->mail)->first();
+            if (!$cek) {
+                \Log::error("Email not found in users table: {$this->mail}");
+                return;
+            }
+
+            // Generate token and update user data
             $randomToken = Str::random(40);
             $resetLink = url('/reset-password-akun/' . $randomToken);
             $data = [
-               'token_reset'=>$randomToken
+                'token_reset' => $randomToken,
             ];
 
-            $simpan= UserModel::query()->where('email',$cek->email)->update($data);
+            $simpan = UserModel::query()->where('email', $cek->email)->update($data);
             if ($simpan) {
+                \Log::info("Token generated and saved for email: {$this->mail}");
                 $email = $this->mail;
+                // Send email
                 Mail::send('frontend.emails.reset-password', [
                     'resetLink' => $resetLink,
                     'user' => $cek
@@ -54,10 +67,14 @@ class SendEmailResetPassword implements ShouldQueue
                     $msg->to($email);
                     $msg->subject('Reset Sandi');
                 });
+
+                \Log::info("Reset password email successfully sent to: {$this->mail}");
+            } else {
+                \Log::error("Failed to save token for email: {$this->mail}");
             }
-        }catch (\Exception $e){
-            echo $e->getMessage();
-            SendEmailResetPassword::dispatch($this->mail, $this->attempt+1);
+        } catch (\Exception $e) {
+            \Log::error("Error while sending reset password email to: {$this->mail}, Attempt: {$this->attempt}, Error: {$e->getMessage()}");
+            SendEmailResetPassword::dispatch($this->mail, $this->attempt + 1);
         }
     }
 }
