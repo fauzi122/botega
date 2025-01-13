@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class LevelMemberModel extends Model
+class MemberSpentModel extends Model
 {
     use HasFactory;
-    protected $table = 'level_member';
+    protected $table = 'member_spent';
     protected $primaryKey = 'id';
     protected $fillable = ['*'];
     protected $guarded = [];
@@ -16,12 +16,13 @@ class LevelMemberModel extends Model
     public const UPDATED_AT = null;
     public const CREATED_AT = null;
 
-    public function flimit_transaction()
+    public function user()
     {
-        return number_format($this->limit_transaction, 0);
+        return $this->belongsTo(UserModel::class, 'user_id', 'id');
     }
-    public function memberSpent()
+
+    public function level()
     {
-        return $this->hasMany(MemberSpentModel::class, 'level', 'id');
+        return $this->belongsTo(LevelMemberModel::class, 'level', 'id');
     }
 }

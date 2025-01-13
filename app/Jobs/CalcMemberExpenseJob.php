@@ -3,26 +3,25 @@
 namespace App\Jobs;
 
 use App\Models\LevelMemberModel;
-use App\Models\TransactionModel;
-use App\Models\UserModel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\DB;
 
 class CalcMemberExpenseJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    private $mode; // mode =0 all, mode=1 syncfromaccurate, mode=2 synctoaccurate
 
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct($mode = 0)
     {
-        //
+        $this->mode = $mode;
     }
 
     /**
@@ -30,32 +29,232 @@ class CalcMemberExpenseJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info('CalcMemberExpenseJob executed at: ' . now());
-        $sql = "update users
-                left join ( SELECT member_user_id, sum(dpp_amount)as total from transactions WHERE YEAR(tgl_invoice)=?
-                            GROUP BY member_user_id
-                        )as tbl on users.id=tbl.member_user_id
-                set users.total_spent = tbl.total
-                where users.id=tbl.member_user_id";
-        echo "Jalan hitung";
-        \DB::update($sql, [date('Y')]);
-
-        $sql = "DELETE FROM member_spent WHERE tahun=?";
-        \DB::delete($sql, [date('Y')]);
-
-        $sql = "INSERT INTO member_spent (user_id, tahun, total_spent, created_at)
-        SELECT id, ?, total_spent, NOW() FROM users";
-        \DB::insert($sql, [date('Y')]);
-
-
-        $lvlmember = LevelMemberModel::query()->orderBy('level', 'asc')->get();
-        $lvls = [];
-        for ($i = 0; $i < count($lvlmember) - 1; $i++) {
-            $lvl = $lvlmember[$i];
-            $next = $lvlmember[$i + 1];
-            UserModel::query()
-                ->whereBetween('total_spent', [$lvl->limit_transaction, $next->limit_transaction])
-                ->update(['level_member_id' => $next->id]);
+        if ($this->mode == 0) {
+            $this->refreshAll();
+        } else {
+            $this->refreshDaily();
         }
+    }
+
+
+    public function refreshAll(): void
+    {
+        Log::info('CalcMemberExpenseJob executed at: ' . now());
+
+        // Ambil semua pengguna dengan tahun transaksi pertama
+        $userFirstTransactionYears = DB::table('transactions')
+            ->whereNotNull('tgl_invoice')
+            ->selectRaw('member_user_id, MIN(YEAR(tgl_invoice)) as first_year')
+            ->groupBy('member_user_id')
+            ->pluck('first_year', 'member_user_id');
+
+        $currentYear = date('Y');
+
+        foreach ($userFirstTransactionYears as $userId => $firstYear) {
+            $yearsToProcess = range($firstYear, $currentYear);
+            $lastLevel = null;
+            $currentLevelId = null; // Menyimpan level tahun berjalan
+
+            foreach ($yearsToProcess as $year) {
+                Log::info("Processing user_id: $userId for year: $year");
+
+                // Hitung total_spent untuk tahun tersebut
+                $totalSpent = DB::table('detail_transactions as dt')
+                    ->join('transactions as t', 't.id', '=', 'dt.transaction_id')
+                    ->leftJoin('detail_retur_penjualan as dr', function ($join) {
+                        $join->on(DB::raw('dr.retur_no COLLATE utf8mb4_unicode_ci'), '=', DB::raw('dt.retur_no COLLATE utf8mb4_unicode_ci'))
+                            ->on(DB::raw('dr.product_id COLLATE utf8mb4_unicode_ci'), '=', DB::raw('dt.product_id COLLATE utf8mb4_unicode_ci'));
+                    })
+                    ->where('t.member_user_id', $userId)
+                    ->whereYear('t.tgl_invoice', $year)
+                    ->selectRaw('SUM(
+                        COALESCE(dt.dpp_amount, 0) - 
+                        CASE 
+                            WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                                (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+                            ELSE 
+                                COALESCE(dr.return_amount, 0)
+                        END
+                    ) as total_spent')
+                    ->value('total_spent') ?? 0;
+
+                $totalSpent = round($totalSpent); // Pembulatan total_spent
+
+                Log::info("Total spent for user_id: $userId in year: $year is $totalSpent");
+
+                // Ambil level yang dipublish
+                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
+
+                $levelId = null;
+                if ($totalSpent > 0) {
+                    foreach ($levels as $level) {
+                        if ($totalSpent <= $level->limit_transaction) {
+                            $levelId = $level->id;
+                            $lastLevel = $level; // Perbarui lastLevel ke level saat ini
+                            break;
+                        }
+                    }
+                } else {
+                    if ($lastLevel) {
+                        $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
+                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap jika tidak ada level lebih rendah
+                        $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
+                    } else {
+                        $levelId = $levels->last()->id; // Level terendah sebagai default
+                        $lastLevel = $levels->last();
+                    }
+                }
+
+                // Simpan ke tabel member_spent
+                DB::table('member_spent')->updateOrInsert(
+                    [
+                        'user_id' => $userId,
+                        'tahun' => $year,
+                    ],
+                    [
+                        'total_spent' => $totalSpent,
+                        'level' => $levelId, // Simpan id level
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+
+                // Simpan level tahun berjalan ke variabel
+                if ($year == $currentYear) {
+                    $currentLevelId = $levelId;
+                }
+            }
+
+            // Perbarui level_member_id di tabel users untuk tahun berjalan
+            if ($currentLevelId) {
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'level_member_id' => $currentLevelId,
+                        'points' => DB::raw("
+            (
+                SELECT ROUND(SUM(ms.total_spent) / 1000)
+                FROM member_spent as ms
+                WHERE ms.user_id = users.id AND ms.tahun = $currentYear
+            ) -
+            (
+                SELECT COALESCE(SUM(r.point), 0)
+                FROM member_rewards mr
+                JOIN rewards r ON mr.reward_id = r.id
+                WHERE mr.user_id = users.id
+            )
+        "),
+                    ]);
+            }
+        }
+
+        Log::info('CalcMemberExpenseJob completed.');
+    }
+
+    public function refreshDaily(): void
+    {
+        Log::info('Daily refresh executed at: ' . now());
+
+        $currentYear = date('Y');
+
+        // Ambil semua pengguna dengan transaksi di tahun berjalan
+        $usersWithCurrentYearTransactions = DB::table('transactions')
+            ->whereNotNull('tgl_invoice')
+            ->whereYear('tgl_invoice', $currentYear)
+            ->select('member_user_id')
+            ->distinct()
+            ->pluck('member_user_id');
+
+        // Ambil level yang dipublish
+        $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
+
+        foreach ($usersWithCurrentYearTransactions as $userId) {
+            Log::info("Processing user_id: $userId for year: $currentYear");
+
+            // Hitung total_spent untuk tahun berjalan
+            $totalSpent = DB::table('detail_transactions as dt')
+                ->join('transactions as t', 't.id', '=', 'dt.transaction_id')
+                ->leftJoin('detail_retur_penjualan as dr', function ($join) {
+                    $join->on(DB::raw('dr.retur_no COLLATE utf8mb4_unicode_ci'), '=', DB::raw('dt.retur_no COLLATE utf8mb4_unicode_ci'))
+                        ->on(DB::raw('dr.product_id COLLATE utf8mb4_unicode_ci'), '=', DB::raw('dt.product_id COLLATE utf8mb4_unicode_ci'));
+                })
+                ->where('t.member_user_id', $userId)
+                ->whereYear('t.tgl_invoice', $currentYear)
+                ->selectRaw('SUM(
+                COALESCE(dt.dpp_amount, 0) - 
+                CASE 
+                    WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+                    ELSE 
+                        COALESCE(dr.return_amount, 0)
+                END
+            ) as total_spent')
+                ->value('total_spent') ?? 0;
+
+            $totalSpent = round($totalSpent); // Pembulatan total_spent
+
+            Log::info("Total spent for user_id: $userId in year: $currentYear is $totalSpent");
+
+            $levelId = null;
+            $lastLevel = DB::table('member_spent')
+                ->where('user_id', $userId)
+                ->where('tahun', '<', $currentYear)
+                ->orderBy('tahun', 'desc')
+                ->value('level');
+
+            if ($totalSpent > 0) {
+                foreach ($levels as $level) {
+                    if ($totalSpent <= $level->limit_transaction) {
+                        $levelId = $level->id;
+                        break;
+                    }
+                }
+            } else {
+                if ($lastLevel) {
+                    $lastLevelModel = $levels->firstWhere('id', $lastLevel);
+                    $nextLevel = $levels->firstWhere('level', $lastLevelModel->level + 1);
+                    $levelId = $nextLevel ? $nextLevel->id : $lastLevelModel->id;
+                } else {
+                    $levelId = $levels->last()->id; // Level terendah
+                }
+            }
+
+            // Simpan ke tabel member_spent
+            DB::table('member_spent')->updateOrInsert(
+                [
+                    'user_id' => $userId,
+                    'tahun' => $currentYear,
+                ],
+                [
+                    'total_spent' => $totalSpent,
+                    'level' => $levelId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // Perbarui level_member_id di tabel users untuk tahun berjalan
+
+            DB::table('users')
+                ->where('id', $userId)
+                ->update([
+                    'level_member_id' => $levelId,
+                    'points' => DB::raw("
+            (
+                SELECT ROUND(SUM(ms.total_spent) / 1000)
+                FROM member_spent as ms
+                WHERE ms.user_id = users.id AND ms.tahun = $currentYear
+            ) -
+            (
+                SELECT COALESCE(SUM(r.point), 0)
+                FROM member_rewards mr
+                JOIN rewards r ON mr.reward_id = r.id
+                WHERE mr.user_id = users.id
+            )
+        "),
+                ]);
+        }
+
+        Log::info('Daily refresh completed.');
     }
 }

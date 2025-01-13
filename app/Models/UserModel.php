@@ -30,6 +30,10 @@ class UserModel extends Model
         'date_verify_nohp' => 'datetime',
         'sandi' => 'hashed',
     ];
+    public function memberSpent()
+    {
+        return $this->hasMany(MemberSpentModel::class, 'user_id', 'id');
+    }
 
     public static function view()
     {
