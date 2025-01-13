@@ -96,25 +96,25 @@ class ManagePointsJob implements ShouldQueue
         ");
 
         // Update the users table with total points
-        DB::update("
-            UPDATE users u
-            JOIN (
-                SELECT 
-                    up.user_id, 
-                    SUM(up.total_point) AS total_points, -- Total poin dari transaksi
-                    COALESCE(SUM(r.point), 0) AS total_rewards_points -- Total poin dari rewards
-                FROM 
-                    user_points up
-                LEFT JOIN 
-                    member_rewards mr ON up.user_id = mr.user_id
-                LEFT JOIN 
-                    rewards r ON mr.reward_id = r.id
-                GROUP BY 
-                    up.user_id
-            ) AS points_summary ON u.id = points_summary.user_id
-            SET 
-                u.points = points_summary.total_points - points_summary.total_rewards_points
-        ");
+        // DB::update("
+        //     UPDATE users u
+        //     JOIN (
+        //         SELECT 
+        //             up.user_id, 
+        //             SUM(up.total_point) AS total_points, -- Total poin dari transaksi
+        //             COALESCE(SUM(r.point), 0) AS total_rewards_points -- Total poin dari rewards
+        //         FROM 
+        //             user_points up
+        //         LEFT JOIN 
+        //             member_rewards mr ON up.user_id = mr.user_id
+        //         LEFT JOIN 
+        //             rewards r ON mr.reward_id = r.id
+        //         GROUP BY 
+        //             up.user_id
+        //     ) AS points_summary ON u.id = points_summary.user_id
+        //     SET 
+        //         u.points = points_summary.total_points - points_summary.total_rewards_points
+        // ");
 
         // Log the action
         CatatanPrivateModel::query()->insert([
@@ -177,22 +177,22 @@ class ManagePointsJob implements ShouldQueue
             );
 
             // Update user points in users table
-            DB::update("
-            UPDATE users u
-            JOIN (
-                SELECT 
-                    up.user_id, 
-                    SUM(up.total_point) - COALESCE(SUM(mr.point), 0) AS final_points
-                FROM 
-                    user_points up
-                LEFT JOIN 
-                    member_rewards mr ON up.user_id = mr.user_id
-                GROUP BY 
-                    up.user_id
-            ) AS points_summary ON u.id = points_summary.user_id
-            SET 
-                u.points = points_summary.final_points
-        ");
+            //     DB::update("
+            //     UPDATE users u
+            //     JOIN (
+            //         SELECT 
+            //             up.user_id, 
+            //             SUM(up.total_point) - COALESCE(SUM(mr.point), 0) AS final_points
+            //         FROM 
+            //             user_points up
+            //         LEFT JOIN 
+            //             member_rewards mr ON up.user_id = mr.user_id
+            //         GROUP BY 
+            //             up.user_id
+            //     ) AS points_summary ON u.id = points_summary.user_id
+            //     SET 
+            //         u.points = points_summary.final_points
+            // ");
 
             // Log the action
             CatatanPrivateModel::query()->insert([
