@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\MemberPointController;
+use App\Http\Controllers\Admin\MemberSpentController;
 use \App\Jobs\ManagePointsJob;
 use App\Jobs\SyncPenjualanJob;
 
@@ -372,6 +373,10 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 })->name('admin.member-points.update');
             });
 
+            Route::prefix('member-spent')->group(function () {
+                Route::get('/', [MemberSpentController::class, 'index'])->name('admin.member-spent.index');
+                Route::get('/data', [MemberSpentController::class, 'getData'])->name('admin.member-spent.datasource');
+            });
 
 
             Route::prefix("reward")->group(function () {

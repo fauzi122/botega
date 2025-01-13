@@ -34,37 +34,42 @@ class Kernel extends ConsoleKernel
         // }
         $schedule->call(function () {
             ManagePointsJob::dispatch('update');
-        })->dailyAt('04:00');
+        })->dailyAt('19:00')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             // CalcMemberExpenseJob::dispatch()->onConnection('sync');
-            CalcMemberExpenseJob::dispatch();
-        })->everyFifteenMinutes();
+            CalcMemberExpenseJob::dispatch(0);
+        })->dailyAt('21:00')->timezone('Asia/Jakarta');
+
+        $schedule->call(function () {
+            // CalcMemberExpenseJob::dispatch()->onConnection('sync');
+            CalcMemberExpenseJob::dispatch(1);
+        })->dailyAt('23:30')->timezone('Asia/Jakarta');
 
 
         $schedule->call(function () {
             // SyncNoFakturFeeMemberJob::dispatch()->onConnection('sync');
             SyncNoFakturFeeMemberJob::dispatch();
-        })->everyThreeHours();
+        })->everyThreeHours()->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             SyncMemberJob::dispatch(1);
             SyncMemberJob::dispatch(2);
             SyncMemberJob::dispatch(3);
-        })->dailyAt('01:00');
+        })->dailyAt('01:00')->timezone('Asia/Jakarta');
 
 
         $schedule->call(function () {
             // SyncMemberJob::dispatch(0)->onConnection('sync');
             SyncMemberJob::dispatch(0);
-        })->dailyAt('11:00');
+        })->dailyAt('11:00')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
             $tgl2 = Carbon::now()->format('d/m/Y');
 
             SendDownPaymentJob::dispatch($tgl1, $tgl2, null, null);
-        })->dailyAt('21:00');
+        })->dailyAt('20:00')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             $tgl1 = Carbon::now()->subDays(14)->format('d/m/Y');
@@ -76,7 +81,7 @@ class Kernel extends ConsoleKernel
 
             // $tgl1 = Carbon::now()->subDays()->format('d/m/Y');
             // SyncPenjualanJob::dispatch($tgl1, true, '', $tgl1);
-        })->dailyAt('04:10');
+        })->dailyAt('04:00')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             $tgl1 = Carbon::now()->subMonths(7)->format('d/m/Y');
@@ -94,7 +99,7 @@ class Kernel extends ConsoleKernel
             $tgl1 = Carbon::now()->subMonths(3)->format('d/m/Y');
             $tgl2 = Carbon::now()->subMonths(2)->format('d/m/Y');
             SyncPenjualanJob::dispatch($tgl1, false, '', $tgl2);
-        })->dailyAt('02:34')->timezone('Asia/Jakarta');
+        })->dailyAt('02:00')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
 
@@ -110,26 +115,26 @@ class Kernel extends ConsoleKernel
 
             SyncPenjualanJob::dispatch('', true, '', '')
                 ->onConnection('sync');
-        })->dailyAt('11:40');
+        })->dailyAt('11:40')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             SyncSaleReturnJob::dispatch(Carbon::now()->subDays(14)->format('d/m/Y'));
-        })->dailyAt('05:00');
+        })->dailyAt('05:00')->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             // ResumeDashboarJob::dispatch()->onConnection('sync');
             ResumeDashboarJob::dispatch();
-        })->everyFourMinutes();
+        })->everyFourMinutes()->timezone('Asia/Jakarta');
 
         $schedule->call(function () {
             ResetPointPenjualangJob::dispatch();
-        })->cron("59 23 31 12 *");
+        })->cron("59 23 31 12 *")->timezone('Asia/Jakarta');
 
 
         $schedule->call(function () {
             // SyncSendEmailUlangTahunJob::dispatch()->onConnection('sync');
             SyncSendEmailUlangTahunJob::dispatch();
-        })->dailyAt('07:30');
+        })->dailyAt('07:30')->timezone('Asia/Jakarta');
 
         //        $schedule->call(function(){
         //            SyncPenjualanJob::dispatch(Carbon::now()->subDays(60)->format('d/m/Y'), false )->onConnection('sync');

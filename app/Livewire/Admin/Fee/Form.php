@@ -187,7 +187,7 @@ class Form extends Component
             //                ])->first();
             //            }
             if ($cit != null) {
-                dd($cit);
+                //dd($cit);
                 $hassplit = FeeSplitModel::hasSplit($this->member_user_id, $cit->detail_transactions_id, $cit->detail_delivery_order_id);
                 if ($hassplit === false) {
                     session()->flash('error', 'Item transaksi sudah pernah diajukan claim');
@@ -404,7 +404,7 @@ class Form extends Component
 
         //        if($ffee == null){
         $v['created_at'] = Carbon::now();
-        dd($v);
+        // dd($v);
         $idfee = FeeProfessionalModel::query()->insertGetId($v);
         if ($v['num_split'] == 2) {
             FeeSplitModel::query()->where([

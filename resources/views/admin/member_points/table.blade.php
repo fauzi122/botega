@@ -28,8 +28,8 @@
 </style>
 <div class="row">
     <div class="col-12 mb-3 text-end">
-        <button id="reset-points-btn" class="btn btn-danger btn-sm">Reset Poin</button>
-        <button id="update-points-btn" class="btn btn-success btn-sm">Perbarui Poin</button>
+        <button id="reset-points-btn" class="btn btn-info btn-sm">Refresh Poin</button>
+        <!-- <button id="update-points-btn" class="btn btn-success btn-sm">Perbarui Poin</button> -->
     </div>
 </div>
 <div class="row">
