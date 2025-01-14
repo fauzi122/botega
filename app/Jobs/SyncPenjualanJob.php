@@ -23,7 +23,9 @@ use Matrix\Exception;
 
 class SyncPenjualanJob implements ShouldQueue
 {
+
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    public $timeout = 3600;
     private $tglTransaksi;
     private $updateUnProcessed = true;
     private $nomorSO;

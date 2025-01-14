@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 class SyncNoFakturFeeMemberJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    public $timeout = 3600;
 
     /**
      * Create a new job instance.
