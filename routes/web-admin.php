@@ -313,14 +313,38 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::delete("/", "LevelMemberController@delete");
             });
 
+            // Route::prefix("redeem")->group(function () {
+            //     Route::get("/", "RedeemController@index");
+            //     Route::get("/data-source", "RedeemController@datasource");
+            //     Route::get("/data-source-{state}", "RedeemController@datasource");
+            //     Route::get("/{id}", "RedeemController@edit");
+            //     Route::post("/", "RedeemController@create");
+            //     Route::delete("/", "RedeemController@delete");
+            // });
             Route::prefix("redeem")->group(function () {
-                Route::get("/", "RedeemController@index");
-                Route::get("/data-source", "RedeemController@datasource");
-                Route::get("/data-source-{state}", "RedeemController@datasource");
-                Route::get("/{id}", "RedeemController@edit");
-                Route::post("/", "RedeemController@create");
-                Route::delete("/", "RedeemController@delete");
+                // Halaman utama
+                Route::get("/", "RedeemController@index")->name('redeempoint.index');
+
+                // Hitung jumlah record di setiap tab
+                Route::get("/count-tab/{step}", "RedeemController@countTab")->name('redeempoint.countTab');
+
+                // Data source untuk DataTable
+                Route::get("/data-source", "RedeemController@datasource")->name('redeempoint.datasource');
+                Route::get("/data-source-proses", "RedeemController@datasourceProses")->name('redeempoint.datasource.proses');
+                Route::get("/data-source-acc", "RedeemController@datasourceAcc")->name('redeempoint.datasource.acc');
+                Route::get("/data-source-tolak", "RedeemController@datasourceTolak")->name('redeempoint.datasource.tolak');
+
+                // Perubahan status
+                Route::post("/status/pengajuan", "RedeemController@statusPengajuan")->name('redeempoint.status.pengajuan');
+                Route::post("/status/acc", "RedeemController@statusAcc")->name('redeempoint.status.acc');
+                Route::post("/status/tolak", "RedeemController@statusTolak")->name('redeempoint.status.tolak');
+                Route::post("/status/draft", "RedeemController@statusDraft")->name('redeempoint.status.tolak');
+
+                // (Opsional) Hapus / Tolak
+                // Kalau memang ingin meniadakan method delete dan diganti tolak, hapus route di bawah ini.
+                Route::delete("/", "RedeemController@delete")->name('redeempoint.delete');
             });
+
 
             Route::prefix("member")->group(function () {
                 Route::get("/", "MemberController@index");

@@ -59,11 +59,14 @@
                                 </select>
                             </div>
                             <span>Poin yang Dibutuhkan: {{ $required_points }}</span><br />
+                            <!-- @if(!$editform || $reward_id != $lm->reward_id)
                             <span>Sisa Poin Member: {{ $remaining_points }}</span>
+                            @endif -->
                             @error('reward_id')
                             <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+
 
                         <!-- Notes -->
                         <div class="form-group mb-3">

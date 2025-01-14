@@ -68,14 +68,14 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->where('t.member_user_id', $userId)
                     ->whereYear('t.tgl_invoice', $year)
                     ->selectRaw('SUM(
-                        COALESCE(dt.dpp_amount, 0) - 
-                        CASE 
-                            WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                                (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
-                            ELSE 
-                                COALESCE(dr.return_amount, 0)
-                        END
-                    ) as total_spent')
+                    COALESCE(dt.dpp_amount, 0) - 
+                    CASE 
+                        WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                            (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+                        ELSE 
+                            COALESCE(dr.return_amount, 0)
+                    END
+                ) as total_spent')
                     ->value('total_spent') ?? 0;
 
                 $totalSpent = round($totalSpent); // Pembulatan total_spent
@@ -125,25 +125,31 @@ class CalcMemberExpenseJob implements ShouldQueue
                 }
             }
 
-            // Perbarui level_member_id di tabel users untuk tahun berjalan
+            // Perbarui level_member_id dan points di tabel users untuk tahun berjalan
             if ($currentLevelId) {
+                // Hitung total poin dari member_spent
+                $totalPoints = DB::table('member_spent')
+                    ->where('user_id', $userId)
+                    ->where('tahun', $currentYear)
+                    ->sum('total_spent') / 1000;
+
+                // Hitung total poin dari rewards
+                $totalRewardsPoints = DB::table('member_rewards as mr')
+                    ->join('rewards as r', 'mr.reward_id', '=', 'r.id')
+                    ->where('mr.user_id', $userId)
+                    ->sum('r.point');
+
+                // Hitung poin akhir
+                $finalPoints = round($totalPoints) - $totalRewardsPoints;
+
+                Log::info("Updating user_id: $userId with final points: $finalPoints");
+
+                // Update tabel users
                 DB::table('users')
                     ->where('id', $userId)
                     ->update([
                         'level_member_id' => $currentLevelId,
-                        'points' => DB::raw("
-            (
-                SELECT ROUND(SUM(ms.total_spent) / 1000)
-                FROM member_spent as ms
-                WHERE ms.user_id = users.id AND ms.tahun = $currentYear
-            ) -
-            (
-                SELECT COALESCE(SUM(r.point), 0)
-                FROM member_rewards mr
-                JOIN rewards r ON mr.reward_id = r.id
-                WHERE mr.user_id = users.id
-            )
-        "),
+                        'points' => $finalPoints,
                     ]);
             }
         }
@@ -181,20 +187,21 @@ class CalcMemberExpenseJob implements ShouldQueue
                 ->where('t.member_user_id', $userId)
                 ->whereYear('t.tgl_invoice', $currentYear)
                 ->selectRaw('SUM(
-                COALESCE(dt.dpp_amount, 0) - 
-                CASE 
-                    WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
-                    ELSE 
-                        COALESCE(dr.return_amount, 0)
-                END
-            ) as total_spent')
+                    COALESCE(dt.dpp_amount, 0) - 
+                    CASE 
+                        WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                            (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+                        ELSE 
+                            COALESCE(dr.return_amount, 0)
+                    END
+                ) as total_spent')
                 ->value('total_spent') ?? 0;
 
             $totalSpent = round($totalSpent); // Pembulatan total_spent
 
             Log::info("Total spent for user_id: $userId in year: $currentYear is $totalSpent");
 
+            // Tentukan level berdasarkan total_spent
             $levelId = null;
             $lastLevel = DB::table('member_spent')
                 ->where('user_id', $userId)
@@ -212,8 +219,10 @@ class CalcMemberExpenseJob implements ShouldQueue
             } else {
                 if ($lastLevel) {
                     $lastLevelModel = $levels->firstWhere('id', $lastLevel);
-                    $nextLevel = $levels->firstWhere('level', $lastLevelModel->level + 1);
-                    $levelId = $nextLevel ? $nextLevel->id : $lastLevelModel->id;
+                    if ($lastLevelModel) {
+                        $nextLevel = $levels->firstWhere('level', $lastLevelModel->level + 1);
+                        $levelId = $nextLevel ? $nextLevel->id : $lastLevelModel->id;
+                    }
                 } else {
                     $levelId = $levels->last()->id; // Level terendah
                 }
@@ -233,25 +242,29 @@ class CalcMemberExpenseJob implements ShouldQueue
                 ]
             );
 
-            // Perbarui level_member_id di tabel users untuk tahun berjalan
+            // Hitung total poin dari member_spent
+            $totalPoints = DB::table('member_spent')
+                ->where('user_id', $userId)
+                ->where('tahun', $currentYear)
+                ->sum('total_spent') / 1000;
 
+            // Hitung total poin dari rewards
+            $totalRewardsPoints = DB::table('member_rewards as mr')
+                ->join('rewards as r', 'mr.reward_id', '=', 'r.id')
+                ->where('mr.user_id', $userId)
+                ->sum('r.point');
+
+            // Hitung poin akhir
+            $finalPoints = round($totalPoints) - $totalRewardsPoints;
+
+            Log::info("User ID: $userId - Total Points: " . round($totalPoints) . ", Total Rewards Points: $totalRewardsPoints, Final Points: $finalPoints");
+
+            // Update tabel users
             DB::table('users')
                 ->where('id', $userId)
                 ->update([
                     'level_member_id' => $levelId,
-                    'points' => DB::raw("
-            (
-                SELECT ROUND(SUM(ms.total_spent) / 1000)
-                FROM member_spent as ms
-                WHERE ms.user_id = users.id AND ms.tahun = $currentYear
-            ) -
-            (
-                SELECT COALESCE(SUM(r.point), 0)
-                FROM member_rewards mr
-                JOIN rewards r ON mr.reward_id = r.id
-                WHERE mr.user_id = users.id
-            )
-        "),
+                    'points' => $finalPoints,
                 ]);
         }
 
