@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Library\ValidatedPermission;
 use App\Models\MemberRewardModel;
+use App\Models\UserModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -134,7 +135,7 @@ class RedeemController extends Controller
         // $request->id => array of ID
         $ids = $request->input('id');
         $updated = MemberRewardModel::whereIn('id', $ids)
-            ->whereIn('status', [0, 2])
+            ->where('status', [0, 2])
             ->update(['status' => 1]);
 
         // Contoh catat log
@@ -167,14 +168,49 @@ class RedeemController extends Controller
     public function statusTolak(Request $request)
     {
         $ids = $request->input('id');
+
+        // Ambil data reward dan join dengan tabel rewards untuk mendapatkan point
+        $memberRewards = MemberRewardModel::select('member_rewards.*', 'rewards.point as reward_point')
+            ->join('rewards', 'member_rewards.reward_id', '=', 'rewards.id') // Join tabel rewards
+            ->whereIn('member_rewards.id', $ids)
+            ->whereIn('member_rewards.status', [0, 1, 2]) // Hanya bisa ditolak dari status tertentu
+            ->get();
+
+        foreach ($memberRewards as $memberReward) {
+            $user = UserModel::find($memberReward->user_id); // Ambil data user langsung
+
+            if ($user) {
+                // Tambahkan poin kembali ke user
+                $user->points += $memberReward->reward_point;
+                $user->save();
+
+                // Catat log pengembalian poin
+                LogController::writeLog(
+                    ValidatedPermission::UBAH_DATA_REDEEM_POINT,
+                    "Poin dikembalikan karena reward ditolak",
+                    [
+                        'user_id' => $memberReward->user_id,
+                        'reward_id' => $memberReward->reward_id,
+                        'points_returned' => $memberReward->reward_point,
+                    ],
+                    0,
+                    $memberReward->user_id
+                );
+            }
+        }
+
+        // Ubah status menjadi "Ditolak"
         $updated = MemberRewardModel::whereIn('id', $ids)
-            ->whereIn('status', [0]) // misal hanya boleh tolak dari status 0,1,2
+            ->whereIn('status', [0, 1, 2])
             ->update(['status' => 3]);
 
         return response()->json([
-            'data' => $updated
+            'data' => $updated,
+            'message' => 'Reward berhasil ditolak dan poin dikembalikan.'
         ]);
     }
+
+
 
     /**
      * (Opsional) Menghapus data. 

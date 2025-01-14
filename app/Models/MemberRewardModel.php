@@ -17,25 +17,39 @@ class MemberRewardModel extends Model
 
     public function getCreatedAtAttribute($v)
     {
-        if($v == null || $v == '')return '';
+        if ($v == null || $v == '') return '';
         return Carbon::parse($v, 'Asia/Jakarta')->format('Y-m-d H:i:s');
     }
 
     public function getApprovedAtAttribute($v)
     {
-        if($v == null || $v == '')return '';
+        if ($v == null || $v == '') return '';
         return Carbon::parse($v, 'Asia/Jakarta')->format('Y-m-d H:i:s');
     }
 
-    public static function view(){
-        return MemberRewardModel::from(function(Builder $b){
+    public static function view()
+    {
+        return MemberRewardModel::from(function (Builder $b) {
             return $b->from('member_rewards as m')
-                     ->leftJoin('users as u', 'u.id', '=', 'm.user_id')
-                     ->leftJoin('rewards as r', 'r.id', '=', 'm.reward_id')
-                     ->leftJoin('users as pg', 'pg.id', '=', 'm.pengelola_user_id')
-                     ->select(['m.*', 'u.id_no', 'u.first_name', 'u.last_name', 'u.points', 'u.total_spent',
-                               'r.code as reward_code', 'r.point as reward_point',
-                               'r.name as reward', 'pg.first_name as pengelola']);
+                ->leftJoin('users as u', 'u.id', '=', 'm.user_id')
+                ->leftJoin('rewards as r', 'r.id', '=', 'm.reward_id')
+                ->leftJoin('users as pg', 'pg.id', '=', 'm.pengelola_user_id')
+                ->select([
+                    'm.*',
+                    'u.id_no',
+                    'u.first_name',
+                    'u.last_name',
+                    'u.points',
+                    'u.total_spent',
+                    'r.code as reward_code',
+                    'r.point as reward_point',
+                    'r.name as reward',
+                    'pg.first_name as pengelola'
+                ]);
         }, 'member_rewards');
+    }
+    public function user()
+    {
+        return $this->belongsTo(UserModel::class, 'user_id', 'id');
     }
 }
