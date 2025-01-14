@@ -76,6 +76,10 @@ class Form extends Component
         $this->editform = false; // Set mode tambah
         $this->reset(['user_id', 'reward_id', 'notes', 'remaining_points', 'required_points']);
     }
+    public function resetState()
+    {
+        $this->reset(['remaining_points', 'required_points', 'point', 'reward_id']);
+    }
 
 
     private function validasi()
@@ -292,6 +296,12 @@ class Form extends Component
         if ($memberPoint) {
             // Tambahkan kembali poin yang dikurangi
             $user->points += abs($memberPoint->points);
+
+            // Pastikan nilai poin user tidak negatif
+            if ($user->points < 0) {
+                $user->points = 0;
+            }
+
             $user->save();
 
             // Hapus log dari MemberPointModel
@@ -307,6 +317,7 @@ class Form extends Component
             );
         }
     }
+
 
 
     public function store()
@@ -347,5 +358,33 @@ class Form extends Component
     public function render()
     {
         return view('livewire.admin.redeempoint.form');
+    }
+
+    private function returnPointsToUser()
+    {
+        $user = UserModel::find($this->user_id);
+
+        if (!$user) {
+            throw new \Exception('User tidak ditemukan.');
+        }
+
+        // Tambahkan poin yang telah dikurangi sebelumnya
+        $user->points += $this->lm->reward_point ?? 0;
+        $user->save();
+
+        // Hapus catatan pengurangan poin dari MemberPointModel jika ada
+        MemberPointModel::where([
+            'user_id' => $this->user_id,
+            'member_reward_id' => $this->lm->id,
+        ])->delete();
+
+        // Catat log
+        LogController::writeLog(
+            ValidatedPermission::UBAH_DATA_REDEEM_POINT,
+            'Poin dikembalikan karena reward ditolak',
+            [],
+            0,
+            $this->user_id
+        );
     }
 }

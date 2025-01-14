@@ -59,9 +59,9 @@
                                 </select>
                             </div>
                             <span>Poin yang Dibutuhkan: {{ $required_points }}</span><br />
-                            <!-- @if(!$editform || $reward_id != $lm->reward_id)
+                            @if(!$editform)
                             <span>Sisa Poin Member: {{ $remaining_points }}</span>
-                            @endif -->
+                            @endif
                             @error('reward_id')
                             <span class="text-danger">{{ $message }}</span>
                             @enderror
@@ -83,7 +83,7 @@
 
                 <div class="modal-footer">
                     <!-- Tombol Footer Modal -->
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" wire:click="resetState" data-bs-dismiss="modal">Close</button>
                     <button wire:loading.attr="disabled" onclick="save()" type="button" class="btn btn-primary">
                         {{ $editform ? 'Simpan Perubahan' : 'Simpan Baru' }}
                     </button>
