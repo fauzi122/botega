@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class CalcMemberExpenseJob implements ShouldQueue
 {
+    public $timeout = 3600;
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     private $mode; // mode =0 all, mode=1 syncfromaccurate, mode=2 synctoaccurate
 
