@@ -53,11 +53,11 @@ class Form extends Component
             $this->reward_id = $this->lm->reward_id;
 
             // Ambil poin dari tabel member_reward
-            $this->point = $this->lm->point;
+            $this->point = $this->lm->points;
 
-            // Hitung poin yang dibutuhkan dan sisa poin member
-            $this->required_points = $this->lm->reward_point ?? '-'; // Poin reward
-            $this->remaining_points = ($this->lm->point ?? 0) - ($this->required_points ?? 0); // Penjumlahan poin
+            // Tampilkan poin reward tanpa menghitung ulang
+            $this->required_points = $this->lm->reward_point ?? '-';
+            $this->remaining_points = '-'; // Biarkan kosong untuk mode edit
         }
 
         $this->notes = $this->lm->notes ?? '';
@@ -67,6 +67,7 @@ class Form extends Component
             $this->approved_at = Carbon::parse($this->lm->approved_at)->format('Y-m-d');
         }
     }
+
 
 
 
@@ -114,10 +115,16 @@ class Form extends Component
     }
     public function showPoint($rewardId)
     {
+        if ($this->editform && $rewardId == $this->lm->reward_id) {
+            // Jika sedang dalam mode edit dan reward tidak berubah, abaikan penghitungan ulang
+            return;
+        }
+
         $reward = RewardModel::find($rewardId); // Ambil data reward berdasarkan ID
         $this->required_points = $reward->point ?? 0; // Perbarui poin yang dibutuhkan
         $this->remaining_points = ($this->point ?? 0) - $this->required_points; // Hitung ulang sisa poin
     }
+
 
 
 
