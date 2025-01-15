@@ -120,7 +120,7 @@ class SyncPenjualanJob implements ShouldQueue
 
                     foreach ($data as $idx => $v) {
                         $detail .= "Processing SO ID: " . $v['id'] . "\n";
-                        $response2 = $r->get('/api/sales-order/detail.do?id=31102');
+                        $response2 = $r->get('/api/sales-order/detail.do?id=' . $v['id']);
                         if ($response2 == '') {
                             $nogagal++;
                             $detail .= "Gagal mengambil detail untuk SO ID: " . $v['id'] . "\n";
