@@ -70,9 +70,9 @@ class FeeProfesionalRekapAll implements FromView, WithEvents, WithTitle
                 ->whereNull(['dt_acc', 'dt_finish']);
         } else if ($this->status == 'acc') {
             $v = $v->whereNotNull(['dt_pengajuan',  'dt_acc'])
-                ->whereNull('dt_finish');
+                ->whereNull(['dt_finish', 'dt_dp']);
         } else {
-            $v = $v->whereNotNull(['dt_acc', 'dt_finish']);
+            $v = $v->whereNotNull(['dt_acc', 'dt_finish'])->whereNull('dt_dp');
         }
         $v->where('fee', '>', 0);
         $v->select([
