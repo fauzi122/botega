@@ -493,7 +493,7 @@ class SyncPenjualanJob implements ShouldQueue
                 $taxable = (int)($d['taxable'] ?? true);
                 $useTax1 = (bool) ($dt['useTax1'] ?? true);
                 //                echo "nilai taxable " . $taxable . "\n branch :";
-                dump("tes-" . $useTax1);
+                // dump("tes-" . $useTax1);
                 // echo "tes-" . $dt;
                 //                echo " \n dppamount " . $dt['dppAmount'];
                 $dppAmount = $dt['dppAmount'] ?? 0;

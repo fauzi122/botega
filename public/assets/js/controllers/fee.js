@@ -987,7 +987,7 @@ function buildTable() {
             {
                 data: "no_faktur",
                 render: (data, type, row, meta) => {
-                    return `${row["no_faktur"] ?? "[Unavailable]"}`;
+                    return `${row["no_faktur"] ?? row["kode_merger"]}`;
                 },
             },
         ],
