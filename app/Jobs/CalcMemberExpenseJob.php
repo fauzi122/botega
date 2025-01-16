@@ -90,21 +90,33 @@ class CalcMemberExpenseJob implements ShouldQueue
                 if ($totalSpent > 0) {
                     foreach ($levels as $level) {
                         if ($totalSpent <= $level->limit_transaction) {
-                            $levelId = $level->id;
-                            $lastLevel = $level; // Perbarui lastLevel ke level saat ini
+                            // Batasi penurunan ke hanya satu tingkat
+                            if ($lastLevel && $level->level > $lastLevel->level + 1) {
+                                $levelId = $levels->firstWhere('level', $lastLevel->level + 1)->id;
+                            } else {
+                                $levelId = $level->id;
+                            }
+                            $lastLevel = $levels->firstWhere('id', $levelId); // Perbarui lastLevel
                             break;
                         }
                     }
                 } else {
-                    if ($lastLevel) {
-                        $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
-                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap jika tidak ada level lebih rendah
-                        $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
+                    if ($year === $currentYear) {
+                        // Jika tahun berjalan, gunakan tier tahun sebelumnya
+                        $levelId = $lastLevel->id ?? $levels->last()->id;
                     } else {
-                        $levelId = $levels->last()->id; // Level terendah sebagai default
-                        $lastLevel = $levels->last();
+                        if ($lastLevel) {
+                            // Jika tidak ada pendapatan tahun lalu, turun satu tingkat
+                            $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1);
+                            $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id;
+                            $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
+                        } else {
+                            $levelId = $levels->last()->id; // Default ke level terendah
+                            $lastLevel = $levels->last();
+                        }
                     }
                 }
+
 
                 // Simpan ke tabel member_spent
                 DB::table('member_spent')->updateOrInsert(
