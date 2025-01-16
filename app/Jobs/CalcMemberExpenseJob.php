@@ -45,7 +45,7 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil semua pengguna dengan tahun transaksi pertama
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
-            // ->where('member_user_id', '3126')
+            ->where('member_user_id', '4165')
             ->selectRaw('member_user_id, MIN(YEAR(tgl_invoice)) as first_year')
             ->groupBy('member_user_id')
             ->pluck('first_year', 'member_user_id');
@@ -98,6 +98,7 @@ class CalcMemberExpenseJob implements ShouldQueue
                         $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
                         $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
                         $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
+                        // dump($year . '->' . $levelId);
                     } else {
                         // Tetapkan level berdasarkan totalSpent
                         foreach ($levels as $level) {
