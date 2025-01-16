@@ -42,7 +42,7 @@ class CalcMemberExpenseJob implements ShouldQueue
     {
         Log::info('CalcMemberExpenseJob executed at: ' . now());
 
-        // Ambil semua pengguna dengan tahun transaksi pertama
+        // Ambil data semua pengguna dan tahun transaksi pertama mereka
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
             ->selectRaw('member_user_id, MIN(YEAR(tgl_invoice)) as first_year')
@@ -54,7 +54,6 @@ class CalcMemberExpenseJob implements ShouldQueue
         foreach ($userFirstTransactionYears as $userId => $firstYear) {
             $yearsToProcess = range($firstYear, $currentYear);
             $lastLevel = null;
-            $currentLevelId = null; // Menyimpan level tahun berjalan
 
             foreach ($yearsToProcess as $year) {
                 Log::info("Processing user_id: $userId for year: $year");
@@ -80,48 +79,51 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->value('total_spent') ?? 0;
 
                 $totalSpent = round($totalSpent); // Pembulatan total_spent
-
                 Log::info("Total spent for user_id: $userId in year: $year is $totalSpent");
 
-                // Ambil level yang dipublish
-                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
+                // Ambil tier tahun sebelumnya
+                $previousYearLevel = DB::table('member_spent')
+                    ->where('user_id', $userId)
+                    ->where('tahun', $year - 1)
+                    ->first();
 
-                $levelId = null;
+                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'asc')->get();
+                $lastLevel = $levels->firstWhere('id', $previousYearLevel->level_id ?? null);
+
                 if ($year === $currentYear) {
-                    // Tahun berjalan (misalnya 2026)
+                    // Tahun berjalan
                     if ($totalSpent > 0) {
-                        // Jika ada transaksi, hitung level berdasarkan total transaksi
+                        // Jika ada transaksi, tentukan apakah naik atau tetap
                         foreach ($levels as $level) {
                             if ($totalSpent <= $level->limit_transaction) {
-                                $levelId = $level->id;
-                                $lastLevel = $level; // Simpan level saat ini
+                                if ($lastLevel && $totalSpent > $lastLevel->limit_transaction) {
+                                    // Naik tier jika transaksi lebih besar dari tahun sebelumnya
+                                    $levelId = $level->id;
+                                    $lastLevel = $level;
+                                    break;
+                                }
+                                $levelId = $lastLevel->id ?? $levels->last()->id; // Tetap di tier yang sama
                                 break;
                             }
                         }
                     } else {
-                        // Jika tidak ada transaksi, gunakan tier dari tahun sebelumnya
+                        // Tidak ada transaksi, gunakan tier tahun sebelumnya
                         $levelId = $lastLevel->id ?? $levels->last()->id;
                     }
                 } else {
-                    // Tahun berikutnya (misalnya tahun 2027)
-                    if ($lastLevel) {
-                        if ($totalSpent > 0 && $totalSpent < $lastLevel->limit_transaction) {
-                            // Jika transaksi tidak memenuhi tier saat ini, turun satu tingkat
-                            $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1);
-                            $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id;
-                            $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
-                        } else {
-                            // Tetap di tier yang sama jika memenuhi target
-                            $levelId = $lastLevel->id;
-                        }
+                    // Tahun berikutnya
+                    if ($totalSpent > 0 && $lastLevel && $totalSpent < $lastLevel->limit_transaction) {
+                        // Turun satu tingkat jika transaksi tidak memenuhi target
+                        $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1);
+                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id;
+                        $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
                     } else {
-                        // Default ke level terendah jika tidak ada data sebelumnya
-                        $levelId = $levels->last()->id;
-                        $lastLevel = $levels->last();
+                        // Tetap di tier yang sama jika memenuhi target
+                        $levelId = $lastLevel->id ?? $levels->last()->id;
                     }
                 }
 
-                // Simpan ke tabel member_spent
+                // Simpan hasil ke tabel member_spent
                 DB::table('member_spent')->updateOrInsert(
                     [
                         'user_id' => $userId,
@@ -129,42 +131,32 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ],
                     [
                         'total_spent' => $totalSpent,
-                        'level' => $levelId, // Simpan id level
+                        'level_id' => $levelId, // Simpan id level
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]
                 );
 
-                // Simpan level tahun berjalan ke variabel
-                if ($year == $currentYear) {
-                    $currentLevelId = $levelId;
-                }
+                Log::info("Level for user_id: $userId in year: $year is $levelId");
             }
 
-            // Perbarui level_member_id dan points di tabel users untuk tahun berjalan
-            if ($currentLevelId) {
-                // Hitung total poin dari member_spent
+            // Update level_member_id dan points di tabel users untuk tahun berjalan
+            if ($year === $currentYear) {
                 $totalPoints = DB::table('member_spent')
                     ->where('user_id', $userId)
-                    ->where('tahun', $currentYear)
                     ->sum('total_spent') / 1000;
 
-                // Hitung total poin dari rewards
                 $totalRewardsPoints = DB::table('member_rewards as mr')
                     ->join('rewards as r', 'mr.reward_id', '=', 'r.id')
                     ->where('mr.user_id', $userId)
                     ->sum('r.point');
 
-                // Hitung poin akhir
                 $finalPoints = round($totalPoints) - $totalRewardsPoints;
 
-                Log::info("Updating user_id: $userId with final points: $finalPoints");
-
-                // Update tabel users
                 DB::table('users')
                     ->where('id', $userId)
                     ->update([
-                        'level_member_id' => $currentLevelId,
+                        'level_member_id' => $levelId,
                         'points' => $finalPoints,
                     ]);
             }
@@ -172,6 +164,7 @@ class CalcMemberExpenseJob implements ShouldQueue
 
         Log::info('CalcMemberExpenseJob completed.');
     }
+
 
     public function refreshDaily(): void
     {
