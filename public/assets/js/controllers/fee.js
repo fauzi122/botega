@@ -237,14 +237,15 @@ function buildTable() {
             { data: "nomor" },
             { data: "periode" },
             {
-                data: "first_name",
+                data: "member",
                 render: (data, type, row, meta) => {
-                    return `${data} ${row["last_name"]} (${
+                    return `${data} (${
                         row["id_no"]
                     })<br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>`;
                 },
+                searchable: true,
             },
             {
                 data: "npwp",
@@ -427,14 +428,15 @@ function buildTable() {
             { data: "nomor" },
             { data: "periode" },
             {
-                data: "first_name",
+                data: "member",
                 render: (data, type, row, meta) => {
-                    return `${data} ${row["last_name"]} (${
+                    return `${data} (${
                         row["id_no"]
                     })<br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>`;
                 },
+                searchable: true,
             },
             {
                 data: "npwp",
@@ -761,14 +763,15 @@ function buildTable() {
             },
             { data: "periode" },
             {
-                data: "first_name",
+                data: "member",
                 render: (data, type, row, meta) => {
-                    return `${data} ${row["last_name"]} (${
+                    return `${data} (${
                         row["id_no"]
                     })<br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>`;
                 },
+                searchable: true,
             },
             {
                 data: "npwp",
@@ -934,15 +937,16 @@ function buildTable() {
             },
             { data: "periode" },
             {
-                data: "first_name",
+                data: "member",
                 render: (data, type, row, meta) => {
-                    return `${data} ${row["last_name"]} (${
+                    return `${data} (${
                         row["id_no"]
                     })<br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>
                             `;
                 },
+                searchable: true,
             },
             {
                 data: "npwp",
@@ -1085,15 +1089,16 @@ function buildTable() {
             },
             { data: "periode" },
             {
-                data: "first_name",
+                data: "member",
                 render: (data, type, row, meta) => {
-                    return `${data} ${row["last_name"]} (${
+                    return `${data} } (${
                         row["id_no"]
                     })<br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>
                             `;
                 },
+                searchable: true,
             },
             {
                 data: "npwp",
