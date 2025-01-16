@@ -87,36 +87,39 @@ class CalcMemberExpenseJob implements ShouldQueue
                 $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
 
                 $levelId = null;
-                if ($totalSpent > 0) {
-                    foreach ($levels as $level) {
-                        if ($totalSpent <= $level->limit_transaction) {
-                            // Batasi penurunan ke hanya satu tingkat
-                            if ($lastLevel && $level->level > $lastLevel->level + 1) {
-                                $levelId = $levels->firstWhere('level', $lastLevel->level + 1)->id;
-                            } else {
+                if ($year === $currentYear) {
+                    // Tahun berjalan (misalnya 2026)
+                    if ($totalSpent > 0) {
+                        // Jika ada transaksi, hitung level berdasarkan total transaksi
+                        foreach ($levels as $level) {
+                            if ($totalSpent <= $level->limit_transaction) {
                                 $levelId = $level->id;
+                                $lastLevel = $level; // Simpan level saat ini
+                                break;
                             }
-                            $lastLevel = $levels->firstWhere('id', $levelId); // Perbarui lastLevel
-                            break;
                         }
+                    } else {
+                        // Jika tidak ada transaksi, gunakan tier dari tahun sebelumnya
+                        $levelId = $lastLevel->id ?? $levels->last()->id;
                     }
                 } else {
-                    if ($year === $currentYear) {
-                        // Jika tahun berjalan, gunakan tier tahun sebelumnya
-                        $levelId = $lastLevel->id ?? $levels->last()->id;
-                    } else {
-                        if ($lastLevel) {
-                            // Jika tidak ada pendapatan tahun lalu, turun satu tingkat
+                    // Tahun berikutnya (misalnya tahun 2027)
+                    if ($lastLevel) {
+                        if ($totalSpent > 0 && $totalSpent < $lastLevel->limit_transaction) {
+                            // Jika transaksi tidak memenuhi tier saat ini, turun satu tingkat
                             $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1);
                             $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id;
                             $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
                         } else {
-                            $levelId = $levels->last()->id; // Default ke level terendah
-                            $lastLevel = $levels->last();
+                            // Tetap di tier yang sama jika memenuhi target
+                            $levelId = $lastLevel->id;
                         }
+                    } else {
+                        // Default ke level terendah jika tidak ada data sebelumnya
+                        $levelId = $levels->last()->id;
+                        $lastLevel = $levels->last();
                     }
                 }
-
 
                 // Simpan ke tabel member_spent
                 DB::table('member_spent')->updateOrInsert(
