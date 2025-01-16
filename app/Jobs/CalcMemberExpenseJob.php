@@ -45,7 +45,7 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil semua pengguna dengan tahun transaksi pertama
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
-            ->where('member_user_id', '3126')
+            // ->where('member_user_id', '3126')
             ->selectRaw('member_user_id, MIN(YEAR(tgl_invoice)) as first_year')
             ->groupBy('member_user_id')
             ->pluck('first_year', 'member_user_id');
@@ -93,23 +93,32 @@ class CalcMemberExpenseJob implements ShouldQueue
                 $lastLevel = $levels->firstWhere('id', $previousYearLevel->level ?? null);
                 $levelId = null;
                 if ($totalSpent > 0) {
-                    foreach ($levels as $level) {
-                        if ($totalSpent <= $level->limit_transaction) {
-                            $levelId = $level->id;
-                            $lastLevel = $level; // Perbarui lastLevel ke level saat ini
-                            break;
+                    if ($previousYearLevel && $totalSpent < $previousYearLevel->total_spent) {
+                        // Jika totalSpent lebih rendah dari tahun sebelumnya, turunkan satu level
+                        $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
+                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
+                        $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
+                    } else {
+                        // Tetapkan level berdasarkan totalSpent
+                        foreach ($levels as $level) {
+                            if ($totalSpent <= $level->limit_transaction) {
+                                $levelId = $level->id;
+                                $lastLevel = $level; // Perbarui lastLevel ke level saat ini
+                                break;
+                            }
                         }
                     }
                 } else {
                     if ($lastLevel) {
                         $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
-                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap jika tidak ada level lebih rendah
+                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
                         $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
                     } else {
                         $levelId = $levels->last()->id; // Level terendah sebagai default
                         $lastLevel = $levels->last();
                     }
                 }
+
                 // die;
                 // Simpan ke tabel member_spent
                 DB::table('member_spent')->updateOrInsert(
