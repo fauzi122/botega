@@ -75,6 +75,8 @@ class ManagePointsJob implements ShouldQueue
         LEFT JOIN 
             detail_retur_penjualan dr ON dr.so_number = t.nomor_so COLLATE utf8mb4_unicode_ci
             AND dr.product_id = dt.product_id COLLATE utf8mb4_unicode_ci
+            WHERE 
+        t.tgl_invoice IS NOT NULL
     ");
 
 
@@ -134,6 +136,7 @@ class ManagePointsJob implements ShouldQueue
         $updatedTransactionIds = DB::table('transactions')
             ->join('detail_transactions', 'transactions.id', '=', 'detail_transactions.transaction_id')
             ->where('detail_transactions.updated_at', '>=', $sevenDaysAgo)
+            ->whereNotNull('transactions.tgl_invoice')
             ->orWhere('transactions.updated_at', '>=', $sevenDaysAgo)
             ->pluck('transactions.id');
 
