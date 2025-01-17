@@ -33,7 +33,8 @@ class CalcMemberExpenseJob implements ShouldQueue
         if ($this->mode == 0) {
             $this->refreshAll();
         } else {
-            $this->refreshDaily();
+            // $this->refreshDaily();
+            $this->refreshAll();
         }
     }
 
@@ -45,14 +46,30 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil semua pengguna dengan tahun transaksi pertama
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
-            // ->where('member_user_id', '4165')
             ->selectRaw('member_user_id, MIN(YEAR(tgl_invoice)) as first_year')
             ->groupBy('member_user_id')
             ->pluck('first_year', 'member_user_id');
 
         $currentYear = date('Y');
 
-        foreach ($userFirstTransactionYears as $userId => $firstYear) {
+        // Ambil semua pengguna dari tabel users
+        $allUserIds = DB::table('users')->pluck('id');
+
+        foreach ($allUserIds as $userId) {
+            if (!isset($userFirstTransactionYears[$userId])) {
+                // Jika user tidak memiliki transaksi, atur points menjadi 0
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'points' => 0,
+                        'level_member_id' => null, // Reset level jika tidak ada transaksi
+                    ]);
+
+                Log::info("User_id: $userId has no transactions. Points set to 0.");
+                continue; // Lanjutkan ke user berikutnya
+            }
+
+            $firstYear = $userFirstTransactionYears[$userId];
             $yearsToProcess = range($firstYear, $currentYear);
             $lastLevel = null;
             $currentLevelId = null; // Menyimpan level tahun berjalan
@@ -70,14 +87,14 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->where('t.member_user_id', $userId)
                     ->whereYear('t.tgl_invoice', $year)
                     ->selectRaw('SUM(
-                    COALESCE(dt.dpp_amount, 0) - 
-                    CASE 
-                        WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                            (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
-                        ELSE 
-                            COALESCE(dr.return_amount, 0)
-                    END
-                ) as total_spent')
+                COALESCE(dt.dpp_amount, 0) - 
+                CASE 
+                    WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+                    ELSE 
+                        COALESCE(dr.return_amount, 0)
+                END
+            ) as total_spent')
                     ->value('total_spent') ?? 0;
 
                 $totalSpent = round($totalSpent); // Pembulatan total_spent
@@ -98,7 +115,6 @@ class CalcMemberExpenseJob implements ShouldQueue
                         $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
                         $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
                         $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
-                        // dump($year . '->' . $levelId);
                     } else {
                         // Tetapkan level berdasarkan totalSpent
                         foreach ($levels as $level) {
@@ -115,12 +131,11 @@ class CalcMemberExpenseJob implements ShouldQueue
                         $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
                         $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
                     } else {
-                        $levelId = $levels->last()->id; // Level terendah sebagai default
+                        $levelId = $levels->last()->id ?? null; // Level terendah sebagai default
                         $lastLevel = $levels->last();
                     }
                 }
 
-                // die;
                 // Simpan ke tabel member_spent
                 DB::table('member_spent')->updateOrInsert(
                     [
@@ -148,7 +163,6 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->where('user_id', $userId)
                     ->where('tahun', $currentYear)
                     ->sum('total_spent') / 1000;
-
                 // Hitung total poin dari rewards
                 $totalRewardsPoints = DB::table('member_rewards as mr')
                     ->join('rewards as r', 'mr.reward_id', '=', 'r.id')
@@ -172,6 +186,7 @@ class CalcMemberExpenseJob implements ShouldQueue
 
         Log::info('CalcMemberExpenseJob completed.');
     }
+
 
     public function refreshDaily(): void
     {
