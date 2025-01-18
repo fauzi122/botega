@@ -81,23 +81,24 @@ class CalcMemberExpenseJob implements ShouldQueue
                 $totalSpent = DB::table('detail_transactions as dt')
                     ->join('transactions as t', 't.id', '=', 'dt.transaction_id')
                     ->leftJoin('detail_retur_penjualan as dr', function ($join) {
-                        $join->on(DB::raw('dr.retur_no COLLATE utf8mb4_unicode_ci'), '=', DB::raw('dt.retur_no COLLATE utf8mb4_unicode_ci'))
-                            ->on(DB::raw('dr.product_id COLLATE utf8mb4_unicode_ci'), '=', DB::raw('dt.product_id COLLATE utf8mb4_unicode_ci'));
+                        $join->on(DB::raw('dr.retur_no COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.retur_no COLLATE utf8mb4_general_ci'))
+                            ->on(DB::raw('dr.product_id COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.product_id COLLATE utf8mb4_general_ci'));
                     })
                     ->where('t.member_user_id', $userId)
                     ->whereYear('t.tgl_invoice', $year)
                     ->selectRaw('SUM(
-                COALESCE(dt.dpp_amount, 0) - 
-                CASE 
-                    WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                        (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
-                    ELSE 
-                        COALESCE(dr.return_amount, 0)
-                END
-            ) as total_spent')
+        COALESCE(dt.dpp_amount, 0) - 
+        CASE 
+            WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+            ELSE 
+                COALESCE(dr.return_amount, 0)
+        END
+    ) as total_spent')
                     ->value('total_spent') ?? 0;
 
-                $totalSpent = round($totalSpent); // Pembulatan total_spent
+                $totalSpent = round($totalSpent);
+
 
                 Log::info("Total spent for user_id: $userId in year: $year is $totalSpent");
                 $previousYearLevel = DB::table('member_spent')
