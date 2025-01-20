@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class CalcMemberExpenseJob implements ShouldQueue
 {
@@ -30,6 +31,9 @@ class CalcMemberExpenseJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // Mail::raw('Test email from Laravel', function ($message) {
+        //     $message->to('mochamad.mmz@bsi.ac.id')->subject('Test Email');
+        // });
         if ($this->mode == 0) {
             $this->refreshAll();
         } else {

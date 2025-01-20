@@ -214,10 +214,12 @@ class FeeController extends Controller
 
         $id = \request('id');
         $r = false;
+        // dd($id);
         foreach ($id as $ii) {
             $ss = explode("|", $ii);
             $userid = $ss[0];
             $feenumberid = $ss[1];
+            $changeMember = isset($ss[2]) ? $ss[2] : null;
 
             $r = FeeProfessionalModel::query()
                 ->where('member_user_id', $userid)
@@ -240,30 +242,39 @@ class FeeController extends Controller
                 ]);
             // Kirim data ke API jika status adalah `dt_dp`
             if ($fieldName === 'dt_dp') {
-                // Ambil data dari tabel `fee_number` dan `users`
+                // Ambil data dari tabel `fee_number`
                 $feeNumber = FeeNumberModel::find($feenumberid);
+
+                // Ambil data pengguna berdasarkan userid dan changeMember (jika ada)
                 $user = UserModel::find($userid);
+                $changeUser = isset($changeMember) ? UserModel::find($changeMember) : null;
 
                 if ($feeNumber && $user) {
+                    // Tentukan customerNo dan charField4
+                    $customerNo = $changeMember ? $changeUser->id_no : $user->id_no; // Gunakan changeCustomer jika ada, fallback ke user->id_no
+                    $charField4 = $changeMember ? $user->first_name . ' ' . $user->last_name . ' (' . $user->id_no . ')' : null; // Jika ada changeCustomer, gunakan user->id_no
+
                     // Data untuk API
                     $dpData = [
-                        'customerNo' => $user->id_no,
+                        'customerNo' => $customerNo, // Menggunakan changeCustomer jika ada
                         'transDate' => now()->format('d/m/Y'),
                         'poNumber' => $feeNumber->nomor,
                         'dpAmount' => round($feeNumber->total), // Membulatkan ke bilangan bulat terdekat
                         'branchName' => 'Jakarta',
                         'charField1' => 'baicircle.id',
-                        'toAddress' => $user->home_addr,
+                        'toAddress' => $user->home_addr, // Tetap gunakan alamat dari user asli
                         'status' => 'Draf',
                         'inclusiveTax' => true,
                         'isTaxable' => true,
+                        'charField4' => $charField4, // Diisi dengan user->id_no jika ada changeCustomer
+                        'taxType' => 'CTAS_DPP_NILAI_LAIN',
                     ];
-
-
+                    // dd($dpData);
                     // Dispatch job
                     SendDownPaymentJob::dispatch(null, null, $dpData, null)->onConnection('sync');
                 }
             }
+
             if ($fieldName == 'dt_pengajuan') {
                 FeePaymentMadeModel::hitungPaymentMade($feenumberid);
             }

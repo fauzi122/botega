@@ -1091,9 +1091,12 @@ function buildTable() {
             {
                 data: "member",
                 render: (data, type, row, meta) => {
-                    return `${data} } (${
+                    return `${data} (${
                         row["id_no"]
-                    })<br/><small class="badge badge-soft-info">${
+                    })<br/><small class="badge badge-soft-success">${
+                        row["change_customer"] ?? "-"
+                    }</small>
+                    <br/><small class="badge badge-soft-info">${
                         row["kategori"] ?? "-"
                     }</small>
                             `;
@@ -1148,77 +1151,6 @@ function buildTable() {
             },
         ],
     });
-    $("#jd-table-setujui").on("click", ".proses-dp-btn", function () {
-        let rawData = $(this).data("ids");
-        console.log("Data Mentah:", rawData);
-
-        let ids = [rawData]; // Simpan langsung dalam array
-        console.log("Data IDs:", ids);
-
-        let nomor = $(this).data("nomor");
-        let route = baseurl() + `/admin/fee/status/dp`;
-
-        prosesDP(nomor, ids, route);
-    });
-    function prosesDP(nomor, ids, route) {
-        Swal.fire({
-            title: `Proses DP untuk nomor ${nomor}?`,
-            text: "Pastikan semua data sudah benar sebelum melanjutkan.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Proses",
-            cancelButtonText: "Batal",
-        }).then((result) => {
-            if (result.value) {
-                // $("#jd-table-setujui").css("display", "block");
-
-                // Membuat data ID yang akan dikirim
-                const data = {
-                    _token: csrf_token(),
-                    id: ids, // Array ID yang diterima dari parameter
-                };
-                console.log(data);
-                // console.log("Response JSON:", nomor + "-" + ids + "-" + route);
-
-                $.post(route, data)
-                    .done((response) => {
-                        console.log("Response JSON:", response);
-                        if (response.data) {
-                            // Reload tabel dan refresh data
-                            $("table#jd-table-setujui")
-                                .DataTable()
-                                .ajax.reload();
-                            $("table#jd-table-dp").DataTable().ajax.reload();
-                            refreshDataSUM();
-                            Swal.fire(
-                                "Berhasil!",
-                                "Proses DP telah berhasil dilakukan.",
-                                "success"
-                            );
-                        } else {
-                            Swal.fire(
-                                "Gagal!",
-                                "Terjadi kesalahan saat memproses data.",
-                                "error"
-                            );
-                            $("table#jd-table-setujui")
-                                .DataTable()
-                                .ajax.reload();
-                        }
-                    })
-                    .fail(() => {
-                        Swal.fire(
-                            "Gagal!",
-                            "Terjadi kesalahan saat memproses data.",
-                            "error"
-                        );
-                    })
-                    .always(() => {
-                        // $("#jd-table-setujui").css("display", "none");
-                    });
-            }
-        });
-    }
 }
 
 function save() {
@@ -1245,3 +1177,110 @@ function showDetailFee(fee_number_id) {
     wireDetail.set("fee_number_id", fee_number_id);
     $("div#modalformDetail").modal("show");
 }
+
+$(document).ready(function () {
+    // Event klik tombol Proses DP
+    $("#jd-table-setujui").on("click", ".proses-dp-btn", function () {
+        let rawData = $(this).data("ids");
+        let nomor = $(this).data("nomor");
+
+        // Simpan data di modal sebagai atribut data
+        $("#modalProsesDP").data("rawData", rawData);
+        $("#modalProsesDP").data("nomor", nomor);
+
+        // Tampilkan modal
+        $("#modalProsesDP").modal("show");
+    });
+    // In your Javascript (external .js resource or <script> tag)
+    // Event perubahan pada opsi DP
+    $("#dpOption").on("change", function () {
+        let selectedOption = $(this).val();
+
+        if (selectedOption === "other") {
+            $("#customerSelectContainer").removeClass("d-none");
+            $(document).ready(function () {
+                $(".js-example-basic-single").select2({
+                    placeholder: "Pilih Customer",
+                    ajax: {
+                        url: "/admin/member/select2prof",
+                        dataType: "json",
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term };
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: data.items.map((item) => ({
+                                    id: item.id,
+                                    text: item.text,
+                                })),
+                            };
+                        },
+                    },
+                    dropdownParent: $("#modalProsesDP"), // Tambahkan ini
+                });
+            });
+        } else {
+            $("#customerSelectContainer").addClass("d-none");
+            $(".js-example-basic-single").val(null).trigger("change"); // Reset nilai Select2
+        }
+    });
+
+    // Event klik tombol Proses
+    $("#prosesDPButton").on("click", function () {
+        let rawData = $("#modalProsesDP").data("rawData"); // Ambil data IDs
+        let nomor = $("#modalProsesDP").data("nomor"); // Ambil data nomor
+
+        let dpType = $("#dpOption").val(); // Ambil opsi proses DP
+        let customerId =
+            dpType === "other" ? $(".js-example-basic-single").val() : null; // Ambil ID customer jika diperlukan
+
+        let data = {
+            _token: csrf_token(),
+            id:
+                dpType === "other"
+                    ? [`${rawData}|${customerId}`] // Gabungkan rawData dan customerId dengan delimiter '|'
+                    : [rawData], // Hanya rawData jika dpType bukan "other"
+            dpType: dpType,
+        };
+
+        // Kirim data ke server
+        $.post(baseurl() + "/admin/fee/status/dp", data)
+            .done(function (response) {
+                if (response.success) {
+                    Swal.fire(
+                        "Berhasil!",
+                        "Proses DP berhasil dilakukan.",
+                        "success"
+                    );
+                    $("#modalProsesDP").modal("hide");
+                    $("table#jd-table-setujui").DataTable().ajax.reload();
+                } else {
+                    console.error("Error dari server:", response.message);
+                    Swal.fire(
+                        "Gagal!",
+                        response.message ||
+                            "Terjadi kesalahan saat memproses data.", // Gunakan pesan dari server jika ada
+                        "error"
+                    );
+                }
+            })
+            .fail(function (xhr, textStatus, errorThrown) {
+                // Tampilkan detail error di log konsol
+                console.error(
+                    "AJAX Error:",
+                    textStatus,
+                    errorThrown,
+                    xhr.responseText
+                );
+
+                // Tampilkan pesan error berdasarkan status HTTP
+                let errorMessage = `Gagal memproses permintaan: ${xhr.status} ${xhr.statusText}`;
+                if (xhr.responseText) {
+                    errorMessage += `\nDetail: ${xhr.responseText}`;
+                }
+
+                Swal.fire("Gagal!", errorMessage, "error");
+            });
+    });
+});

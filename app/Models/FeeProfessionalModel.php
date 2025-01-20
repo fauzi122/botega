@@ -56,7 +56,8 @@ class FeeProfessionalModel extends Model
                     'dt.product_id as product_id',
                     'pc.category',
                     'pd.category_id',
-                    'dp.number'
+                    'dp.number',
+                    'dp.change_customer'
                 ]);
         }, 'fee_professional');
     }
@@ -146,7 +147,8 @@ class FeeProfessionalModel extends Model
             'an_rekening',
             'no_faktur',
             'bank_kota',
-            'number'
+            'number',
+            'change_customer'
         ], 'fee_professional')->groupBy(['fee_number_id']);
     }
 

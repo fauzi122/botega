@@ -349,6 +349,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             Route::prefix("member")->group(function () {
                 Route::get("/", "MemberController@index");
                 Route::get("/select2prof", "MemberController@select2profesional");
+                Route::get("/select2prof2", "MemberController@select2profesional2");
                 Route::get("/select2", "MemberController@select2");
                 Route::get("/data-source", "MemberController@datasource");
                 Route::get("/get-points/{userId}", "MemberController@getPoints");

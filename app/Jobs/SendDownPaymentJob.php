@@ -97,7 +97,10 @@ class SendDownPaymentJob implements ShouldQueue
                 // Ekstraksi nilai penting dari respons API
                 $dpId = $result['r']['id'] ?? null;
                 $number = $result['r']['number'] ?? null;
+                $changeCustomer = $result['r']['charField4'] ?? null;
                 $status = $result['r']['approvalStatus'] ?? null;
+                $customerNo = $result['r']['customer']['customerNo'] ?? null;
+                $name = $result['r']['customer']['name'] ?? null;
                 $poNumber = $result['r']['poNumber'] ?? null;
 
                 if ($dpId && $number && $poNumber) {
@@ -111,6 +114,7 @@ class SendDownPaymentJob implements ShouldQueue
                             ['fee_number_id' => $feeNumberId],
                             [
                                 'dp_id' => $dpId,
+                                'change_customer' => $name . ' (' . $customerNo . ')',
                                 'number' => $number,
                                 'status' => $status,
                                 'updated_at' => now(),
