@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' =>'smtp',
+    'default' => 'smtp',
 
     /*
     |--------------------------------------------------------------------------
@@ -34,16 +34,24 @@ return [
     */
 
     'mailers' => [
+        // 'smtp' => [
+        //     'transport' => 'smtp',
+        //     'host' => 'smtp.gmail.com', // env('MAIL_HOST', 'smtp.gmail.com'),
+        //     'port' => 587, //  env('MAIL_PORT', 587),
+        //     'encryption' => 'tls', // env('MAIL_ENCRYPTION', 'tls'),
+        //     'username' => 'admin@bottegaartisan.com', // env('zinezine2727@gmail.com'),
+        //     'password' => 'Indonesi@2024',
+        //     'timeout' => null,
+        // ],
         'smtp' => [
             'transport' => 'smtp',
-            'host' => 'smtp.gmail.com', // env('MAIL_HOST', 'smtp.gmail.com'),
-            'port' => 587, //  env('MAIL_PORT', 587),
-            'encryption' => 'tls', // env('MAIL_ENCRYPTION', 'tls'),
-            'username' => 'admin@bottegaartisan.com' , // env('zinezine2727@gmail.com'),
-            'password' => 'dogesejyydxjxqft',
+            'host' => env('MAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('MAIL_PORT', 587),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+            'username' => env('MAIL_USERNAME'),
+            'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
         ],
-
         'ses' => [
             'transport' => 'ses',
         ],

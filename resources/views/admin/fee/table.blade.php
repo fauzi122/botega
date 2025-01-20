@@ -216,6 +216,7 @@
                                 <th>PPH23</th>
                                 <th>TOTAL</th>
                                 <th>NO FAKTUR</th>
+                                <th>Change Customer</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -232,7 +233,37 @@
 @livewire('admin.fee.form')
 @livewire('admin.fee.detailfee')
 @livewire('admin.fee.merger')
-
+<div class="modal fade" id="modalProsesDP" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Proses DP</h5>
+                <button type="button" class="close" onclick="$('#modalProsesDP').modal('hide')" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="dpOption">Pilih Jenis Proses DP</label>
+                    <select class="form-control" id="dpOption">
+                        <option value="sendiri">Proses DP Sendiri</option>
+                        <option value="other">Proses DP untuk Customer Lain</option>
+                    </select>
+                </div>
+                <div class="form-group d-none" id="customerSelectContainer">
+                    <label for="customerSelect">Pilih Customer</label>
+                    <select class="form-control js-example-basic-single">
+                        <!-- Select2 akan menggantikan ini -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="$('#modalProsesDP').modal('hide')">Batal</button>
+                <button type="button" id="prosesDPButton" class="btn btn-primary">Proses</button>
+            </div>
+        </div>
+    </div>
+</div>
 <style>
     .rata-kanan {
         display: block;
@@ -244,8 +275,9 @@
     }
 </style>
 <iframe style="display: none" id="frame-download" name="frame-download"></iframe>
+
 @endsection
 
 @push('script')
-<script src="{{asset('assets/js/controllers/fee.js?v=3.64')}}"></script>
+<script src="{{asset('assets/js/controllers/fee.js?v=3.65')}}"></script>
 @endpush
