@@ -32,7 +32,7 @@ class CalcMemberExpenseJob implements ShouldQueue
     public function handle(): void
     {
         // Mail::raw('Test email from Laravel', function ($message) {
-        //     $message->to('mochabdulazis01@gmail.com')->subject('Test Email');
+        //     $message->to('mochamad.mmz@bsi.ac.id')->subject('Test Email');
         // });
         if ($this->mode == 0) {
             $this->refreshAll();
@@ -91,23 +91,20 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->where('t.member_user_id', $userId)
                     ->whereYear('t.tgl_invoice', $year)
                     ->selectRaw('SUM(
-            COALESCE(dt.dpp_amount, 0) - 
-            CASE 
-                WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                    (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
-                ELSE 
-                    COALESCE(dr.return_amount, 0)
-            END
-        ) as total_spent')
+        COALESCE(dt.dpp_amount, 0) - 
+        CASE 
+            WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+            ELSE 
+                COALESCE(dr.return_amount, 0)
+        END
+    ) as total_spent')
                     ->value('total_spent') ?? 0;
 
-                if ($totalSpent === null) {
-                    $totalSpent = 0;
-                }
                 $totalSpent = round($totalSpent);
 
-                Log::info("Total spent for user_id: $userId in year: $year is $totalSpent");
 
+                Log::info("Total spent for user_id: $userId in year: $year is $totalSpent");
                 $previousYearLevel = DB::table('member_spent')
                     ->where('user_id', $userId)
                     ->where('tahun', $year - 1)
@@ -115,16 +112,10 @@ class CalcMemberExpenseJob implements ShouldQueue
 
                 // Ambil level yang dipublish
                 $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
-                $highestLevel = $levels->first(); // Level tertinggi berdasarkan level yang diurutkan descending
                 $lastLevel = $levels->firstWhere('id', $previousYearLevel->level ?? null);
                 $levelId = null;
-
                 if ($totalSpent > 0) {
-                    if ($totalSpent > $highestLevel->limit_transaction) {
-                        // Jika totalSpent melebihi limit level tertinggi, langsung tetapkan level tertinggi
-                        $levelId = $highestLevel->id;
-                        $lastLevel = $highestLevel;
-                    } elseif ($previousYearLevel && $totalSpent < $previousYearLevel->total_spent) {
+                    if ($previousYearLevel && $totalSpent < $previousYearLevel->total_spent) {
                         // Jika totalSpent lebih rendah dari tahun sebelumnya, turunkan satu level
                         $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
                         $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
@@ -142,7 +133,7 @@ class CalcMemberExpenseJob implements ShouldQueue
                 } else {
                     if ($lastLevel) {
                         $nextLevel = $levels->firstWhere('level', $lastLevel->level + 1); // Turun satu tingkat
-                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id;
+                        $levelId = $nextLevel ? $nextLevel->id : $lastLevel->id; // Tetap di level saat ini jika tidak ada level lebih rendah
                         $lastLevel = $nextLevel ? $nextLevel : $lastLevel;
                     } else {
                         $levelId = $levels->last()->id ?? null; // Level terendah sebagai default
@@ -150,6 +141,7 @@ class CalcMemberExpenseJob implements ShouldQueue
                     }
                 }
 
+                // Simpan ke tabel member_spent
                 DB::table('member_spent')->updateOrInsert(
                     [
                         'user_id' => $userId,
@@ -199,7 +191,6 @@ class CalcMemberExpenseJob implements ShouldQueue
 
         Log::info('CalcMemberExpenseJob completed.');
     }
-
 
 
     public function refreshDaily(): void
