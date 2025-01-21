@@ -28,6 +28,16 @@
                 </p>
             </div> -->
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="filterType">Filter Tipe User</label>
+                        <select id="filterType" class="form-control">
+                            <option value="">Semua</option>
+                            <option value="profesional">Profesional</option>
+                            <option value="member">Member</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-responsive table-responsive-md">
                     <table id="jd-table"
                         width="100%"
@@ -39,6 +49,8 @@
                                 <th style="width:20px">No</th>
                                 <th style="width:100px">KODE</th>
                                 <th>NAMA LENGKAP</th>
+                                <th>NIK</th> <!-- Tambahkan kolom NIK -->
+                                <th>NPWP</th> <!-- Tambahkan kolom NPWP -->
                                 <th>LEVEL</th>
                                 <th>KONTAK</th>
                                 <th style="width: 30px">AKSI</th>

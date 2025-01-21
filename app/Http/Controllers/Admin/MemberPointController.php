@@ -90,6 +90,7 @@ class MemberPointController extends Controller
                     ->on(DB::raw('detail_retur_penjualan.product_id COLLATE utf8mb4_unicode_ci'), '=', DB::raw('detail_transactions.product_id COLLATE utf8mb4_unicode_ci'));
             })
             ->where('member_points.user_id', $id)
+            ->whereNotNull('transactions.tgl_invoice')
             ->groupBy(
                 'transactions.nomor_so',
                 'detail_transactions.notes',

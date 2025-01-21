@@ -148,6 +148,25 @@ class MemberController extends Controller
             'total_items' => count($ret)
         ]);
     }
+    public function select2profesional2()
+    {
+        $q = \request('q');
+        $r = QueryBuilderExt::whereFilter(
+            UserModel::view()
+                // ->whereRaw('(kategori=? OR reward_type IN(?,?) )',  ['MEMBER PRO', 1, 3])
+                ->where('user_type', 'member'),
+            ['first_name', 'last_name', 'id_no'],
+            $q
+        )->paginate(10);
+        $ret[] = ['id' => '', 'text' => '--'];
+        foreach ($r as $k) {
+            $ret[] = ['id' => $k->id, 'text' => $k->first_name . ' ' . $k->last_name . ' (' . $k->id_no . ')'];
+        }
+        return response()->json([
+            'items' => $ret,
+            'total_items' => count($ret)
+        ]);
+    }
 
 
     public function foto($id)
@@ -172,14 +191,23 @@ class MemberController extends Controller
 
 
 
-    public function datasource()
+    public function datasource(Request $request)
     {
         if (!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_MEMBER)) {
             return [];
         }
 
-        $id = \request('id');
-        return datatables(UserModel::view()->where('user_type', 'member'))->make(true);
+        $query = UserModel::view()->where('user_type', 'member');
+
+        // Filter berdasarkan tipe
+        if ($request->has('type')) {
+            if ($request->type == 'profesional') {
+                $query->whereIn('reward_type', [1, 3]); // Profesional
+            } elseif ($request->type == 'member') {
+                $query->where('reward_type', 2); // Member
+            }
+        }
+        return datatables($query)->make(true);
     }
 
     public function delete()
