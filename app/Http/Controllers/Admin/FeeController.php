@@ -207,87 +207,98 @@ class FeeController extends Controller
 
     public function gantiStatus($fieldName, $status = '')
     {
+        try {
+            if (!ValidatedPermission::authorize(ValidatedPermission::UBAH_DATA_FEE)) {
+                return;
+            }
 
-        if (!ValidatedPermission::authorize(ValidatedPermission::UBAH_DATA_FEE)) {
-            return;
-        }
+            $id = \request('id');
+            $r = false;
+            // dd($id);
+            foreach ($id as $ii) {
+                $ss = explode("|", $ii);
+                $userid = $ss[0];
+                $feenumberid = $ss[1];
+                $changeMember = isset($ss[2]) ? $ss[2] : null;
 
-        $id = \request('id');
-        $r = false;
-        // dd($id);
-        foreach ($id as $ii) {
-            $ss = explode("|", $ii);
-            $userid = $ss[0];
-            $feenumberid = $ss[1];
-            $changeMember = isset($ss[2]) ? $ss[2] : null;
+                $r = FeeProfessionalModel::query()
+                    ->where('member_user_id', $userid)
+                    ->where('fee_number_id', $feenumberid)
+                    ->whereNull($fieldName)
+                    ->update([
+                        'admin_user_id' => session('admin')?->id,
+                        'updated_at' => now(),
+                        $fieldName => now(),
+                        'harus_dibayar' => $fieldName === 'dt_finish' ? 0 : \DB::raw('total_pembayaran'),
+                    ]);
 
-            $r = FeeProfessionalModel::query()
-                ->where('member_user_id', $userid)
-                ->where('fee_number_id', $feenumberid)
-                ->whereNull($fieldName)
-                ->update([
-                    'admin_user_id' => session('admin')?->id,
-                    'updated_at' => now(),
-                    $fieldName => now(),
-                    'harus_dibayar' => $fieldName === 'dt_finish' ? 0 : \DB::raw('total_pembayaran'),
-                ]);
+                FeeNumberModel::query()
+                    ->where('id', $feenumberid)
+                    ->whereNull($fieldName)
+                    ->update([
+                        'admin_user_id' => session('admin')?->id,
+                        $fieldName => now(),
+                        'updated_at' => now(),
+                    ]);
+                // Kirim data ke API jika status adalah `dt_dp`
+                if ($fieldName === 'dt_dp') {
+                    // Ambil data dari tabel `fee_number`
+                    $feeNumber = FeeNumberModel::find($feenumberid);
 
-            FeeNumberModel::query()
-                ->where('id', $feenumberid)
-                ->whereNull($fieldName)
-                ->update([
-                    'admin_user_id' => session('admin')?->id,
-                    $fieldName => now(),
-                    'updated_at' => now(),
-                ]);
-            // Kirim data ke API jika status adalah `dt_dp`
-            if ($fieldName === 'dt_dp') {
-                // Ambil data dari tabel `fee_number`
-                $feeNumber = FeeNumberModel::find($feenumberid);
+                    // Ambil data pengguna berdasarkan userid dan changeMember (jika ada)
+                    $user = UserModel::find($userid);
+                    $changeUser = isset($changeMember) ? UserModel::find($changeMember) : null;
 
-                // Ambil data pengguna berdasarkan userid dan changeMember (jika ada)
-                $user = UserModel::find($userid);
-                $changeUser = isset($changeMember) ? UserModel::find($changeMember) : null;
+                    if ($feeNumber && $user) {
+                        // Tentukan customerNo dan charField4
+                        $customerNo = $changeMember ? $changeUser->id_no : $user->id_no; // Gunakan changeCustomer jika ada, fallback ke user->id_no
+                        $charField4 = $changeMember ? $user->first_name . ' ' . $user->last_name . ' (' . $user->id_no . ')' : null; // Jika ada changeCustomer, gunakan user->id_no
 
-                if ($feeNumber && $user) {
-                    // Tentukan customerNo dan charField4
-                    $customerNo = $changeMember ? $changeUser->id_no : $user->id_no; // Gunakan changeCustomer jika ada, fallback ke user->id_no
-                    $charField4 = $changeMember ? $user->first_name . ' ' . $user->last_name . ' (' . $user->id_no . ')' : null; // Jika ada changeCustomer, gunakan user->id_no
-
-                    // Data untuk API
-                    $dpData = [
-                        'customerNo' => $customerNo, // Menggunakan changeCustomer jika ada
-                        'transDate' => now()->format('d/m/Y'),
-                        'poNumber' => $feeNumber->nomor,
-                        'dpAmount' => round($feeNumber->total), // Membulatkan ke bilangan bulat terdekat
-                        'branchName' => 'Jakarta',
-                        'charField1' => 'baicircle.id',
-                        'toAddress' => $user->home_addr, // Tetap gunakan alamat dari user asli
-                        'status' => 'Draf',
-                        'inclusiveTax' => true,
-                        'isTaxable' => true,
-                        'charField4' => $charField4, // Diisi dengan user->id_no jika ada changeCustomer
-                        'taxType' => 'CTAS_DPP_NILAI_LAIN',
-                    ];
-                    // dd($dpData);
-                    // Dispatch job
-                    SendDownPaymentJob::dispatch(null, null, $dpData, null)->onConnection('sync');
+                        // Data untuk API
+                        $dpData = [
+                            'customerNo' => $customerNo, // Menggunakan changeCustomer jika ada
+                            'transDate' => now()->format('d/m/Y'),
+                            'poNumber' => $feeNumber->nomor,
+                            'dpAmount' => round($feeNumber->total), // Membulatkan ke bilangan bulat terdekat
+                            'branchName' => 'Jakarta',
+                            'charField1' => 'baicircle.id',
+                            'toAddress' => $user->home_addr, // Tetap gunakan alamat dari user asli
+                            'status' => 'Draf',
+                            'inclusiveTax' => true,
+                            'isTaxable' => true,
+                            'charField4' => $charField4, // Diisi dengan user->id_no jika ada changeCustomer
+                            'taxType' => 'CTAS_DPP_NILAI_LAIN',
+                        ];
+                        // dd($dpData);
+                        // Dispatch job
+                        SendDownPaymentJob::dispatch(null, null, $dpData, null)->onConnection('sync');
+                    }
                 }
-            }
 
-            if ($fieldName == 'dt_pengajuan') {
-                FeePaymentMadeModel::hitungPaymentMade($feenumberid);
-            }
+                if ($fieldName == 'dt_pengajuan') {
+                    FeePaymentMadeModel::hitungPaymentMade($feenumberid);
+                }
 
-            SendNotifFeeJob::dispatch($feenumberid, $fieldName);
+                SendNotifFeeJob::dispatch($feenumberid, $fieldName);
+            }
+            if ($fieldName == 'dt_acc' || $fieldName == 'dt_pengajuan') {
+                FeeNumberModel::updateRekeningPengajuan();
+            }
+            //        LogController::writeLog(ValidatedPermission::UBAH_DATA_FEE, 'Fee Perpindahan Tahap  '.$status, $id);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil diperbarui.',
+                'data' => $r
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        if ($fieldName == 'dt_acc' || $fieldName == 'dt_pengajuan') {
-            FeeNumberModel::updateRekeningPengajuan();
-        }
-        //        LogController::writeLog(ValidatedPermission::UBAH_DATA_FEE, 'Fee Perpindahan Tahap  '.$status, $id);
-        return response()->json([
-            'data' => $r
-        ]);
+        // return response()->json([
+        //     'data' => $r
+        // ]);
     }
 
     public function status_set($status)

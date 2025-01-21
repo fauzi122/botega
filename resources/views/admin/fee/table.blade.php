@@ -216,7 +216,6 @@
                                 <th>PPH23</th>
                                 <th>TOTAL</th>
                                 <th>NO FAKTUR</th>
-                                <th>Change Customer</th>
                             </tr>
                         </thead>
                         <tbody></tbody>

@@ -18,7 +18,7 @@ document.addEventListener("livewire:initialized", function () {
 });
 
 function buildTable() {
-    $("#jd-table").DataTable({
+    var table = $("#jd-table").DataTable({
         dom: "Bltfrltip",
         lengthMenu: [
             [10, 25, 50, -1],
@@ -60,6 +60,9 @@ function buildTable() {
         ajax: {
             url: $("table#jd-table").data("datasource"),
             method: "GET",
+            data: function (d) {
+                d.type = $("#filterType").val(); // Tambahkan filter berdasarkan tipe (Profesional/Member)
+            },
         },
         order: [[1, "asc"]],
         columnDefs: [],
@@ -88,6 +91,18 @@ function buildTable() {
                     }</small> `;
                 },
             },
+            {
+                data: "nik",
+                render: (data, type, row, meta) => {
+                    return data && data.trim() !== "" ? data : "-"; // Ganti "-" jika data kosong/null
+                },
+            }, // Tambahkan kolom NIK
+            {
+                data: "npwp",
+                render: (data, type, row, meta) => {
+                    return data && data.trim() !== "" ? data : "-"; // Ganti "-" jika data kosong/null
+                },
+            }, // Tambahkan kolom NIK
             {
                 data: "level_name",
                 render: (data, type, row, meta) => {
@@ -125,6 +140,9 @@ function buildTable() {
             { data: "email", visible: false },
             { data: "wa", visible: false },
         ],
+    });
+    $("#filterType").on("change", function () {
+        table.ajax.reload(); // Reload tabel dengan parameter filter
     });
 }
 

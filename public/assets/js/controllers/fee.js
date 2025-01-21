@@ -1202,7 +1202,7 @@ $(document).ready(function () {
                 $(".js-example-basic-single").select2({
                     placeholder: "Pilih Customer",
                     ajax: {
-                        url: "/admin/member/select2prof",
+                        url: "/admin/member/select2prof2",
                         dataType: "json",
                         delay: 250,
                         data: function (params) {
@@ -1255,6 +1255,8 @@ $(document).ready(function () {
                     );
                     $("#modalProsesDP").modal("hide");
                     $("table#jd-table-setujui").DataTable().ajax.reload();
+                    $("table#jd-table-dp").DataTable().ajax.reload();
+                    refreshDataSUM();
                 } else {
                     console.error("Error dari server:", response.message);
                     Swal.fire(

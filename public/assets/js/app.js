@@ -561,11 +561,11 @@ File: Main Js File
                         url: baseurl + "/redeem/",
                         icon: "arrow-right-circle",
                     },
-                    {
-                        title: "Member Point",
-                        url: baseurl + "/member-points/",
-                        icon: "arrow-right-circle",
-                    },
+                    // {
+                    //     title: "Member Point",
+                    //     url: baseurl + "/member-points/",
+                    //     icon: "arrow-right-circle",
+                    // },
                     {
                         title: "Story Level",
                         url: baseurl + "/member-spent/",

@@ -45,7 +45,7 @@ class Login extends Controller
         $username = $request->input('email');
         $password = $request->input('password');
 
-        $cek = DB::table('users')->where('email', $username)->where('user_type', 'member')->first();
+        $cek = DB::table('users')->where('email', $username)->where('reward_type', '2')->first();
         if ($cek) {
             try {
                 if (Hash::check($password, $cek->pass)) {
@@ -65,7 +65,7 @@ class Login extends Controller
             }
         } else {
 
-            return redirect()->back()->with('error', 'Username dan Password Salah');
+            return redirect()->back()->with('error', 'Member Tidak Ditemukan ');
         }
     }
 
@@ -134,7 +134,7 @@ class Login extends Controller
         $cek = DB::table('users')->where('email', $email)->first();
 
         if ($cek) {
-            SendEmailResetPassword::dispatch($email);
+            SendEmailResetPassword::dispatch($email)->onConnection('sync');
             //            $randomToken = Str::random(40);
             //            $resetLink = url('/reset-password-akun/' . $randomToken);
             //            $data = [
@@ -185,7 +185,7 @@ class Login extends Controller
         $cek = UserModel::query()
             ->where('token_reset', $token)
             ->first();
-
+        // dd($cek);
         if ($cek) {
             return view('frontend.auth.forget_pass', compact('token'));
         } else {
@@ -198,7 +198,7 @@ class Login extends Controller
         $pass = $request->password;
         $pass_conf = $request->confirm_password;
         $token = $request->token;
-
+        // dd($pass . '/' . $pass_conf . '/' . $token);
         if ($pass <> $pass_conf) {
             return redirect()->back()->with('error', 'Konfirmasi password tidak sessuai');
         }
