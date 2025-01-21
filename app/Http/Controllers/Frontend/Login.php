@@ -55,7 +55,7 @@ class Login extends Controller
                     Session::put('user', $cek);
                     return redirect('/home')->with('success', 'Selamat Datang, ' . $cek->first_name . ' ' . $cek->last_name);
                 } else {
-                    dd("1");
+                    // dd("1");
 
                     return redirect()->back()->with('error', 'Username dan Password Salah');
                 }
