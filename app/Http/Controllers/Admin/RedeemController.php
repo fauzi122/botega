@@ -135,7 +135,7 @@ class RedeemController extends Controller
         // $request->id => array of ID
         $ids = $request->input('id');
         $updated = MemberRewardModel::whereIn('id', $ids)
-            ->where('status', [0, 2])
+            ->whereIn('status', [0, 2])
             ->update(['status' => 1]);
 
         // Contoh catat log

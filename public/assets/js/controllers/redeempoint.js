@@ -297,37 +297,37 @@ function buildTableAcc() {
             "excel",
             "pdf",
             "print",
-            // {
-            //     // Tombol Tolak => status 3
-            //     text: '<i class="mdi mdi-trash-can-outline"></i> Proses',
-            //     className: "btn-danger",
-            //     action: function (e, dt, node, config) {
-            //         let urlAction =
-            //             $("#jd-table-acc").data("urlaction") +
-            //             "/status/pengajuan";
-            //         showConfirm(
-            //             "jd-table-acc",
-            //             "Proses Redeem",
-            //             "Yakin proses data ini?",
-            //             function (res, ids) {
-            //                 if (res.value) {
-            //                     $.post(urlAction, {
-            //                         _token: csrf_token(),
-            //                         id: ids,
-            //                     }).done(function (resp) {
-            //                         $("#jd-table-acc")
-            //                             .DataTable()
-            //                             .ajax.reload();
-            //                         $("#jd-table-proses")
-            //                             .DataTable()
-            //                             .ajax.reload();
-            //                         refreshDataSum();
-            //                     });
-            //                 }
-            //             }
-            //         );
-            //     },
-            // },
+            {
+                // Tombol Tolak => status 3
+                text: '<i class="mdi mdi-trash-can-outline"></i> Proses',
+                className: "btn-danger",
+                action: function (e, dt, node, config) {
+                    let urlAction =
+                        $("#jd-table-acc").data("urlaction") +
+                        "/status/pengajuan";
+                    showConfirm(
+                        "jd-table-acc",
+                        "Proses Redeem",
+                        "Yakin proses data ini?",
+                        function (res, ids) {
+                            if (res.value) {
+                                $.post(urlAction, {
+                                    _token: csrf_token(),
+                                    id: ids,
+                                }).done(function (resp) {
+                                    $("#jd-table-acc")
+                                        .DataTable()
+                                        .ajax.reload();
+                                    $("#jd-table-proses")
+                                        .DataTable()
+                                        .ajax.reload();
+                                    refreshDataSum();
+                                });
+                            }
+                        }
+                    );
+                },
+            },
         ],
         initComplete: function () {
             $(".dt-button").addClass("btn btn-sm btn-primary");
