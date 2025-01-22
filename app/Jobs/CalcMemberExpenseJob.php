@@ -103,7 +103,6 @@ class CalcMemberExpenseJob implements ShouldQueue
 
                 $totalSpent = round($totalSpent);
 
-
                 Log::info("Total spent for user_id: $userId in year: $year is $totalSpent");
                 $previousYearLevel = DB::table('member_spent')
                     ->where('user_id', $userId)
@@ -114,6 +113,7 @@ class CalcMemberExpenseJob implements ShouldQueue
                 $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
                 $lastLevel = $levels->firstWhere('id', $previousYearLevel->level ?? null);
                 $levelId = null;
+
                 if ($totalSpent > 0) {
                     if ($previousYearLevel && $totalSpent < $previousYearLevel->total_spent) {
                         // Jika totalSpent lebih rendah dari tahun sebelumnya, turunkan satu level
@@ -129,6 +129,10 @@ class CalcMemberExpenseJob implements ShouldQueue
                                 break;
                             }
                         }
+                        if ($totalSpent > $levels->last()->limit_transaction) {
+                            $levelId = $levels->last()->id; // Tetapkan ke level tertinggi
+                            $lastLevel = $levels->last();
+                        }
                     }
                 } else {
                     if ($lastLevel) {
@@ -139,6 +143,10 @@ class CalcMemberExpenseJob implements ShouldQueue
                         $levelId = $levels->last()->id ?? null; // Level terendah sebagai default
                         $lastLevel = $levels->last();
                     }
+                }
+                if ($year == $currentYear && $previousYearLevel) {
+                    $levelId = $previousYearLevel->level;
+                    $lastLevel = $levels->firstWhere('id', $levelId);
                 }
 
                 // Simpan ke tabel member_spent
@@ -157,7 +165,11 @@ class CalcMemberExpenseJob implements ShouldQueue
 
                 // Simpan level tahun berjalan ke variabel
                 if ($year == $currentYear) {
-                    $currentLevelId = $levelId;
+                    if ($totalSpent <= ($previousYearLevel->total_spent ?? 0)) {
+                        $currentLevelId = $previousYearLevel->level; // Tetap gunakan level tahun sebelumnya
+                    } else {
+                        $currentLevelId = $levelId; // Gunakan level yang sesuai dengan totalSpent
+                    }
                 }
             }
 
