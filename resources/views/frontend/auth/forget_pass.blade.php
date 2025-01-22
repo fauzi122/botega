@@ -48,7 +48,7 @@
                                     <form class="mt-4 pt-2" method="post" action="{{ url('login/resetpasswordacc')  }}">
                                         @csrf
 
-                                        <input type="text" name="token" value="{{$token}}">
+                                        <input type="hidden" name="token" value="{{$token}}">
 
                                         <div class="mb-3">
                                             <div class="row">
