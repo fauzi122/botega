@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
-class CalcMemberExpenseJob implements ShouldQueue
+class CalcMemberExpenseJob_v2 implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     private $mode; // mode =0 all, mode=1 syncfromaccurate, mode=2 synctoaccurate
@@ -90,12 +90,9 @@ class CalcMemberExpenseJob implements ShouldQueue
                     })
                     ->where('t.member_user_id', $userId)
                     ->whereYear('t.tgl_invoice', $year)
-                    ->selectRaw('SUM(CASE 
-            WHEN COALESCE(dt.dpp_amount, 0) = 0 THEN
-                COALESCE(dt.total_price, 0)
-            ELSE
-                COALESCE(dt.dpp_amount, 0)
-        END -  CASE 
+                    ->selectRaw('SUM(
+        COALESCE(dt.dpp_amount, 0) - 
+        CASE 
             WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
                 (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
             ELSE 
