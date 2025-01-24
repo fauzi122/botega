@@ -95,7 +95,8 @@ class CalcMemberExpenseJob implements ShouldQueue
                 COALESCE(dt.total_price, 0)
             ELSE
                 COALESCE(dt.dpp_amount, 0)
-        END -  CASE 
+        END -   
+        CASE 
             WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
                 (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
             ELSE 
