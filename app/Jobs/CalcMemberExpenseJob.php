@@ -50,9 +50,10 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil semua pengguna dengan tahun transaksi pertama
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
-            ->selectRaw('member_user_id, MIN(YEAR(tgl_invoice)) as first_year')
-            ->groupBy('member_user_id')
+            ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_invoice)) as first_year")
+            ->groupBy('member_user_id') // Tambahkan kolom ke GROUP BY
             ->pluck('first_year', 'member_user_id');
+
 
         $currentYear = date('Y');
 
@@ -83,12 +84,12 @@ class CalcMemberExpenseJob implements ShouldQueue
 
                 // Hitung total_spent untuk tahun tersebut
                 $totalSpent = DB::table('detail_transactions as dt')
-                    ->join('transactions as t', 't.id', '=', 'dt.transaction_id')
+                    ->join('transactions as t', DB::raw('t.id COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.transaction_id COLLATE utf8mb4_general_ci'))
                     ->leftJoin('detail_retur_penjualan as dr', function ($join) {
                         $join->on(DB::raw('dr.retur_no COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.retur_no COLLATE utf8mb4_general_ci'))
                             ->on(DB::raw('dr.product_id COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.product_id COLLATE utf8mb4_general_ci'));
                     })
-                    ->where('t.member_user_id', $userId)
+                    ->whereRaw('t.member_user_id COLLATE utf8mb4_general_ci = ?', $userId)
                     ->whereYear('t.tgl_invoice', $year)
                     ->selectRaw('SUM(CASE 
             WHEN COALESCE(dt.dpp_amount, 0) = 0 THEN
