@@ -86,10 +86,11 @@ class SendDownPaymentJob implements ShouldQueue
     public function createFeeNumberDP(): void
     {
         $api = new APIAccurate();
-
+        // Log::warning('job jalan');
         try {
             $url = '/api/sales-invoice/create-down-payment.do';
             $response = $api->post($url, $this->data);
+            // Log::warning('job jalan', [$response]);
 
             if ($response->status() === 200) {
                 $result = json_decode($response->body(), true);
@@ -108,13 +109,14 @@ class SendDownPaymentJob implements ShouldQueue
 
                     if ($feeNumber) {
                         $feeNumberId = $feeNumber->id;
+                        // Log::warning('job jalan', [$changeCustomer]);
 
                         // Buat atau perbarui FeeNumberDP
                         FeeNumberDP::updateOrCreate(
                             ['fee_number_id' => $feeNumberId],
                             [
                                 'dp_id' => $dpId,
-                                'change_customer' => $name . ' (' . $customerNo . ')',
+                                'change_customer' => $changeCustomer != '' ? $name . ' (' . $customerNo . ')' : '',
                                 'number' => $number,
                                 'status' => $status,
                                 'updated_at' => now(),

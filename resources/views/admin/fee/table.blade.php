@@ -255,6 +255,12 @@
                         <!-- Select2 akan menggantikan ini -->
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="salesOrderSelect">Pilih Nomor Sales Order</label>
+                    <select class="form-control" id="salesOrderSelect">
+                        <!-- Select2 akan menggantikan ini -->
+                    </select>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="$('#modalProsesDP').modal('hide')">Batal</button>

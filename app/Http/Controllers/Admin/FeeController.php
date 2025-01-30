@@ -220,7 +220,8 @@ class FeeController extends Controller
                 $userid = $ss[0];
                 $feenumberid = $ss[1];
                 $changeMember = isset($ss[2]) ? $ss[2] : null;
-
+                $nomorSO = isset($ss[3]) ? $ss[3] : null; // Ambil nomor SO jika dikirim
+                // dd($changeMember);
                 $r = FeeProfessionalModel::query()
                     ->where('member_user_id', $userid)
                     ->where('fee_number_id', $feenumberid)
@@ -251,13 +252,15 @@ class FeeController extends Controller
 
                     if ($feeNumber && $user) {
                         // Tentukan customerNo dan charField4
+                        // dd($changeMember ? 'ada' : 'ga');
                         $customerNo = $changeMember ? $changeUser->id_no : $user->id_no; // Gunakan changeCustomer jika ada, fallback ke user->id_no
-                        $charField4 = $changeMember ? $user->first_name . ' ' . $user->last_name . ' (' . $user->id_no . ')' : null; // Jika ada changeCustomer, gunakan user->id_no
+                        $charField4 = $changeMember ? $user->first_name . ' ' . $user->last_name . ' (' . $user->id_no . ')' : ''; // Jika ada changeCustomer, gunakan user->id_no
 
                         // Data untuk API
                         $dpData = [
                             'customerNo' => $customerNo, // Menggunakan changeCustomer jika ada
                             'transDate' => now()->format('d/m/Y'),
+                            'soNumber' => $nomorSO,
                             'poNumber' => $feeNumber->nomor,
                             'dpAmount' => round($feeNumber->total), // Membulatkan ke bilangan bulat terdekat
                             'branchName' => 'Jakarta',
@@ -268,6 +271,8 @@ class FeeController extends Controller
                             'isTaxable' => true,
                             'charField4' => $charField4, // Diisi dengan user->id_no jika ada changeCustomer
                             'taxType' => 'CTAS_DPP_NILAI_LAIN',
+                            'forceCalculateTaxRate' => true,
+                            'taxRate' => '12',
                         ];
                         // dd($dpData);
                         // Dispatch job
