@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\GiftModel;
 use App\Models\LogsModel;
+use App\Models\MemberRewardModel;
 use App\Models\RewardModel;
 use App\Models\RewardRiwayat;
 use App\Models\SliderModel;
@@ -25,14 +26,24 @@ class Reward extends Controller
             ->first();
 
         $reward = RewardModel::query()
-            ->leftJoin('reward_riwayat', function ($join) {
-                $join->on('rewards.id', '=', 'reward_riwayat.reward_id')
-                    ->where('reward_riwayat.user_id', '=', session('user')->id);
+            ->leftJoin('member_rewards', function ($join) {
+                $join->on('rewards.id', '=', 'member_rewards.reward_id')
+                    ->where('member_rewards.user_id', '=', session('user')->id);
             })
-            ->select('rewards.*', \DB::raw("COALESCE(reward_riwayat.status, NULL) AS status"), \DB::raw("COALESCE(reward_riwayat.user_id, NULL) AS user_id"))
+            ->select('rewards.*', \DB::raw("COALESCE(member_rewards.status, NULL) AS status"), \DB::raw("COALESCE(member_rewards.user_id, NULL) AS user_id"))
             ->where('rewards.expired_at', '>=', Carbon::now('Asia/Jakarta'))
             ->orderBy('rewards.id','desc')
             ->get();
+
+        // $reward = RewardModel::query()
+        //     ->leftJoin('reward_riwayat', function ($join) {
+        //         $join->on('rewards.id', '=', 'reward_riwayat.reward_id')
+        //             ->where('reward_riwayat.user_id', '=', session('user')->id);
+        //     })
+        //     ->select('rewards.*', \DB::raw("COALESCE(reward_riwayat.status, NULL) AS status"), \DB::raw("COALESCE(reward_riwayat.user_id, NULL) AS user_id"))
+        //     ->where('rewards.expired_at', '>=', Carbon::now('Asia/Jakarta'))
+        //     ->orderBy('rewards.id','desc')
+        //     ->get();
 
 //        var_dump($reward);die();
 
@@ -63,7 +74,7 @@ class Reward extends Controller
         try {
             $poinakun = UserModel::query()->where('id', session('user')->id)->first();
             $poinreward = RewardModel::query()->where('id', $rewardId)->first();
-            $cek = RewardRiwayat::query()->where('reward_id', $rewardId)->where('user_id', session('user')->id)->get();
+            $cek = MemberRewardModel::query()->where('reward_id', $rewardId)->where('user_id', session('user')->id)->get();
             if ($cek->isNotEmpty()) {
                 return response()->json(['message' => 'Maaf, Anda sudah klaim reward ini.'], 500);
             }
@@ -74,6 +85,7 @@ class Reward extends Controller
                     $data = [
                         'reward_id' => $rewardId,
                         'user_id' => session('user')->id,
+                        'point' => $poinakun->points,
                         'status' => 1,
                         'created_at' => now()->setTimezone('Asia/Jakarta')
                     ];
@@ -98,7 +110,8 @@ class Reward extends Controller
 
 
 
-                    RewardRiwayat::query()->insert($data);
+                    MemberRewardModel::query()->insert($data);
+                    // RewardRiwayat::query()->insert($data);
                     return response()->json(['message' => 'Reward berhasil diklaim.']);
                 } else {
                     return response()->json(['message' => 'Gagal melakukan klaim reward.'], 500);

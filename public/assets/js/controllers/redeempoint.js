@@ -223,7 +223,7 @@ function buildTableProses() {
                     showConfirm(
                         "jd-table-proses",
                         "Pengajuan Redeem",
-                        "Yakin pengajan data ini?",
+                        "Yakin pengajuan data ini?",
                         function (res, ids) {
                             if (res.value) {
                                 $.post(urlAction, {
