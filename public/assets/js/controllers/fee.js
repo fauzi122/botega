@@ -1183,13 +1183,17 @@ $(document).ready(function () {
     $("#jd-table-setujui").on("click", ".proses-dp-btn", function () {
         let rawData = $(this).data("ids");
         let nomor = $(this).data("nomor");
-
+        // Pisahkan ID dari rawData
+        let ids = rawData.split("|");
+        memberUserId = ids[0]; // Ambil member_user_id dari tombol
         // Simpan data di modal sebagai atribut data
         $("#modalProsesDP").data("rawData", rawData);
         $("#modalProsesDP").data("nomor", nomor);
-
+        $("#modalProsesDP").data("memberUserId", memberUserId);
         // Tampilkan modal
         $("#modalProsesDP").modal("show");
+        // Muat daftar SO berdasarkan member_user_id dari tombol
+        loadSalesOrder(memberUserId);
     });
     // In your Javascript (external .js resource or <script> tag)
     // Event perubahan pada opsi DP
@@ -1219,13 +1223,65 @@ $(document).ready(function () {
                     },
                     dropdownParent: $("#modalProsesDP"), // Tambahkan ini
                 });
+                // Update daftar SO ketika customer lain dipilih
+                $(".js-example-basic-single").on("change", function () {
+                    let selectedCustomer = $(this).val();
+                    loadSalesOrder(selectedCustomer);
+                });
             });
         } else {
             $("#customerSelectContainer").addClass("d-none");
             $(".js-example-basic-single").val(null).trigger("change"); // Reset nilai Select2
+            // Load SO berdasarkan member_user_id dari tombol yang ditekan
+            loadSalesOrder($("#modalProsesDP").data("memberUserId"));
         }
     });
+    // Fungsi untuk memuat daftar SO berdasarkan ID member/customer
+    function loadSalesOrder(memberId = null) {
+        $("#salesOrderSelect").select2({
+            placeholder: "Pilih Nomor SO",
+            width: "100%",
+            escapeMarkup: function (markup) {
+                return markup;
+            }, // Biarkan HTML ditampilkan
+            templateResult: function (data) {
+                if (!data.id) {
+                    return data.text; // Untuk opsi default
+                }
 
+                // Format tampilan hasil di dropdown
+                return $(`<span>${data.text}</span>`);
+            },
+            templateSelection: function (data) {
+                return data.text.replace(/<\/?[^>]+(>|$)/g, ""); // Hilangkan HTML dari tampilan pilihan
+            },
+            ajax: {
+                url: "/admin/penjualan/select2nomor_so_fee",
+                dataType: "json",
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term,
+                        member_id: memberId, // Kirim member_id jika memilih customer lain
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.items.map((item) => ({
+                            id: item.id,
+                            text: `${item.text}`,
+                        })),
+                    };
+                },
+            },
+            dropdownParent: $("#modalProsesDP"),
+        });
+    }
+
+    // Muat daftar SO saat modal pertama kali ditampilkan
+    $("#modalProsesDP").on("show.bs.modal", function () {
+        loadSalesOrder(); // Default: menampilkan SO milik sendiri
+    });
     // Event klik tombol Proses
     $("#prosesDPButton").on("click", function () {
         let rawData = $("#modalProsesDP").data("rawData"); // Ambil data IDs
@@ -1234,13 +1290,21 @@ $(document).ready(function () {
         let dpType = $("#dpOption").val(); // Ambil opsi proses DP
         let customerId =
             dpType === "other" ? $(".js-example-basic-single").val() : null; // Ambil ID customer jika diperlukan
+        let selectedSO = $("#salesOrderSelect").val();
+
+        // Gabungkan data secara dinamis
+        let idParts = [rawData]; // Mulai dengan rawData
+
+        if (dpType === "other" && customerId) {
+            idParts.push(customerId); // Tambahkan customerId jika "other"
+        }
+        if (selectedSO) {
+            idParts.push(selectedSO); // Tambahkan selectedSO jika ada
+        }
 
         let data = {
             _token: csrf_token(),
-            id:
-                dpType === "other"
-                    ? [`${rawData}|${customerId}`] // Gabungkan rawData dan customerId dengan delimiter '|'
-                    : [rawData], // Hanya rawData jika dpType bukan "other"
+            id: [idParts.join("|")], // Gabungkan tanpa delimiter berlebih
             dpType: dpType,
         };
 
@@ -1262,13 +1326,12 @@ $(document).ready(function () {
                     Swal.fire(
                         "Gagal!",
                         response.message ||
-                            "Terjadi kesalahan saat memproses data.", // Gunakan pesan dari server jika ada
+                            "Terjadi kesalahan saat memproses data.",
                         "error"
                     );
                 }
             })
             .fail(function (xhr, textStatus, errorThrown) {
-                // Tampilkan detail error di log konsol
                 console.error(
                     "AJAX Error:",
                     textStatus,
@@ -1276,7 +1339,6 @@ $(document).ready(function () {
                     xhr.responseText
                 );
 
-                // Tampilkan pesan error berdasarkan status HTTP
                 let errorMessage = `Gagal memproses permintaan: ${xhr.status} ${xhr.statusText}`;
                 if (xhr.responseText) {
                     errorMessage += `\nDetail: ${xhr.responseText}`;

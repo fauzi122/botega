@@ -528,6 +528,7 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/data-source-detail", "PenjualanProdukController@datasource_detail");
                 Route::get("/data-source", "PenjualanProdukController@datasource");
                 Route::get("/select2nomor_so", "PenjualanProdukController@select2nomor_so");
+                Route::get("/select2nomor_so_fee", "PenjualanProdukController@select2nomor_so_fee");
                 Route::get("/form", "PenjualanProdukController@form");
                 Route::get("/detail/{id}", "PenjualanProdukController@detail");
                 Route::get("/json-detail/{id}", "PenjualanProdukController@json_detail");
