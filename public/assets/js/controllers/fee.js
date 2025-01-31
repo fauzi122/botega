@@ -1179,63 +1179,84 @@ function showDetailFee(fee_number_id) {
 }
 
 $(document).ready(function () {
+    let lastNomor = null; // Menyimpan nomor SO terakhir yang diklik
     // Event klik tombol Proses DP
     $("#jd-table-setujui").on("click", ".proses-dp-btn", function () {
+        resetModalDP(); // Reset modal sebelum mengisi data baru
+
         let rawData = $(this).data("ids");
         let nomor = $(this).data("nomor");
-        // Pisahkan ID dari rawData
+        // Jika nomor SO berubah, reset modal
+        if (nomor !== lastNomor) {
+            resetModalDP();
+        }
+        lastNomor = nomor;
+
         let ids = rawData.split("|");
-        memberUserId = ids[0]; // Ambil member_user_id dari tombol
-        // Simpan data di modal sebagai atribut data
+        let memberUserId = ids[0]; // Ambil member_user_id dari tombol
         $("#modalProsesDP").data("rawData", rawData);
         $("#modalProsesDP").data("nomor", nomor);
         $("#modalProsesDP").data("memberUserId", memberUserId);
-        // Tampilkan modal
+
         $("#modalProsesDP").modal("show");
-        // Muat daftar SO berdasarkan member_user_id dari tombol
+
+        // Muat daftar SO berdasarkan memberUserId dari tombol
         loadSalesOrder(memberUserId);
     });
-    // In your Javascript (external .js resource or <script> tag)
+
+    // Reset modal saat ditutup
+    $("#modalProsesDP").on("hidden.bs.modal", function () {
+        resetModalDP();
+    });
+
+    // Fungsi untuk mereset modal ke keadaan awal
+    function resetModalDP() {
+        $("#dpOption").val("sendiri").trigger("change"); // Reset opsi DP
+        $("#customerSelectContainer").addClass("d-none"); // Sembunyikan dropdown customer
+        $(".js-example-basic-single").val(null).trigger("change"); // Reset Select2 Customer
+        $("#salesOrderSelect").val(null).trigger("change"); // Reset Select2 Sales Order
+    }
+
     // Event perubahan pada opsi DP
     $("#dpOption").on("change", function () {
         let selectedOption = $(this).val();
 
         if (selectedOption === "other") {
             $("#customerSelectContainer").removeClass("d-none");
-            $(document).ready(function () {
-                $(".js-example-basic-single").select2({
-                    placeholder: "Pilih Customer",
-                    ajax: {
-                        url: "/admin/member/select2prof2",
-                        dataType: "json",
-                        delay: 250,
-                        data: function (params) {
-                            return { q: params.term };
-                        },
-                        processResults: function (data) {
-                            return {
-                                results: data.items.map((item) => ({
-                                    id: item.id,
-                                    text: item.text,
-                                })),
-                            };
-                        },
+
+            $(".js-example-basic-single").select2({
+                placeholder: "Pilih Customer",
+                ajax: {
+                    url: "/admin/member/select2prof2",
+                    dataType: "json",
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
                     },
-                    dropdownParent: $("#modalProsesDP"), // Tambahkan ini
-                });
-                // Update daftar SO ketika customer lain dipilih
-                $(".js-example-basic-single").on("change", function () {
-                    let selectedCustomer = $(this).val();
-                    loadSalesOrder(selectedCustomer);
-                });
+                    processResults: function (data) {
+                        return {
+                            results: data.items.map((item) => ({
+                                id: item.id,
+                                text: item.text,
+                            })),
+                        };
+                    },
+                },
+                dropdownParent: $("#modalProsesDP"),
+            });
+
+            // Update daftar SO ketika customer lain dipilih
+            $(".js-example-basic-single").on("change", function () {
+                let selectedCustomer = $(this).val();
+                loadSalesOrder(selectedCustomer);
             });
         } else {
             $("#customerSelectContainer").addClass("d-none");
-            $(".js-example-basic-single").val(null).trigger("change"); // Reset nilai Select2
-            // Load SO berdasarkan member_user_id dari tombol yang ditekan
+            $(".js-example-basic-single").val(null).trigger("change"); // Reset Select2 Customer
             loadSalesOrder($("#modalProsesDP").data("memberUserId"));
         }
     });
+
     // Fungsi untuk memuat daftar SO berdasarkan ID member/customer
     function loadSalesOrder(memberId = null) {
         $("#salesOrderSelect").select2({
@@ -1243,17 +1264,15 @@ $(document).ready(function () {
             width: "100%",
             escapeMarkup: function (markup) {
                 return markup;
-            }, // Biarkan HTML ditampilkan
+            },
             templateResult: function (data) {
                 if (!data.id) {
-                    return data.text; // Untuk opsi default
+                    return data.text;
                 }
-
-                // Format tampilan hasil di dropdown
                 return $(`<span>${data.text}</span>`);
             },
             templateSelection: function (data) {
-                return data.text.replace(/<\/?[^>]+(>|$)/g, ""); // Hilangkan HTML dari tampilan pilihan
+                return data.text.replace(/<\/?[^>]+(>|$)/g, "");
             },
             ajax: {
                 url: "/admin/penjualan/select2nomor_so_fee",
@@ -1262,7 +1281,7 @@ $(document).ready(function () {
                 data: function (params) {
                     return {
                         q: params.term,
-                        member_id: memberId, // Kirim member_id jika memilih customer lain
+                        member_id: memberId,
                     };
                 },
                 processResults: function (data) {
@@ -1278,37 +1297,31 @@ $(document).ready(function () {
         });
     }
 
-    // Muat daftar SO saat modal pertama kali ditampilkan
-    $("#modalProsesDP").on("show.bs.modal", function () {
-        loadSalesOrder(); // Default: menampilkan SO milik sendiri
-    });
     // Event klik tombol Proses
     $("#prosesDPButton").on("click", function () {
-        let rawData = $("#modalProsesDP").data("rawData"); // Ambil data IDs
-        let nomor = $("#modalProsesDP").data("nomor"); // Ambil data nomor
+        let rawData = $("#modalProsesDP").data("rawData");
+        let nomor = $("#modalProsesDP").data("nomor");
 
-        let dpType = $("#dpOption").val(); // Ambil opsi proses DP
+        let dpType = $("#dpOption").val();
         let customerId =
-            dpType === "other" ? $(".js-example-basic-single").val() : null; // Ambil ID customer jika diperlukan
+            dpType === "other" ? $(".js-example-basic-single").val() : null;
         let selectedSO = $("#salesOrderSelect").val();
 
-        // Gabungkan data secara dinamis
-        let idParts = [rawData]; // Mulai dengan rawData
+        let idParts = [rawData];
 
         if (dpType === "other" && customerId) {
-            idParts.push(customerId); // Tambahkan customerId jika "other"
+            idParts.push(customerId);
         }
         if (selectedSO) {
-            idParts.push(selectedSO); // Tambahkan selectedSO jika ada
+            idParts.push(selectedSO);
         }
 
         let data = {
             _token: csrf_token(),
-            id: [idParts.join("|")], // Gabungkan tanpa delimiter berlebih
+            id: [idParts.join("|")],
             dpType: dpType,
         };
 
-        // Kirim data ke server
         $.post(baseurl() + "/admin/fee/status/dp", data)
             .done(function (response) {
                 if (response.success) {
@@ -1317,7 +1330,7 @@ $(document).ready(function () {
                         "Proses DP berhasil dilakukan.",
                         "success"
                     );
-                    $("#modalProsesDP").modal("hide");
+                    $("#modalProsesDP").modal("hide"); // Tutup modal setelah sukses
                     $("table#jd-table-setujui").DataTable().ajax.reload();
                     $("table#jd-table-dp").DataTable().ajax.reload();
                     refreshDataSUM();
