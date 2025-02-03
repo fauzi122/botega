@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Libraries\QueryBuilderExt;
 use App\Library\ValidatedPermission;
 use App\Models\LogsModel;
+use App\Models\KategoriMemberModel;
 use App\Models\ProductModel;
 use App\Models\RequestUpdateModel;
 use App\Models\UserModel;
@@ -95,7 +96,8 @@ class MemberController extends Controller
 
     public function index()
     {
-        return view('admin.member.table');
+        $categories = KategoriMemberModel::all();
+        return view('admin.member.table', compact('categories'));
     }
 
     public function info($id)
@@ -189,8 +191,6 @@ class MemberController extends Controller
         ]);
     }
 
-
-
     public function datasource(Request $request)
     {
         if (!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_MEMBER)) {
@@ -206,6 +206,10 @@ class MemberController extends Controller
             } elseif ($request->type == 'member') {
                 $query->where('reward_type', 2); // Member
             }
+        }
+        // Filter berdasarkan kategori
+        if ($request->has('category') && !empty($request->category)) {
+            $query->where('kategori_id', $request->category);
         }
         return datatables($query)->make(true);
     }
