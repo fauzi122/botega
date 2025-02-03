@@ -20,34 +20,34 @@
     <!--====================  End of product slider area  ====================-->
     <!--====================  banner area full  ====================-->
 
-    {{--    <div class="banner-area section-space">--}}
-    {{--        <div class="container">--}}
-    {{--            <div class="row">--}}
-    {{--                <div class="col-lg-12">--}}
-    {{--                    <!--=======  single banner  =======-->--}}
+    {{--    <div class="banner-area section-space"> --}}
+    {{--        <div class="container"> --}}
+    {{--            <div class="row"> --}}
+    {{--                <div class="col-lg-12"> --}}
+    {{--                    <!--=======  single banner  =======--> --}}
 
-    {{--                    <div class="single-banner">--}}
-    {{--                        <div class="single-banner__image">--}}
-    {{--                            <a href="{{url('product)}}">--}}
-    {{--                                <img src="https://www.bottegaartisan.com/uploadbasket/files/pages/asdsa.jpg"--}}
-    {{--                                     class="img-fluid" alt="" style="border-radius: 20px; object-fit: cover">--}}
-    {{--                            </a>--}}
-    {{--                        </div>--}}
+    {{--                    <div class="single-banner"> --}}
+    {{--                        <div class="single-banner__image"> --}}
+    {{--                            <a href="{{url('product)}}"> --}}
+    {{--                                <img src="https://www.bottegaartisan.com/uploadbasket/files/pages/asdsa.jpg" --}}
+    {{--                                     class="img-fluid" alt="" style="border-radius: 20px; object-fit: cover"> --}}
+    {{--                            </a> --}}
+    {{--                        </div> --}}
 
-    {{--                        <div class="single-banner__content single-banner__content--overlay">--}}
-    {{--                            <p class="banner-small-text">STYLING SAVINGS</p>--}}
-    {{--                            <p class="banner-big-text">Designer Furniture</p>--}}
-    {{--                            <p class="banner-small-text banner-small-text--end">30% Off Armchairs</p>--}}
-    {{--                            <a href="{{url('product)}}"--}}
-    {{--                               class="theme-button theme-button--banner theme-button--banner--two">SHOP NOW</a>--}}
-    {{--                        </div>--}}
-    {{--                    </div>--}}
+    {{--                        <div class="single-banner__content single-banner__content--overlay"> --}}
+    {{--                            <p class="banner-small-text">STYLING SAVINGS</p> --}}
+    {{--                            <p class="banner-big-text">Designer Furniture</p> --}}
+    {{--                            <p class="banner-small-text banner-small-text--end">30% Off Armchairs</p> --}}
+    {{--                            <a href="{{url('product)}}" --}}
+    {{--                               class="theme-button theme-button--banner theme-button--banner--two">SHOP NOW</a> --}}
+    {{--                        </div> --}}
+    {{--                    </div> --}}
 
-    {{--                    <!--=======  End of single banner  =======-->--}}
-    {{--                </div>--}}
-    {{--            </div>--}}
-    {{--        </div>--}}
-    {{--    </div>--}}
+    {{--                    <!--=======  End of single banner  =======--> --}}
+    {{--                </div> --}}
+    {{--            </div> --}}
+    {{--        </div> --}}
+    {{--    </div> --}}
 
     <!--====================  End of banner area full   ====================-->
     <!--====================  product slider with text area ====================-->
