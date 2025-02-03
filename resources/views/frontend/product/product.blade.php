@@ -7,11 +7,11 @@
                 <div class="col-lg-6 offset-lg-3">
 
                     <div class="breadcrumb-wrapper">
-{{--                        <h2 class="page-title">Product</h2>--}}
-{{--                        <ul class="breadcrumb-list">--}}
-{{--                            <li><a href="{{url('home')}}">Home</a></li>--}}
-{{--                            <li class="active">Product</li>--}}
-{{--                        </ul>--}}
+                        {{--                        <h2 class="page-title">Product</h2> --}}
+                        {{--                        <ul class="breadcrumb-list"> --}}
+                        {{--                            <li><a href="{{url('home')}}">Home</a></li> --}}
+                        {{--                            <li class="active">Product</li> --}}
+                        {{--                        </ul> --}}
                     </div>
                 </div>
             </div>
@@ -114,73 +114,80 @@
                     <div class="col-lg-12">
                         <!--=======  shop content wrapper  =======-->
                         <div class="sidebar-search" style="margin-bottom: 30px">
-                            <form action="{{url('product')}}" method="get">
-                                <input type="search" name="cari" value="{{$cari}}" placeholder="Search...">
+                            <form action="{{ url('product') }}" method="get">
+                                <input type="search" name="cari" value="{{ $cari }}" placeholder="Search...">
                                 <button type="submit"><i class="fa fa-search"></i></button>
                             </form>
                         </div>
                         <div class="shop-content-wrapper">
                             <!--=======  shop header wrapper   =======-->
                             <div class="shop-product-wrap row grid">
-                                @foreach($list as $l)
-
-                                    <div class="col-lg-3 col-md-6 col-sm-6 col-custom-sm-6 col-12">
+                                @foreach ($list as $l)
+                                    <div class="col-lg-3 col-md-6 col-sm-6 col-custom-sm-6 col-12 img-full">
                                         <!--=======  grid view product  =======-->
                                         <div class="single-grid-product">
                                             <div class="single-grid-product__image"
-                                                 style="position: relative; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px">
+                                                style="position: relative; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
                                                 <div class="product-badge-wrapper">
-                                                    <span class="onsale">{{$l->category}}</span>
+                                                    <span class="onsale">{{ $l->category }}</span>
 
                                                 </div>
                                                 <div class="product-badge-wrapper">
 
                                                 </div>
-                                                <a href="{{url('product-detail/'.Crypt::encrypt($l->id) )}}"
-                                                   class="image-wrap">
-                                                    @if($l->path_file && Storage::exists($l->path_file))
-                                                        <img src="{{ url('produk-img/imageprimary/'.$l->id.'.png') }}"
-                                                             class="img-fluid" alt=""
-                                                             style="border-radius: 10px; object-fit: cover; width: 100%; height: 400px;">
+                                                <a href="{{ url('product-detail/' . Crypt::encrypt($l->id)) }}"
+                                                    class="image-wrap">
+                                                    @if ($l->path_file && Storage::exists($l->path_file))
+                                                        <img src="{{ url('produk-img/imageprimary/' . $l->id . '.png') }}"
+                                                            class="img-fluid" alt=""
+                                                            style="aspect-ratio: 1/1; object-fit: cover; width: 100%;">
                                                     @else
                                                         <img src="{{ asset('assets_frontend/img/noimage.png') }}"
-                                                             class="img-fluid" alt=""
-                                                             style="border-radius: 10px; object-fit: cover; width: 100%; height: 400px;">
+                                                            class="img-fluid" alt=""
+                                                            style="aspect-ratio: 1/1; object-fit: cover; width: 100%;">
                                                     @endif
                                                 </a>
 
                                             </div>
                                             <div class="single-grid-product__content">
                                                 <h3 class="title"><a
-                                                        href="{{url('product-detail/'.Crypt::encrypt($l->id))}}">{{\Illuminate\Support\Str::limit($l->name,40) }}</a>
+                                                        href="{{ url('product-detail/' . Crypt::encrypt($l->id)) }}">{{ \Illuminate\Support\Str::limit($l->name, 40) }}</a>
                                                 </h3>
                                                 <div class="price">
-{{--                                                    <span--}}
-{{--                                                        class="discounted-price">Rp {{ number_format($l->price, 0, ',', '.') }}</span>--}}
+                                                    {{--                                                    <span --}}
+                                                    {{--                                                        class="discounted-price">Rp {{ number_format($l->price, 0, ',', '.') }}</span> --}}
                                                 </div>
 
                                                 <div class="rating"
-                                                     style="display: flex; justify-content: space-between; align-items: center;">
+                                                    style="display: flex; justify-content: space-between; align-items: center;">
                                                     <div>
-                                                        <i id="likeIcon{{ $l->id }}" style="font-size: 15px; color: red"
-                                                           onclick="toggleLike('{{ $l->id }}', {{ $l->islike ? 'true' : 'false' }}, {{ $l->likes }})"
-                                                           class="fa {{ $l->islike ? 'fa-heart' : 'fa-heart-o' }}"></i>
-                                                        <span id="likeCount{{ $l->id }}">{{ $l->likes }}</span> Suka
+                                                        <i id="likeIcon{{ $l->id }}"
+                                                            style="font-size: 15px; color: red"
+                                                            onclick="toggleLike('{{ $l->id }}', {{ $l->islike ? 'true' : 'false' }}, {{ $l->likes }})"
+                                                            class="fa {{ $l->islike ? 'fa-heart' : 'fa-heart-o' }}"></i>
+                                                        <span
+                                                            id="likeCount{{ $l->id }}">{{ $l->likes }}</span>
+                                                        Suka
 
                                                     </div>
                                                     @php
                                                         $title = $l->name;
-                                                        $fullname = session('user')->first_name.' '.session('user')->last_name;
-                                                          $gambar = url('produk-img/imageprimary/'.$l->id.'.png');
+                                                        $fullname =
+                                                            session('user')->first_name .
+                                                            ' ' .
+                                                            session('user')->last_name;
+                                                        $gambar = url('produk-img/imageprimary/' . $l->id . '.png');
 
-//                                                          var_dump($gambar);die();
-                                                          $harga = number_format($l->price, 0, ',', '.');
-                                                          $nomorWhatsApp = '+6281120209000';
+                                                        //                                                          var_dump($gambar);die();
+                                                        $harga = number_format($l->price, 0, ',', '.');
+                                                        $nomorWhatsApp = '+6281120209000';
                                                     @endphp
 
 
-                                                    <a href="https://wa.me/<?php echo $nomorWhatsApp; ?>?text=<?php echo urlencode("Hallo, saya $fullname ingin menanyakan produk:\n\nTitle: $title\n"); ?>" target="_blank" class="theme-button theme-button--alt btn-sm" style="border-radius: 20px;">
-                                                     <i class="fa fa-whatsapp" style="color: white"></i>   Customer Care
+                                                    <a href="https://wa.me/<?php echo $nomorWhatsApp; ?>?text=<?php echo urlencode("Hallo, saya $fullname ingin menanyakan produk:\n\nTitle: $title\n"); ?>"
+                                                        target="_blank" class="theme-button theme-button--alt btn-sm"
+                                                        style="border-radius: 20px;">
+                                                        <i class="fa fa-whatsapp" style="color: white"></i> Customer Care
                                                     </a>
                                                 </div>
                                             </div>
@@ -198,41 +205,48 @@
 
                             <div class="pagination-wrapper">
                                 <ul>
-                                    @if($list->onFirstPage())
+                                    @if ($list->onFirstPage())
                                         <li class="disabled"><span><i class="fa fa-angle-left"></i></span></li>
                                     @else
                                         <li>
-                                            <a href="{{ $list->previousPageUrl() }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">
+                                            <a
+                                                href="{{ $list->previousPageUrl() }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">
                                                 <i class="fa fa-angle-left"></i>
                                             </a>
                                         </li>
                                     @endif
 
-                                    @if($list->currentPage() > 3)
-                                        <li><a href="{{ $list->url(1) }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">1</a></li>
+                                    @if ($list->currentPage() > 3)
+                                        <li><a
+                                                href="{{ $list->url(1) }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">1</a>
+                                        </li>
                                         <li class="disabled"><span>...</span></li>
                                     @endif
 
-                                    @foreach(range(max(1, $list->currentPage() - 2), min($list->currentPage() + 2, $list->lastPage())) as $page)
-                                        @if($page == $list->currentPage())
+                                    @foreach (range(max(1, $list->currentPage() - 2), min($list->currentPage() + 2, $list->lastPage())) as $page)
+                                        @if ($page == $list->currentPage())
                                             <li class="active"><span>{{ $page }}</span></li>
                                         @else
                                             <li>
-                                                <a href="{{ $list->url($page) }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">
+                                                <a
+                                                    href="{{ $list->url($page) }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">
                                                     {{ $page }}
                                                 </a>
                                             </li>
                                         @endif
                                     @endforeach
 
-                                    @if($list->currentPage() < $list->lastPage() - 2)
+                                    @if ($list->currentPage() < $list->lastPage() - 2)
                                         <li class="disabled"><span>...</span></li>
-                                        <li><a href="{{ $list->url($list->lastPage()) }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">{{ $list->lastPage() }}</a></li>
+                                        <li><a
+                                                href="{{ $list->url($list->lastPage()) }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">{{ $list->lastPage() }}</a>
+                                        </li>
                                     @endif
 
-                                    @if($list->hasMorePages())
+                                    @if ($list->hasMorePages())
                                         <li>
-                                            <a href="{{ $list->nextPageUrl() }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">
+                                            <a
+                                                href="{{ $list->nextPageUrl() }}{{ !empty($cari) ? '&cari=' . $cari : '' }}">
                                                 <i class="fa fa-angle-right"></i>
                                             </a>
                                         </li>
@@ -255,7 +269,6 @@
 
         <!--=======  End of shop page area  =======-->
     </div>
-
 @endsection
 @section('script')
     <!-- Di dalam Blade View atau template Anda -->
@@ -275,16 +288,16 @@
 
                 // Kirim permintaan AJAX menggunakan Fetch API
                 fetch('/productlikes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({
-                        postId: id,
-                        isLiked: isLiked,
-                    }),
-                })
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({
+                            postId: id,
+                            isLiked: isLiked,
+                        }),
+                    })
                     .then(response => response.json())
                     .then(data => {
                         // Tangani respons server jika diperlukan
@@ -304,5 +317,4 @@
             }
         }
     </script>
-
 @endsection

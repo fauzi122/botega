@@ -5,21 +5,21 @@
 @section('content')
     <div class="breadcrumb-area section-space--breadcrumb">
         <div class="container">
-            {{--            <div class="row">--}}
-            {{--                <div class="col-lg-6 offset-lg-3">--}}
-            {{--                    <!--=======  breadcrumb wrapper  =======-->--}}
+            {{--            <div class="row"> --}}
+            {{--                <div class="col-lg-6 offset-lg-3"> --}}
+            {{--                    <!--=======  breadcrumb wrapper  =======--> --}}
 
-            {{--                    <div class="breadcrumb-wrapper">--}}
-            {{--                        <h2 class="page-title">Reward</h2>--}}
-            {{--                        <ul class="breadcrumb-list">--}}
-            {{--                            <li><a href="{{url('home')}}">Home</a></li>--}}
-            {{--                            <li class="active">Reward</li>--}}
-            {{--                        </ul>--}}
-            {{--                    </div>--}}
+            {{--                    <div class="breadcrumb-wrapper"> --}}
+            {{--                        <h2 class="page-title">Reward</h2> --}}
+            {{--                        <ul class="breadcrumb-list"> --}}
+            {{--                            <li><a href="{{url('home')}}">Home</a></li> --}}
+            {{--                            <li class="active">Reward</li> --}}
+            {{--                        </ul> --}}
+            {{--                    </div> --}}
 
-            {{--                    <!--=======  End of breadcrumb wrapper  =======-->--}}
-            {{--                </div>--}}
-            {{--            </div>--}}
+            {{--                    <!--=======  End of breadcrumb wrapper  =======--> --}}
+            {{--                </div> --}}
+            {{--            </div> --}}
         </div>
     </div>
 
@@ -44,22 +44,28 @@
                                     <div class="col-xl-3 offset-xl-1 col-lg-6">
                                         <div class="deal-counter-wrapper__image">
 
-                                            {!! QrCode::size(150)->generate( url(session('user')->id_no) ) !!}
+                                            {!! QrCode::size(150)->generate(url(session('user')->id_no)) !!}
                                         </div>
                                     </div>
                                     <div class="col-xl-5 col-lg-6">
                                         <div class="deal-counter-wrapper__content">
 
-                                            <h2 class="title">{{$cek->first_name.' '.$cek->last_name}}</h2>
+                                            <h2 class="title">{{ $cek->first_name . ' ' . $cek->last_name }}</h2>
                                             @php
                                                 $level = $cek->level_name;
-                                                $levelColors = ['Bronze' => '#cd7f32', 'Silver' => '#C0C0C0', 'Gold' => '#FFD700', 'Diamond' => '#B9F2FF', 'Platinum' => '#00FF7F'];
+                                                $levelColors = [
+                                                    'Bronze' => '#cd7f32',
+                                                    'Silver' => '#C0C0C0',
+                                                    'Gold' => '#FFD700',
+                                                    'Diamond' => '#B9F2FF',
+                                                    'Platinum' => '#00FF7F',
+                                                ];
                                             @endphp
 
                                             <div class="col" style="display: flex; align-items: center;">
                                                 <a href="#"
-                                                   class="theme-button theme-button--alt theme-button--deal-counter"
-                                                   style="background-color: {{ isset($levelColors[$level]) ? $levelColors[$level] : '#cd7f32' }};">
+                                                    class="theme-button theme-button--alt theme-button--deal-counter"
+                                                    style="background-color: {{ isset($levelColors[$level]) ? $levelColors[$level] : '#cd7f32' }};">
                                                     @if ($level !== null && array_key_exists($level, $levelColors))
                                                         {{ $level }}
                                                     @else
@@ -67,8 +73,8 @@
                                                     @endif
                                                 </a>
                                                 <div style="display: flex; align-items: center;">
-                                                    <span class="odometer" data-count="{{$cek->points}}"
-                                                          style="margin-right: 10px; margin-left: 10px; font-weight: bold; font-size: 27px; color: goldenrod">00</span>
+                                                    <span class="odometer" data-count="{{ $cek->points }}"
+                                                        style="margin-right: 10px; margin-left: 10px; font-weight: bold; font-size: 27px; color: goldenrod">00</span>
                                                     <h2 style="margin: 0; color: goldenrod">Points</h2>
                                                 </div>
 
@@ -98,14 +104,13 @@
 
                     <li class="nav-item">
                         <button class="nav-link active" id="additional-info-tab" data-bs-toggle="tab"
-                                data-bs-target="#product-additional-info" role="tab"
-                                aria-controls="product-additional-info"
-                                aria-selected="false">REWARD
+                            data-bs-target="#product-additional-info" role="tab" aria-controls="product-additional-info"
+                            aria-selected="false">REWARD
                         </button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#product-review"
-                                role="tab" aria-controls="product-review" aria-selected="false">GIFT
+                            role="tab" aria-controls="product-review" aria-selected="false">GIFT
                         </button>
                     </li>
                 </ul>
@@ -122,10 +127,10 @@
 
 
                         <div class="tab-pane fade active" id="product-additional-info" role="tabpanel"
-                             aria-labelledby="additional-info-tab">
+                            aria-labelledby="additional-info-tab">
                             <div class="container">
                                 <div class="shop-product-wrap row grid">
-                                    @foreach($reward as $r)
+                                    @foreach ($reward as $r)
                                         <div class="col-lg-2 col-md-6 col-sm-6 col-custom-sm-6 col-6">
 
                                             <!--=======  grid view product  =======-->
@@ -136,29 +141,30 @@
                                                         <span class="onsale">{{ $r->name }}</span>
                                                     </div>
                                                     <a href="">
-                                                        <img src="{{url('reward-image/'.$r->id.'.png')}}"
-                                                             style="border-radius: 20px; object-fit: cover; height: 200px; width: 100%"
-                                                             class="img-fluid" alt=""
-                                                             onerror="this.src='{{ asset('assets_frontend/img/noimage.png') }}'">
+                                                        <img src="{{ url('reward-image/' . $r->id . '.png') }}"
+                                                            style="aspect-ratio: 1/1; object-fit: cover;width: 100%"
+                                                            class="img-fluid" alt=""
+                                                            onerror="this.src='{{ asset('assets_frontend/img/noimage.png') }}'">
 
                                                     </a>
 
                                                 </div>
                                                 <div class="single-grid-product__content"
-                                                     style="display: flex; justify-content: space-between; align-items: center;">
+                                                    style="display: flex; justify-content: space-between; align-items: center;">
 
                                                     <div class="price"><span
-                                                            style="color: darkorange; font-weight: bold;">{{ $r->point }} POINT</span>
+                                                            style="color: darkorange; font-weight: bold;">{{ $r->point }}
+                                                            POINT</span>
                                                     </div>
                                                     <div>
-                                                        @if($r->status == 1 && $r->user_id == session('user')->id)
+                                                        @if ($r->status == 1 && $r->user_id == session('user')->id)
                                                             <button class="btn btn-secondary btn-sm"
-                                                                    style="border-radius: 20px">Sudah Klaim
+                                                                style="border-radius: 20px">Sudah Klaim
                                                             </button>
                                                         @else
                                                             <button class="btn btn-primary btn-sm"
-                                                                    style="border-radius: 20px; "
-                                                                    onclick="klaimReward({{ $r->id }})">Klaim
+                                                                style="border-radius: 20px; "
+                                                                onclick="klaimReward({{ $r->id }})">Klaim
                                                             </button>
                                                         @endif
                                                     </div>
@@ -173,9 +179,9 @@
 
                                                 <div class="single-list-product__image">
                                                     <a href="#" class="favorite-icon" data-tippy="Add to Wishlist"
-                                                       data-tippy-inertia="true" data-tippy-animation="shift-away"
-                                                       data-tippy-delay="50" data-tippy-arrow="true"
-                                                       data-tippy-theme="sharpborder" data-tippy-placement="left">
+                                                        data-tippy-inertia="true" data-tippy-animation="shift-away"
+                                                        data-tippy-delay="50" data-tippy-arrow="true"
+                                                        data-tippy-theme="sharpborder" data-tippy-placement="left">
                                                         <i class="fa fa-heart-o"></i>
                                                         <i class="fa fa-heart"></i>
                                                     </a>
@@ -185,11 +191,9 @@
                                                         <span class="hot">Hot</span>
                                                     </div>
                                                     <a href="product-details-basic.html" class="image-wrap">
-                                                        <img
-                                                            src="{{asset('')}}assets_frontend/img/products/product-9-1-600x800.jpg"
+                                                        <img src="{{ asset('') }}assets_frontend/img/products/product-9-1-600x800.jpg"
                                                             class="img-fluid" alt="">
-                                                        <img
-                                                            src="{{asset('')}}assets_frontend/img/products/product-9-2-600x800.jpg"
+                                                        <img src="{{ asset('') }}assets_frontend/img/products/product-9-2-600x800.jpg"
                                                             class="img-fluid" alt="">
                                                     </a>
 
@@ -200,7 +204,8 @@
                                                     <h3 class="title"><a href="product-details-basic.html">Lighting
                                                             Lamp</a></h3>
                                                     <div class="price"><span class="main-price discounted">$145</span>
-                                                        <span class="discounted-price">$110</span></div>
+                                                        <span class="discounted-price">$110</span>
+                                                    </div>
                                                     <p class="product-short-desc">Lorem ipsum dolor sit amet,
                                                         consectetur adipisicing elit. Dolorem quod optio quaerat in
                                                         molestiae amet repudiandae repellendus eveniet libero mollitia.
@@ -209,20 +214,22 @@
                                                     <div class="color">
                                                         <ul>
                                                             <li><a class="active" href="#" data-tippy="Black"
-                                                                   data-tippy-inertia="true"
-                                                                   data-tippy-animation="shift-away"
-                                                                   data-tippy-delay="50" data-tippy-arrow="true"
-                                                                   data-tippy-theme="roundborder"><span
+                                                                    data-tippy-inertia="true"
+                                                                    data-tippy-animation="shift-away"
+                                                                    data-tippy-delay="50" data-tippy-arrow="true"
+                                                                    data-tippy-theme="roundborder"><span
                                                                         class="color-picker black"></span></a></li>
-                                                            <li><a href="#" data-tippy="Blue" data-tippy-inertia="true"
-                                                                   data-tippy-animation="shift-away"
-                                                                   data-tippy-delay="50" data-tippy-arrow="true"
-                                                                   data-tippy-theme="roundborder"><span
+                                                            <li><a href="#" data-tippy="Blue"
+                                                                    data-tippy-inertia="true"
+                                                                    data-tippy-animation="shift-away"
+                                                                    data-tippy-delay="50" data-tippy-arrow="true"
+                                                                    data-tippy-theme="roundborder"><span
                                                                         class="color-picker blue"></span></a></li>
-                                                            <li><a href="#" data-tippy="Brown" data-tippy-inertia="true"
-                                                                   data-tippy-animation="shift-away"
-                                                                   data-tippy-delay="50" data-tippy-arrow="true"
-                                                                   data-tippy-theme="roundborder"><span
+                                                            <li><a href="#" data-tippy="Brown"
+                                                                    data-tippy-inertia="true"
+                                                                    data-tippy-animation="shift-away"
+                                                                    data-tippy-delay="50" data-tippy-arrow="true"
+                                                                    data-tippy-theme="roundborder"><span
                                                                         class="color-picker brown"></span></a></li>
                                                         </ul>
                                                     </div>
@@ -232,24 +239,19 @@
                                                                 class="cd-trigger" href="#qv-1" data-tippy="Quick View"
                                                                 data-tippy-inertia="true"
                                                                 data-tippy-animation="shift-away" data-tippy-delay="50"
-                                                                data-tippy-arrow="true"
-                                                                data-tippy-theme="sharpborder"><i
+                                                                data-tippy-arrow="true" data-tippy-theme="sharpborder"><i
                                                                     class="fa fa-search"></i></a></span>
-                                                        <span class="single-icon single-icon--add-to-cart"><a href="#"
-                                                                                                              data-tippy="Add to cart"
-                                                                                                              data-tippy-inertia="true"
-                                                                                                              data-tippy-animation="shift-away"
-                                                                                                              data-tippy-delay="50"
-                                                                                                              data-tippy-arrow="true"
-                                                                                                              data-tippy-theme="sharpborder"><i
-                                                                    class="fa fa-shopping-basket"></i> <span>ADD TO CART</span></a></span>
+                                                        <span class="single-icon single-icon--add-to-cart"><a
+                                                                href="#" data-tippy="Add to cart"
+                                                                data-tippy-inertia="true"
+                                                                data-tippy-animation="shift-away" data-tippy-delay="50"
+                                                                data-tippy-arrow="true" data-tippy-theme="sharpborder"><i
+                                                                    class="fa fa-shopping-basket"></i> <span>ADD TO
+                                                                    CART</span></a></span>
                                                         <span class="single-icon single-icon--compare"><a href="#"
-                                                                                                          data-tippy="Compare"
-                                                                                                          data-tippy-inertia="true"
-                                                                                                          data-tippy-animation="shift-away"
-                                                                                                          data-tippy-delay="50"
-                                                                                                          data-tippy-arrow="true"
-                                                                                                          data-tippy-theme="sharpborder"><i
+                                                                data-tippy="Compare" data-tippy-inertia="true"
+                                                                data-tippy-animation="shift-away" data-tippy-delay="50"
+                                                                data-tippy-arrow="true" data-tippy-theme="sharpborder"><i
                                                                     class="fa fa-exchange"></i></a></span>
                                                     </div>
 
@@ -259,7 +261,6 @@
                                             <!--=======  End of list view product  =======-->
 
                                         </div>
-
                                     @endforeach
                                 </div>
                             </div>
@@ -269,19 +270,21 @@
                         <div class="tab-pane fade" id="product-review" role="tabpanel" aria-labelledby="review-tab">
                             <div class="container">
                                 <div class="row">
-                                    @foreach($gifts as $g)
+                                    @foreach ($gifts as $g)
                                         <div class="col-lg-12 mb-3">
                                             <div class="card">
                                                 <div class="card-body">
                                                     <div class="row">
                                                         <div class="col-md-4">
-                                                            <h5 class="card-title">{{$g->name}}</h5>
+                                                            <h5 class="card-title">{{ $g->name }}</h5>
                                                         </div>
                                                         <div class="col-md-4">
-                                                            <p class="card-text">{{$g->description}}</p>
+                                                            <p class="card-text">{{ $g->description }}</p>
                                                         </div>
                                                         <div class="col-md-4">
-                                                            <p class="card-text"> <i class="fa fa-truck"></i> {{Carbon::parse($g->sent_at)->locale('id_ID')->isoFormat('D MMMM YYYY')}}</p>
+                                                            <p class="card-text"> <i class="fa fa-truck"></i>
+                                                                {{ Carbon::parse($g->sent_at)->locale('id_ID')->isoFormat('D MMMM YYYY') }}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -316,9 +319,8 @@
 @endsection
 
 @section('script')
-
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Temukan elemen dengan kelas "odometer"
             var odometerElement = document.querySelector('.odometer');
 
@@ -328,8 +330,8 @@
             // Inisialisasi odometer
             var odometer = new Odometer({
                 el: odometerElement,
-                value: 0,  // Nilai awal odometer
-                format: 'd'  // Format angka (misalnya 'd' untuk bilangan bulat)
+                value: 0, // Nilai awal odometer
+                format: 'd' // Format angka (misalnya 'd' untuk bilangan bulat)
             });
 
             // Mulai animasi odometer dengan nilai dari data-count
@@ -354,10 +356,13 @@
                 if (result.isConfirmed) {
                     // Lakukan aksi klaim di sini (contoh: permintaan AJAX)
                     $.ajax({
-                        url: '/klaim-reward/' + rewardId, // Gantilah dengan URL endpoint yang sesuai di server Anda
+                        url: '/klaim-reward/' +
+                        rewardId, // Gantilah dengan URL endpoint yang sesuai di server Anda
                         method: 'POST',
-                        data: {_token: '{{ csrf_token() }}'}, // Jangan lupa untuk menyertakan _token jika menggunakan Laravel
-                        success: function (response) {
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        }, // Jangan lupa untuk menyertakan _token jika menggunakan Laravel
+                        success: function(response) {
                             console.log('Klaim Berhasil:', response);
                             // Tampilkan SweetAlert berhasil
                             Swal.fire({
@@ -375,7 +380,7 @@
                                 }
                             });
                         },
-                        error: function (response) {
+                        error: function(response) {
                             console.error('Klaim Gagal:', response);
                             // Tampilkan SweetAlert gagal
                             Swal.fire({
@@ -397,7 +402,5 @@
                 }
             });
         }
-
     </script>
-
 @endsection

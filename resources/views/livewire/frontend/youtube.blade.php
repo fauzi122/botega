@@ -1,4 +1,3 @@
-
 <div class="product-slider-area section-space">
     <div class="container">
         <div class="row">
@@ -14,10 +13,11 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-12">
+            <div class="col-lg-12 px-0">
                 <!--=======  product slider wrapper  =======-->
 
-                <div class="product-slider-wrapper theme-slick-slider" data-slick-setting='{
+                <div class="product-slider-wrapper theme-slick-slider"
+                    data-slick-setting='{
                         "slidesToShow": 2,
                         "slidesToScroll": 2,
                         "arrows": true,
@@ -26,7 +26,8 @@
                         "speed": 500,
                         "prevArrow": {"buttonClass": "slick-prev", "iconClass": "fa fa-angle-left" },
                         "nextArrow": {"buttonClass": "slick-next", "iconClass": "fa fa-angle-right" }
-                    }' data-slick-responsive='[
+                    }'
+                    data-slick-responsive='[
                         {"breakpoint":1501, "settings": {"slidesToShow": 2, "slidesToScroll":2, "arrows": false} },
                         {"breakpoint":1199, "settings": {"slidesToShow": 2, "slidesToScroll": 2, "arrows": false} },
                         {"breakpoint":991, "settings": {"slidesToShow": 2,"slidesToScroll": 2, "arrows": true, "dots": false} },
@@ -35,18 +36,18 @@
                         {"breakpoint":479, "settings": {"slidesToShow": 1,"slidesToScroll": 1, "arrows": true, "dots": false} }
                     ]'>
 
-                    @foreach($youtube as $you)
-
+                    @foreach ($youtube as $you)
                         <div class="col">
                             <div class="">
                                 <div class="">
                                     <div class="product-badge-wrapper">
 
                                     </div>
-                                    <div class="video-container" style="border-radius: 20px">
-                                        <iframe width="390" height="220" src="{{$you->link_youtube}}" title="{{$you->title}}"
-                                                frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                allowfullscreen></iframe>
+                                    <div class="video-container" style="border-radius: 0px">
+                                        <iframe class="w-100" width="390" height="220"
+                                            src="{{ $you->link_youtube }}" title="{{ $you->title }}" frameborder="0"
+                                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowfullscreen></iframe>
                                     </div>
                                 </div>
                                 <div class="single-grid-product__content">
