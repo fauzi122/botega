@@ -29,12 +29,21 @@
             </div> -->
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label for="filterType">Filter Tipe User</label>
                         <select id="filterType" class="form-control">
                             <option value="">Semua</option>
                             <option value="profesional">Profesional</option>
                             <option value="member">Member</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filterCategory">Filter Kategori</label>
+                        <select id="filterCategory" class="form-control">
+                            <option value="">Semua</option>
+                            @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
