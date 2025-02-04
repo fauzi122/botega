@@ -71,6 +71,7 @@ Route::namespace('App\Http\Controllers\Frontend')->middleware('auth-member')->gr
     Route::get('/event', 'News@event');
     Route::get("detail-article/{id}", "News@detail");
     Route::get("event-detail/{id}", "News@detevent");
+    Route::post("join-event/{event_id}", "News@joinevent");
     Route::post("/post-comment", "News@postcomment");
     Route::get("image-event/{id}", "News@imageevent");
     Route::get("image-eventdetail/{id}", "News@imageeventdetail");

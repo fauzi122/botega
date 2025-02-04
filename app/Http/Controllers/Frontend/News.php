@@ -7,10 +7,12 @@ use App\Library\Helper;
 use App\Models\ArticleCommentModel;
 use App\Models\ArticleModel;
 use App\Models\EventGaleryModel;
+use App\Models\EventMember;
 use App\Models\EventsModel;
 use App\Models\UserModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -132,14 +134,18 @@ class News extends Controller
     {
         $cari = \request('cari','');
 
+
         $list=EventsModel::query()
             ->select('events.*','users.first_name','users.last_name')
             ->leftJoin('users', 'events.user_id','=','users.id')
+            ->where('member_id', 'LIKE', '%'.session('user')->level_member_id.'%')
             ->where('publish', 1);
+
         if ($cari != '') {
             $list = Helper::whereFilter($list, ['judul', 'descriptions'], $cari);
         }
         $r = $list->paginate(6);
+
 //        var_dump($r);die();
 
         $data = [
@@ -161,17 +167,40 @@ class News extends Controller
             ->orderBy('event_galeries.path_file','desc')
             ->get();
 
+        $cek = EventMember::query()->where('event_id', $idd)->where('member_id', session('user')->id)->get();
 //        dd($list);die();
 
         $data = [
             'title'=>'Event Detail',
             'news'=>'',
-            'list'=>$list
+            'list'=>$list,
+            'cek'=>$cek
 
         ];
 
         return view('frontend.news.det_event',$data);
 
+    }
+    public function joinevent($eventId) {
+        
+        $cek = EventMember::query()->where('event_id', $eventId)->where('member_id', session('user')->id)->get();
+        if ($cek->isNotEmpty()) {
+            return response()->json(['message' => 'Maaf, Anda sudah mengikuti event ini.'], 500);
+        }
+        
+        try {
+            $data = [
+                'event_id' => $eventId,
+                'member_id' => session('user')->id,
+                'created_at' => now()->setTimezone('Asia/Jakarta'),
+            ];
+
+            EventMember::query()->insert($data);
+
+            return response()->json(['message' => 'Berhasil mengikuti event.']);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Gagal mengikuti event.'], 500);
+        }
     }
     public function imageevent($id){
 
