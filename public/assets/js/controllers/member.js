@@ -61,88 +61,63 @@ function buildTable() {
             url: $("table#jd-table").data("datasource"),
             method: "GET",
             data: function (d) {
-                d.type = $("#filterType").val(); // Tambahkan filter berdasarkan tipe (Profesional/Member)
+                d.type = $("#filterType").val();
+                d.category = $("#filterCategory").val(); // Filter berdasarkan kategori
             },
         },
         order: [[1, "asc"]],
-        columnDefs: [],
         columns: [
-            {
-                data: "id",
-                sortable: false,
-                width: "20px",
-                target: 0,
-                searchable: false,
-                render: function (data, type, row, meta) {
-                    return (
-                        App.tableCheckID(data) +
-                        (meta.row + 1 + meta.settings._iDisplayStart)
-                    );
-                },
-            },
+            { data: "id", sortable: false, width: "20px", searchable: false },
             { data: "id_no" },
             {
                 data: "first_name",
-                render: (data, type, row, meta) => {
+                render: (data, type, row) => {
                     return `${data} ${
                         row["last_name"]
-                    }<br/><small class="badge badge-soft-info" >${
+                    }<br/><small class="badge badge-soft-info">${
                         row.kategori ?? ""
-                    }</small> `;
+                    }</small>`;
                 },
             },
-            {
-                data: "nik",
-                render: (data, type, row, meta) => {
-                    return data && data.trim() !== "" ? data : "-"; // Ganti "-" jika data kosong/null
-                },
-            }, // Tambahkan kolom NIK
-            {
-                data: "npwp",
-                render: (data, type, row, meta) => {
-                    return data && data.trim() !== "" ? data : "-"; // Ganti "-" jika data kosong/null
-                },
-            }, // Tambahkan kolom NIK
+            { data: "nik", render: (data) => (data ? data : "-") },
+            { data: "npwp", render: (data) => (data ? data : "-") },
             {
                 data: "level_name",
-                render: (data, type, row, meta) => {
+                render: (data, type, row) => {
                     let totalspent = formatUang(row["total_spent"]);
-                    const reward = Number(row["reward_type"]);
-                    const ispro = reward === 1 || reward === 3;
-                    const label = ispro ? "Professional" : "";
-                    return `${label} ${
+                    let isPro = [1, 3].includes(Number(row["reward_type"]));
+                    return `${isPro ? "Professional" : ""} ${
                         data ?? ""
                     }<br/><small class="badge badge-soft-success">IDR ${totalspent}</small>`;
                 },
             },
             {
                 data: "hp",
-                render: (data, type, row, meta) => {
-                    const sudahverifi =
-                        row["date_verify_email"] === null
-                            ? ""
-                            : `<i class="mdi mdi-check-all" style="color: green"></i>`;
+                render: (data, type, row) => {
+                    let verifiedIcon = row["date_verify_email"]
+                        ? `<i class="mdi mdi-check-all" style="color: green"></i>`
+                        : "";
                     return `${data ?? ""}<br/>${row["wa"] ?? ""}<br/>${
                         row["email"] ?? "-"
-                    } ${sudahverifi}`;
+                    } ${verifiedIcon}`;
                 },
             },
             {
                 data: "last_name",
                 sortable: false,
                 width: "100px",
-                render: (data, type, row, meta) => {
+                render: (data, type, row) => {
                     return `<button class="btn btn-sm btn-info" onclick="editdata(${row["id"]})"><i class="mdi mdi-pencil"></i> Edit</button>
-                     <button class="btn btn-sm btn-warning" onclick="syncData(${row["id"]})"><i class="mdi mdi-sync"></i> Sinkron</button>
-                    `;
+                            <button class="btn btn-sm btn-warning" onclick="syncData(${row["id"]})"><i class="mdi mdi-sync"></i> Sinkron</button>`;
                 },
             },
             { data: "email", visible: false },
             { data: "wa", visible: false },
         ],
     });
-    $("#filterType").on("change", function () {
-        table.ajax.reload(); // Reload tabel dengan parameter filter
+
+    $("#filterType, #filterCategory").on("change", function () {
+        table.ajax.reload();
     });
 }
 

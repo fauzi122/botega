@@ -567,7 +567,7 @@ File: Main Js File
                         icon: "arrow-right-circle",
                     },
                     {
-                        title: "Story Level",
+                        title: "History Level",
                         url: baseurl + "/member-spent/",
                         icon: "arrow-right-circle",
                     },
