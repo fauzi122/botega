@@ -145,7 +145,16 @@
                             </div>
 
 
-
+                            <div>
+                                @if ($cek->isNotEmpty())
+                                    <button class="btn btn-secondary btn-sm" style="border-radius: 20px">Sudah mengikuti
+                                    </button>
+                                @else
+                                    <button type="submit" class="btn btn-primary btn-sm mt-2 px-2"
+                                        onclick="joinEvent({{ $list[0]->id }})" style="border-radius: 15px;">Ikuti
+                                        event</button>
+                                @endif
+                            </div>
                         </div>
 
                         <!--=======  End of product details description area  =======-->
@@ -166,4 +175,72 @@
 
 
     <!--=======  End of single product description tab area  =======-->
+@endsection
+
+@section('script')
+    <script>
+        function joinEvent(eventId) {
+            console.log(eventId);
+            // Tampilkan SweetAlert konfirmasi
+            Swal.fire({
+                title: 'Konfirmasi Event',
+                text: 'Apakah Anda yakin ingin mengikuti event ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, ikuti!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                // Jika pengguna menekan tombol "Ya"
+                if (result.isConfirmed) {
+                    // Lakukan aksi klaim di sini (contoh: permintaan AJAX)
+                    $.ajax({
+                        url: '/join-event/' +
+                            eventId, // Gantilah dengan URL endpoint yang sesuai di server Anda
+                        method: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        }, // Jangan lupa untuk menyertakan _token jika menggunakan Laravel
+                        success: function(response) {
+                            console.log('Berhasil Mengikuti Event:', response);
+                            // Tampilkan SweetAlert berhasil
+                            Swal.fire({
+                                title: 'Berhasil Mengikuti Event!',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 2000,
+                                showCancelButton: false,
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                                didClose: () => {
+                                    // Reload halaman setelah alert berhasil ditutup
+                                    console.log('Reloading...');
+                                    location.reload();
+                                }
+                            });
+                        },
+                        error: function(response) {
+                            console.error('Gagal Mengikuti Event:', response);
+                            // Tampilkan SweetAlert gagal
+                            Swal.fire({
+                                title: 'Gagal Mengikuti Event!',
+                                text: response.responseJSON.message,
+                                icon: 'error',
+                                timer: 2000,
+                                showCancelButton: false,
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                                didClose: () => {
+                                    // Reload halaman setelah alert gagal ditutup
+                                    console.log('Reloading...');
+                                    location.reload();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    </script>
 @endsection

@@ -285,7 +285,7 @@
 
                         <li class="menu-item-has-children {{ isset($news) ? 'active' : '' }}">
                             <a
-                                onclick="this.closest('.menu-item-has-children').querySelector('.menu-expand').click(); return false;">NEWS</a>
+                                onclick="this.closest('.menu-item-has-children').querySelector('.menu-expand').click();">NEWS</a>
                             <ul class="sub-menu">
                                 <li>
                                     <a href="{{ url('informasi') }}">Informasi Terkini</a>
