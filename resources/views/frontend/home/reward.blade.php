@@ -54,14 +54,13 @@
                                             @php
                                                 $level = $cek->level_name;
                                                 $levelColors = [
-                                                    'Bronze' => '#cd7f32',
-                                                    'Silver' => '#C0C0C0',
-                                                    'Gold' => '#FFD700',
-                                                    'Diamond' => '#B9F2FF',
-                                                    'Platinum' => '#00FF7F',
+                                                    'Tier D' => '#cd7f32',
+                                                    'Tier C' => '#C0C0C0',
+                                                    'Tier B' => '#FFD700',
+                                                    'Tier A' => '#B9F2FF',
+                                                    'Tier AA' => '#00FF7F',
                                                 ];
                                             @endphp
-
                                             <div class="col" style="display: flex; align-items: center;">
                                                 <a href="#"
                                                     class="theme-button theme-button--alt theme-button--deal-counter"
@@ -69,7 +68,7 @@
                                                     @if ($level !== null && array_key_exists($level, $levelColors))
                                                         {{ $level }}
                                                     @else
-                                                        Bronze
+                                                        Tier D
                                                     @endif
                                                 </a>
                                                 <div style="display: flex; align-items: center;">
@@ -357,7 +356,7 @@
                     // Lakukan aksi klaim di sini (contoh: permintaan AJAX)
                     $.ajax({
                         url: '/klaim-reward/' +
-                        rewardId, // Gantilah dengan URL endpoint yang sesuai di server Anda
+                            rewardId, // Gantilah dengan URL endpoint yang sesuai di server Anda
                         method: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}'
