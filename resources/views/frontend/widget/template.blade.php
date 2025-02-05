@@ -264,13 +264,13 @@
 
         <div class="offcanvas-wrapper">
 
-            <div class="offcanvas-inner-content">
-                <div class="offcanvas-mobile-search-area">
+            <div class="offcanvas-inner-content" style="padding-top: 15px;">
+                {{-- <div class="offcanvas-mobile-search-area">
                     <form action="{{ url('product') }}" method="get">
                         <input type="search" name="cari" placeholder="Search...">
                         <button type="submit"><i class="fa fa-search"></i></button>
                     </form>
-                </div>
+                </div> --}}
                 <nav class="offcanvas-naviagtion">
                     <ul>
                         <li class="has {{ isset($home) ? 'active' : '' }}">
