@@ -5,20 +5,20 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Katalog Produk</h5>
-                    <button type="button" class="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close" >
+                    <button type="button" class="close btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     @if(session()->has('success'))
-                        <div class="alert alert-border-left alert-label-icon alert-success alert-dismissible fade show">
-                            {{session('success')}}
-                        </div>
+                    <div class="alert alert-border-left alert-label-icon alert-success alert-dismissible fade show">
+                        {{session('success')}}
+                    </div>
                     @endif
                     @if(session()->has('error'))
-                        <div class="alert alert-border-left alert-danger alert-label-icon alert-dismissible fade show">
-                            {{session('error')}}
-                        </div>
+                    <div class="alert alert-border-left alert-danger alert-label-icon alert-dismissible fade show">
+                        {{session('error')}}
+                    </div>
                     @endif
 
                     <div wire:loading.class.remove="hide" class="hide" style="width: 100%; justify-content: center">
@@ -38,7 +38,7 @@
                                 <select wire:model="lvl_member_id" id="lvl_member_id" name="lvl_member_id" class="form-select">
                                     <option>-- Pilih Level Member --</option>
                                     @foreach($lvlmember as $lvl)
-                                        <option value="{{$lvl->id}}">{{$lvl->level_name}}</option>
+                                    <option value="{{$lvl->id}}">{{$lvl->level_name}}</option>
                                     @endforeach
                                 </select>
                                 @error('lvl_member_id')
@@ -61,8 +61,8 @@
                             <div class="col-md-7" id="image-preview" wire:ignore>
                                 <img style="width: 200px; height: 150px; object-fit: cover" src="" id="img-preview" />
                                 <button id='btn-hapus-gambar' style="position: absolute; margin-top: 130px; margin-left: -50px"
-                                        class="btn btn-sm btn-danger btn-rounded" title="Hapus gambar"
-                                        onclick="return hapusgambar()"><i class="mdi mdi-close"></i></button>
+                                    class="btn btn-sm btn-danger btn-rounded" title="Hapus gambar"
+                                    onclick="return hapusgambar()"><i class="mdi mdi-close"></i></button>
                             </div>
 
                         </div>
@@ -78,10 +78,10 @@
                         <div class="form-group col-md-5">
                             <div wire:ignore>
                                 <label for="file_katalog">File Katalog (.pdf only)</label>
-                                <input type="file" accept="application/pdf"  name="file_katalog" class="form-control-file form-control" />
+                                <input type="file" accept="application/pdf" name="file_katalog" class="form-control-file form-control" />
                             </div>
                             @if($urlunduh != '')
-                                <a href="{{$urlunduh}}" target="_blank"><i class="mdi mdi-download"></i> Unduh file</a>
+                            <a href="{{$urlunduh}}" target="_blank"><i class="mdi mdi-download"></i> Unduh file</a>
                             @endif
                             <input type="hidden" class="@error('file_katalog') is-invalid @enderror" />
                             @error('file_katalog')
