@@ -62,16 +62,16 @@ class KatalogProdukController extends Controller
 
         return datatables(KatalogProdukModel::query())
             ->addColumn('urlfoto', function ($v) {
-                $f = secure_url('/admin/katalog-produk/image/' . $v['id'] . '.png');
+                $f = url('/admin/katalog-produk/image/' . $v['id'] . '.png');
                 if (Storage::exists($v['gambar_katalog']) && $v['gambar_katalog'] != '') {
-                    return $f;
+                    return '';
                 }
                 return '';
             })
             ->addColumn('fileunduh', function ($v) {
-                $f = secure_url('/admin/katalog-produk/berkas/' . $v['id'] . '.pdf');
+                $f = url('/admin/katalog-produk/berkas/' . $v['id'] . '.pdf');
                 if (Storage::exists($v['file_katalog']) && $v['file_katalog'] != '') {
-                    return $f;
+                    return '';
                 }
                 return '';
             })
