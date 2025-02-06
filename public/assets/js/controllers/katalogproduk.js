@@ -49,12 +49,7 @@ function createFrameGridView() {
 
 function createURLGridView(start = 0) {
     let cari = $("div#gridview .card-header input[name=cari]").val();
-    // var url = baseurl() + "/admin/katalog-produk/data-source/?";
-    // Pastikan selalu HTTPS
-    let protocol =
-        window.location.protocol === "https:" ? "https://" : "https://";
-    let url =
-        protocol + window.location.host + "/admin/katalog-produk/data-source/?";
+    var url = baseurl() + "/admin/katalog-produk/data-source/?";
 
     var searchQuery = "";
     let columns = ["nama_katalog"];
