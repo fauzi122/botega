@@ -10,10 +10,16 @@ class Produk extends Component
     public function render()
     {
 
+        // $produk = DB::table('products as a')
+        //     ->select('a.*', 'b.path_file', 'b.is_primary')
+        //     ->leftJoin('product_images as b', 'a.id', '=', 'b.product_id')
+        //     ->limit(4)
+        //     ->orderBy('a.id','desc')
+        //     ->get();
         $produk = DB::table('products as a')
             ->select('a.*', 'b.path_file', 'b.is_primary')
             ->leftJoin('product_images as b', 'a.id', '=', 'b.product_id')
-            ->limit(4)
+            ->where('a.sts_home', 1)
             ->orderBy('a.id','desc')
             ->get();
         $data = [

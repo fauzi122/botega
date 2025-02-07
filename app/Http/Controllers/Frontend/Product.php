@@ -26,7 +26,7 @@ class Product extends Controller
             $join->on('products.id', '=', 'product_likes.product_id')->where('product_likes.user_id', $user_id);
         })->leftJoin('product_images', function ($join) {
             $join->on('products.id', '=', 'product_images.product_id')->where('product_images.is_primary', '=', 1);
-        })->orderBy('products.id', 'desc');
+        })->where('sts_product', 1)->orderBy('products.id', 'desc');
 //test
         if ($cari != '') {
             $list = Helper::whereFilter($list, ['products.name', 'products.descriptions', 'product_categories.category'], $cari);

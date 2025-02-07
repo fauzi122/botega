@@ -70,6 +70,17 @@ function buildTable(){
             { data: 'category'},
             { data: 'price', width:'100px', render:(data, type, row, meta) => formatUang(data)},
             { data: 'qty', width: '40px'},
+            { data: 'sts_home', render:(data, type, row, meta) => {
+                let checked = data === 1 ? 'checked' : '';
+                return `<input onchange="toggleHomeAktif(${row['id']}, this)" ${checked} type="checkbox" id="switch_home_${row['id']}" switch="none">
+                            <label for="switch_home_${row['id']}" data-on-label="Ya" data-off-label="Tidak"></label>`
+            }},
+            { data: 'sts_product', render:(data, type, row, meta) => {
+                let checked = data === 1 ? 'checked' : '';
+
+                return `<input onchange="toggleProductAktif(${row['id']}, event)" ${checked} type="checkbox" id="switch_product_${row['id']}" switch="none">
+                            <label for="switch_product_${row['id']}" data-on-label="Ya" data-off-label="Tidak"></label>`
+            }},
             { data: 'id', render:(data, type, row, meta) => {
                     let url = $('meta[name=baseurl]').attr('content') + '/admin/produk-image/' + row['id'];
                     return `
@@ -80,6 +91,27 @@ function buildTable(){
 
         ]
     });
+}
+
+function toggleHomeAktif(id, check) {
+    wire.toggleHomeAktif(id);
+    if (check.checked) {
+        $(`#switch_product_${id}`).prop('checked', true);
+        productAktif(id);
+    }
+}
+function productAktif(id) {
+    wire.productAktif(id);
+}
+function toggleProductAktif(id, event) {
+    
+    if ($(`#switch_home_${id}`).prop('checked')) {
+        event.preventDefault();
+        $(event.target).prop('checked', true);
+        return;
+    }
+
+    wire.toggleProductAktif(id);
 }
 
 function editdata(id){
