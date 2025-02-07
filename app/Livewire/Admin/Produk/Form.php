@@ -48,6 +48,32 @@ class Form extends Component
         $this->edit(0);
     }
 
+    public function toggleHomeAktif($id)
+    {
+        if (!ValidatedPermission::authorize(ValidatedPermission::UBAH_DATA_PRODUK)) {
+            return;
+        }
+
+        ProductModel::where('id', $id)->update(['sts_home' => \DB::raw('not sts_home')]);
+
+    }
+    public function productAktif($id)
+    {
+        if (!ValidatedPermission::authorize(ValidatedPermission::UBAH_DATA_PRODUK)) {
+            return;
+        }
+
+        ProductModel::where('id', $id)->update(['sts_product' => 1]);
+    }
+    public function toggleProductAktif($id)
+    {
+        if (!ValidatedPermission::authorize(ValidatedPermission::UBAH_DATA_PRODUK)) {
+            return;
+        }
+
+        ProductModel::where('id', $id)->update(['sts_product' => \DB::raw('not sts_product')]);
+    }
+
     public function save(){
         if($this->editform){
             $this->update();
