@@ -64,7 +64,7 @@ class KatalogProdukController extends Controller
             ->addColumn('urlfoto', function ($v) {
                 $f = url('/admin/katalog-produk/image/' . $v['id'] . '.png');
                 if (Storage::exists($v['gambar_katalog']) && $v['gambar_katalog'] != '') {
-                    return '';
+                    return $f;
                 }
                 return '';
             })
