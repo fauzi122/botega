@@ -47,7 +47,7 @@ function createFrameGridView(){
 function createURLGridView(start=0){
     let produkid = $('div#gridview').data('produkid');
     let cari = $('div#gridview .card-header input[name=cari]').val();
-    var url = baseurl() + '/admin/slider/data-source/?';
+    var url = $('#gridview').data('datasource') + "/?";
 
     var searchQuery = '';
     let columns = ['title', 'description'];

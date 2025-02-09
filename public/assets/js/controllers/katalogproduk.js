@@ -49,7 +49,7 @@ function createFrameGridView() {
 
 function createURLGridView(start = 0) {
     let cari = $("div#gridview .card-header input[name=cari]").val();
-    var url = baseurl() + "/admin/katalog-produk/data-source/?";
+    var url = $('#gridview').data('datasource') + "/?";
 
     var searchQuery = "";
     let columns = ["nama_katalog"];
@@ -68,7 +68,6 @@ function createURLGridView(start = 0) {
         encodeURI(cari)
     );
 }
-
 var _timeOutSearch;
 function buildGridView(page) {
     createFrameGridView();
@@ -84,6 +83,7 @@ function buildGridView(page) {
                 n["urlfoto"] === ""
                     ? ""
                     : `<img class="card-img-top img-fluid" src="${n["urlfoto"]}" />`;
+                    
             let filekatalog =
                 n["fileunduh"] === ""
                     ? ""
