@@ -43,8 +43,7 @@
                                 <div class="row">
                                     <div class="col-xl-3 offset-xl-1 col-lg-6">
                                         <div class="deal-counter-wrapper__image">
-
-                                            {!! QrCode::size(150)->generate(url(session('user')->id_no)) !!}
+                                            {!! QrCode::size(150)->generate(url(session('user')->id_no ? session('user')->id_no : '')) !!}
                                         </div>
                                     </div>
                                     <div class="col-xl-5 col-lg-6">
@@ -64,12 +63,8 @@
                                             <div class="col" style="display: flex; align-items: center;">
                                                 <a href="#"
                                                     class="theme-button theme-button--alt theme-button--deal-counter"
-                                                    {{-- style="background-color: {{ isset($levelColors[$level]) ? $levelColors[$level] : '#cd7f32' }};" --}} style="background-color: #cd7f32;">
+                                                    style="background-color: #cd7f32;">
                                                     {{ $cek->level_name ? $cek->level_name : 'Tier D' }}
-                                                    {{-- @if ($level !== null && array_key_exists($level, $levelColors))
-                                                    @else
-                                                        Tier D
-                                                    @endif --}}
                                                 </a>
                                                 <div style="display: flex; align-items: center;">
                                                     <span class="odometer" data-count="{{ $cek->points }}"
