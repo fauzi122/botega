@@ -51,7 +51,7 @@
                                         <div class="deal-counter-wrapper__content">
 
                                             <h2 class="title">{{ $cek->first_name . ' ' . $cek->last_name }}</h2>
-                                            @php
+                                            {{-- @php
                                                 $level = $cek->level_name;
                                                 $levelColors = [
                                                     'Tier D' => '#cd7f32',
@@ -60,16 +60,16 @@
                                                     'Tier A' => '#B9F2FF',
                                                     'Tier AA' => '#00FF7F',
                                                 ];
-                                            @endphp
+                                            @endphp --}}
                                             <div class="col" style="display: flex; align-items: center;">
                                                 <a href="#"
                                                     class="theme-button theme-button--alt theme-button--deal-counter"
-                                                    style="background-color: {{ isset($levelColors[$level]) ? $levelColors[$level] : '#cd7f32' }};">
-                                                    @if ($level !== null && array_key_exists($level, $levelColors))
-                                                        {{ $level }}
+                                                    {{-- style="background-color: {{ isset($levelColors[$level]) ? $levelColors[$level] : '#cd7f32' }};" --}} style="background-color: #cd7f32;">
+                                                    {{ $cek->level_name ? $cek->level_name : 'Tier D' }}
+                                                    {{-- @if ($level !== null && array_key_exists($level, $levelColors))
                                                     @else
                                                         Tier D
-                                                    @endif
+                                                    @endif --}}
                                                 </a>
                                                 <div style="display: flex; align-items: center;">
                                                     <span class="odometer" data-count="{{ $cek->points }}"
