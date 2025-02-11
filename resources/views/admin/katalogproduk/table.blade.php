@@ -30,7 +30,7 @@
                             </div> -->
             <div class="card-body">
                 <div class="table-responsive table-responsive-md">
-                    <div id="gridview" data-datasource="{{ secure_url('admin/katalog-produk/data-source') }}"></div>
+                    <div id="gridview" data-datasource="{{ url('admin/katalog-produk/data-source') }}"></div>
                 </div>
 
             </div>
