@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @yield('meta')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('') }}assets_frontend/img/logoicon2.png">
 
@@ -79,8 +80,8 @@
                             <div class="header-logo">
                                 <a href="{{ url('home') }}">
                                     @if (isset($home))
-                                        <img src="{{ asset('') }}assets_frontend/img/bottega-brown.png"
-                                            class="img-fluid" alt="" style="width: 70%; height: 60%;">
+                                    <img src="{{ asset('') }}assets_frontend/img/bottega-brown.png"
+                                        class="img-fluid" alt="" style="width: 70%; height: 60%;">
                                     @endif
                                     <img src="{{ asset('') }}assets_frontend/img/bottega-brown.png"
                                         class="img-fluid" alt="" style="width: 70%; height: 60%;">
@@ -95,9 +96,9 @@
 
                                         </li>
                                         @if (session('user'))
-                                            <li class="has {{ isset($reward) ? 'active' : '' }}">
-                                                <a href="{{ url('reward') }}">REWARD</a>
-                                            </li>
+                                        <li class="has {{ isset($reward) ? 'active' : '' }}">
+                                            <a href="{{ url('reward') }}">REWARD</a>
+                                        </li>
                                         @endif
 
                                         <li class="has-children {{ isset($news) ? 'active' : '' }}">
@@ -123,63 +124,63 @@
                             </div>
 
                             @if (session('user'))
-                                <div class="header-icon-area">
+                            <div class="header-icon-area">
 
-                                    <div class="account-dropdown d-flex align-items-center">
-                                        <a href="" style="color: black">Selamat Datang,
-                                            {{ session('user')->first_name }} <i class="pe-7s-angle-down"></i></a>
+                                <div class="account-dropdown d-flex align-items-center">
+                                    <a href="" style="color: black">Selamat Datang,
+                                        {{ session('user')->first_name }} <i class="pe-7s-angle-down"></i></a>
 
-                                        <ul class="account-dropdown__list">
-                                            <li><a href="{{ url('profile') }}">My Profile</a></li>
-                                            {{--                                        <li><a href="{{url('barcode')}}">Barcode QR Member</a></li> --}}
-                                            <li><a href="{{ url('ubahpassword') }}">Ubah Password</a></li>
-                                            <li><a href="javascript:void(0)" id="labelLogout">Logout</a></li>
-                                        </ul>
-                                    </div>
+                                    <ul class="account-dropdown__list">
+                                        <li><a href="{{ url('profile') }}">My Profile</a></li>
+                                        {{-- <li><a href="{{url('barcode')}}">Barcode QR Member</a></li> --}}
+                                        <li><a href="{{ url('ubahpassword') }}">Ubah Password</a></li>
+                                        <li><a href="javascript:void(0)" id="labelLogout">Logout</a></li>
+                                    </ul>
+                                </div>
 
-                                    <div class="header-icon d-flex align-items-center">
-                                        <ul class="header-icon__list">
-                                            <li><a href="javascript:void(0)" id="search-icon"><i
-                                                        class="fa fa-search"></i></a></li>
-                                            <li>
-                                                <a href="{{ url('notifications') }}"><i class="fa fa-bell-o"></i>
-                                                    @if ($unread > 0)
-                                                        <span class="item-count bounce">{{ $unread }}</span>
-                                                    @endif
-
-                                                </a>
+                                <div class="header-icon d-flex align-items-center">
+                                    <ul class="header-icon__list">
+                                        <li><a href="javascript:void(0)" id="search-icon"><i
+                                                    class="fa fa-search"></i></a></li>
+                                        <li>
+                                            <a href="{{ url('notifications') }}"><i class="fa fa-bell-o"></i>
                                                 @if ($unread > 0)
-                                                    <div class="container">
-                                                        <div class="minicart-wrapper">
-                                                            <p class="minicart-wrapper__title">Notification</p>
-                                                            <div class="minicart-wrapper__items ps-scroll"
-                                                                id="notification-items">
-                                                                <!-- Di sini akan ditampilkan notifikasi -->
-                                                            </div>
-                                                            <div class="minicart-wrapper__buttons mb-0">
-                                                                <a href="{{ url('notifications') }}"
-                                                                    class="theme-button theme-button--minicart-button mb-0">VIEW
-                                                                    NOTIFICATIONS</a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                <span class="item-count bounce">{{ $unread }}</span>
                                                 @endif
 
+                                            </a>
+                                            @if ($unread > 0)
+                                            <div class="container">
+                                                <div class="minicart-wrapper">
+                                                    <p class="minicart-wrapper__title">Notification</p>
+                                                    <div class="minicart-wrapper__items ps-scroll"
+                                                        id="notification-items">
+                                                        <!-- Di sini akan ditampilkan notifikasi -->
+                                                    </div>
+                                                    <div class="minicart-wrapper__buttons mb-0">
+                                                        <a href="{{ url('notifications') }}"
+                                                            class="theme-button theme-button--minicart-button mb-0">VIEW
+                                                            NOTIFICATIONS</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
 
-                                            </li>
-                                        </ul>
-                                    </div>
+
+                                        </li>
+                                    </ul>
                                 </div>
+                            </div>
                             @else
-                                <div class="header-icon-area">
-                                    <div class="header-icon d-flex align-items-center">
-                                        <a href="{{ url('login') }}"
-                                            class="theme-button theme-button--small theme-button--rounded">
-                                            <i class="pe-7s-user"></i> Login Member
-                                        </a>
+                            <div class="header-icon-area">
+                                <div class="header-icon d-flex align-items-center">
+                                    <a href="{{ url('login') }}"
+                                        class="theme-button theme-button--small theme-button--rounded">
+                                        <i class="pe-7s-user"></i> Login Member
+                                    </a>
 
-                                    </div>
                                 </div>
+                            </div>
                             @endif
 
                         </div>
@@ -210,7 +211,7 @@
                                 <li>
                                     <a href="{{ url('notifications') }}"><i class="fa fa-bell-o"></i>
                                         @if ($unread > 0)
-                                            <span class="item-count bounce">{{ $unread }}</span>
+                                        <span class="item-count bounce">{{ $unread }}</span>
                                         @endif
 
                                     </a>
@@ -267,67 +268,68 @@
             <div class="offcanvas-inner-content" style="padding-top: 15px;">
                 {{-- <div class="offcanvas-mobile-search-area">
                     <form action="{{ url('product') }}" method="get">
-                        <input type="search" name="cari" placeholder="Search...">
-                        <button type="submit"><i class="fa fa-search"></i></button>
-                    </form>
-                </div> --}}
-                <nav class="offcanvas-naviagtion">
-                    <ul>
-                        <li class="has {{ isset($home) ? 'active' : '' }}">
-                            <a href="{{ url('home') }}">HOME</a>
+                <input type="search" name="cari" placeholder="Search...">
+                <button type="submit"><i class="fa fa-search"></i></button>
+                </form>
+            </div> --}}
+            <nav class="offcanvas-naviagtion">
+                <ul>
+                    <li class="has {{ isset($home) ? 'active' : '' }}">
+                        <a href="{{ url('home') }}">HOME</a>
 
-                        </li>
-                        @if (session('user'))
-                            <li class="has {{ isset($reward) ? 'active' : '' }}">
-                                <a href="{{ url('reward') }}">REWARD</a>
+                    </li>
+                    @if (session('user'))
+                    <li class="has {{ isset($reward) ? 'active' : '' }}">
+                        <a href="{{ url('reward') }}">REWARD</a>
+                    </li>
+                    @endif
+
+                    <li class="menu-item-has-children {{ isset($news) ? 'active' : '' }}">
+                        <a
+                            onclick="this.closest('.menu-item-has-children').querySelector('.menu-expand').click();">NEWS</a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a href="{{ url('informasi') }}">Informasi Terkini</a>
                             </li>
-                        @endif
+                            <li>
+                                <a href="{{ url('event') }}">Event</a>
+                            </li>
 
-                        <li class="menu-item-has-children {{ isset($news) ? 'active' : '' }}">
-                            <a
-                                onclick="this.closest('.menu-item-has-children').querySelector('.menu-expand').click();">NEWS</a>
-                            <ul class="sub-menu">
-                                <li>
-                                    <a href="{{ url('informasi') }}">Informasi Terkini</a>
-                                </li>
-                                <li>
-                                    <a href="{{ url('event') }}">Event</a>
-                                </li>
-
-                            </ul>
-                        </li>
+                        </ul>
+                    </li>
 
 
-                        <li class="has {{ isset($product) ? 'active' : '' }}"><a
-                                href="{{ url('product') }}">PRODUCT</a>
+                    <li class="has {{ isset($product) ? 'active' : '' }}"><a
+                            href="{{ url('product') }}">PRODUCT</a>
 
-                        </li>
-                    </ul>
-                </nav>
+                    </li>
+                </ul>
+            </nav>
 
-                <div class="offcanvas-widget-area">
-                    <div class="off-canvas-contact-widget">
-                        <div class="header-contact-info">
-                            <ul class="header-contact-info__list">
-                                <li style="font-weight: bold">{{ session('user')->first_name }}
-                                    {{ session('user')->last_name }} </li>
-                                <li><i class="fa fa-user"></i> <a href="{{ url('profile') }}" title="">My
-                                        Profile </a></li>
-                                <li><i class="fa fa-gear"></i> <a href="{{ url('ubahpassword') }}"
-                                        title="">Ubah Password </a>
-                                </li>
-                                <li><i class="fa fa-arrow-circle-left"></i> <a href="javascript:void(0)"
-                                        id="labelLogout">Logout </a>
-                                </li>
+            <div class="offcanvas-widget-area">
+                <div class="off-canvas-contact-widget">
+                    <div class="header-contact-info">
+                        <ul class="header-contact-info__list">
+                            <li style="font-weight: bold">{{ session('user')->first_name }}
+                                {{ session('user')->last_name }}
+                            </li>
+                            <li><i class="fa fa-user"></i> <a href="{{ url('profile') }}" title="">My
+                                    Profile </a></li>
+                            <li><i class="fa fa-gear"></i> <a href="{{ url('ubahpassword') }}"
+                                    title="">Ubah Password </a>
+                            </li>
+                            <li><i class="fa fa-arrow-circle-left"></i> <a href="javascript:void(0)"
+                                    id="labelLogout">Logout </a>
+                            </li>
 
 
-                            </ul>
-                        </div>
+                        </ul>
                     </div>
-
                 </div>
+
             </div>
         </div>
+    </div>
 
     </div>
 
@@ -521,57 +523,62 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
     @if (session('success'))
-        <script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: '{{ session('success') }}',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        </script>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '{{ session('
+            success ') }}',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    </script>
     @endif
 
     @if (session('error'))
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: '{{ session('error') }}',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        </script>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: '{{ session('
+            error ') }}',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    </script>
     @endif
 
 
     @if (session('warning'))
-        <script>
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian!',
-                text: '{{ session('warning') }}',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        </script>
+    <script>
+        Swal.fire({
+            icon: 'warning',
+            title: 'Perhatian!',
+            text: '{{ session('
+            warning ') }}',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    </script>
     @endif
 
     @if (session('info'))
-        <script>
-            Swal.fire({
-                icon: 'info',
-                title: 'Info!',
-                text: '{{ session('info') }}',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        </script>
+    <script>
+        Swal.fire({
+            icon: 'info',
+            title: 'Info!',
+            text: '{{ session('
+            info ') }}',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    </script>
     @endif
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('{{ url('datanotif') }}')
+            fetch('{{ url('
+                    datanotif ') }}')
                 .then(response => response.json())
                 .then(data => {
                     const notificationItems = document.getElementById('notification-items');
