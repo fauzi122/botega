@@ -89,9 +89,15 @@ class CalcMemberExpenseJob implements ShouldQueue
                         $join->on(DB::raw('dr.retur_no COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.retur_no COLLATE utf8mb4_general_ci'))
                             ->on(DB::raw('dr.product_id COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.product_id COLLATE utf8mb4_general_ci'));
                     })
+                    ->leftJoin('fee_number as fn', function ($join) use ($year) {
+                        $join->on(DB::raw('fn.member_user_id COLLATE utf8mb4_general_ci'), '=', DB::raw('t.member_user_id COLLATE utf8mb4_general_ci'))
+                            ->whereNotNull('fn.dt_finish') // Hanya yang dt_finish tidak null
+                            ->whereYear('fn.dt_finish', $year); // Sesuai tahun tertentu
+                    })
                     ->whereRaw('t.member_user_id COLLATE utf8mb4_general_ci = ?', $userId)
                     ->whereYear('t.tgl_invoice', $year)
-                    ->selectRaw('SUM(CASE 
+                    ->selectRaw('SUM(
+        CASE 
             WHEN COALESCE(dt.dpp_amount, 0) = 0 THEN
                 COALESCE(dt.total_price, 0)
             ELSE
@@ -103,7 +109,7 @@ class CalcMemberExpenseJob implements ShouldQueue
             ELSE 
                 COALESCE(dr.return_amount, 0)
         END
-    ) as total_spent')
+    ) + COALESCE(fn.dpp_penjualan, 0)) as total_spent')
                     ->value('total_spent') ?? 0;
 
                 $totalSpent = round($totalSpent);
