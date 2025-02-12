@@ -85,7 +85,7 @@ class Reward extends Controller
                     $data = [
                         'reward_id' => $rewardId,
                         'user_id' => session('user')->id,
-                        'point' => $poinakun->points,
+                        'point' => $poinreward->point,
                         'status' => 1,
                         'created_at' => now()->setTimezone('Asia/Jakarta')
                     ];
