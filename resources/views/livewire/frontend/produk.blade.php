@@ -43,34 +43,34 @@
                                     ]'>
 
                                 @foreach ($produk as $pro)
-                                    <div class="col">
-                                        <div class="single-grid-product">
-                                            <div class="single-grid-product__image"
-                                                style="position: relative; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 0px"
-                                                {{-- style="position: relative; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px" --}}>
-                                                <a class="image-wrap">
-                                                    @if ($pro->path_file && Storage::exists($pro->path_file))
-                                                        <img src="{{ url('produk-img/imageprimary/' . $pro->id . '.png') }}"
-                                                            class="img-fluid" alt=""
-                                                            style="border-radius: 0;object-fit: cover; width: 100%;aspect-ratio: 1/1;">
-                                                    @else
-                                                        <img src="{{ asset('assets_frontend/img/noimage.png') }}"
-                                                            class="img-fluid" alt="" {{-- style="border-radius: 10px; object-fit: cover; width: 100%; height: 400px;" --}}
-                                                            style="border-radius: 0;object-fit: cover; width: 100%;aspect-ratio: 1/1;">
-                                                    @endif
-                                                </a>
+                                <div class="col">
+                                    <div class="single-grid-product">
+                                        <div class="single-grid-product__image"
+                                            style="position: relative; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 0px"
+                                            {{-- style="position: relative; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px" --}}>
+                                            <a class="image-wrap">
+                                                @if ($pro->path_file && Storage::exists($pro->path_file))
+                                                <img src="{{ url('produk-img/imageprimary/' . $pro->id . '.png') }}"
+                                                    class="img-fluid" alt=""
+                                                    style="border-radius: 0;object-fit: cover; width: 100%;aspect-ratio: 1/1;">
+                                                @else
+                                                <img src="{{ asset('assets_frontend/img/noimage.png') }}"
+                                                    class="img-fluid" alt="" {{-- style="border-radius: 10px; object-fit: cover; width: 100%; height: 400px;" --}}
+                                                    style="border-radius: 0;object-fit: cover; width: 100%;aspect-ratio: 1/1;">
+                                                @endif
+                                            </a>
 
-                                            </div>
-                                            <div class="single-grid-product__content">
-                                                <h3 class="title"><a
-                                                        href="{{ url('product-detail/' . Crypt::encrypt($pro->id)) }}">{{ \Illuminate\Support\Str::limit($pro->name, 50) }}</a>
-                                                </h3>
-
-                                            </div>
                                         </div>
+                                        <div class="single-grid-product__content">
+                                            <h3 class="title"><a
+                                                    href="{{ url('product-detail/' . Crypt::encrypt($pro->id)) }}">{{ \Illuminate\Support\Str::limit($pro->name, 50) }}</a>
+                                            </h3>
 
-                                        <!--=======  End of single short view product  =======-->
+                                        </div>
                                     </div>
+
+                                    <!--=======  End of single short view product  =======-->
+                                </div>
                                 @endforeach
 
                             </div>
