@@ -39,7 +39,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             // CalcMemberExpenseJob::dispatch()->onConnection('sync');
             CalcMemberExpenseJob::dispatch(0);
-        })->dailyAt('12:50')->timezone('Asia/Jakarta');
+        })->dailyAt('13:00')->timezone('Asia/Jakarta');
 
         // $schedule->call(function () {
         //     // CalcMemberExpenseJob::dispatch()->onConnection('sync');
