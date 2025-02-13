@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
-class CalcMemberExpenseJob implements ShouldQueue
+class CalcMemberExpenseJob_20251302 implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     private $mode; // mode =0 all, mode=1 syncfromaccurate, mode=2 synctoaccurate
@@ -45,7 +45,7 @@ class CalcMemberExpenseJob implements ShouldQueue
 
     public function refreshAll(): void
     {
-        Log::info('CalcMemberExpenseJob executed at: ' . now());
+        // Log::info('CalcMemberExpenseJob executed at: ' . now());
 
         // Ambil tahun pertama dari tabel transactions
         $userFirstTransactionYears = DB::table('transactions')
@@ -73,16 +73,28 @@ class CalcMemberExpenseJob implements ShouldQueue
         $allUserIds = DB::table('users')->pluck('id');
 
         foreach ($allUserIds as $userId) {
-            // Jika user tidak memiliki transaksi atau fee, set tahun pertama sebagai tahun sekarang
-            $firstYear = $userFirstYears[$userId] ?? $currentYear;
+            if (!isset($userFirstTransactionYears[$userId])) {
+                // Jika user tidak memiliki transaksi, atur points menjadi 0
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'points' => 0,
+                        'level_member_id' => null, // Reset level jika tidak ada transaksi
+                    ]);
+
+                // Log::info("User_id: $userId has no transactions. Points set to 0.");
+                continue; // Lanjutkan ke user berikutnya
+            }
+
+            $firstYear = $userFirstTransactionYears[$userId];
             $yearsToProcess = range($firstYear, $currentYear);
             $lastLevel = null;
-            $currentLevelId = null;
+            $currentLevelId = null; // Menyimpan level tahun berjalan
 
             foreach ($yearsToProcess as $year) {
-                Log::info("Processing user_id: $userId for year: $year");
+                // Log::info("Processing user_id: $userId for year: $year");
 
-                // Hitung total_spent dari transaksi
+                // Hitung total_spent untuk tahun tersebut dari transaksi
                 $totalSpentFromTransactions = DB::table('detail_transactions as dt')
                     ->join('transactions as t', DB::raw('t.id COLLATE utf8mb4_general_ci'), '=', DB::raw('dt.transaction_id COLLATE utf8mb4_general_ci'))
                     ->leftJoin('detail_retur_penjualan as dr', function ($join) {
@@ -92,24 +104,26 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->whereRaw('t.member_user_id COLLATE utf8mb4_general_ci = ?', $userId)
                     ->whereYear('t.tgl_invoice', $year)
                     ->selectRaw('SUM(
-                    CASE 
-                        WHEN COALESCE(dt.dpp_amount, 0) = 0 THEN
-                            COALESCE(dt.total_price, 0)
-                        ELSE
-                            COALESCE(dt.dpp_amount, 0)
-                    END -   
-                    CASE 
-                        WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
-                            (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
-                        ELSE 
-                            COALESCE(dr.return_amount, 0)
-                    END
-                ) as total_spent')
+                        CASE 
+                            WHEN COALESCE(dt.dpp_amount, 0) = 0 THEN
+                                COALESCE(dt.total_price, 0)
+                            ELSE
+                                COALESCE(dt.dpp_amount, 0)
+                        END -   
+                        CASE 
+                            WHEN COALESCE(dr.return_amount, 0) = 0 AND COALESCE(dt.retur_qty, 0) > 0 THEN
+                                (COALESCE(dt.dpp_amount, 0) / COALESCE(dt.qty, 1)) * COALESCE(dt.retur_qty, 0)
+                            ELSE 
+                                COALESCE(dr.return_amount, 0)
+                        END
+                    ) as total_spent')
                     ->value('total_spent') ?? 0;
 
                 $totalSpentFromTransactions = round($totalSpentFromTransactions);
 
-                // Hitung total_spent dari fee_number
+                // Log::info("Total spent from transactions for user_id: $userId in year: $year is $totalSpentFromTransactions");
+
+                // Hitung total_spent untuk tahun tersebut dari fee_number
                 $totalSpentFromFee = DB::table('fee_number')
                     ->where('member_user_id', $userId)
                     ->whereNotNull('dt_finish') // Hanya yang dt_finish tidak null
@@ -118,17 +132,14 @@ class CalcMemberExpenseJob implements ShouldQueue
 
                 $totalSpentFromFee = round($totalSpentFromFee);
 
+                // Log::info("Total spent from fee_number for user_id: $userId in year: $year is $totalSpentFromFee");
+
                 // Gabungkan total dari transaksi dan fee_number
                 $totalSpent = $totalSpentFromTransactions + $totalSpentFromFee;
 
-                // Jika tidak ada transaksi tapi ada fee, tetap proses fee
-                if ($totalSpentFromTransactions == 0 && $totalSpentFromFee > 0) {
-                    $totalSpent = $totalSpentFromFee;
-                }
+                // Log::info("Total spent (transactions + fee) for user_id: $userId in year: $year is $totalSpent");
 
-                Log::info("Total spent (transactions + fee) for user_id: $userId in year: $year is $totalSpent");
-
-                // Gunakan logika menentukan level seperti sebelumnya
+                // Lakukan proses seperti biasa untuk menentukan level dan menyimpan total_spent
                 $previousYearLevel = DB::table('member_spent')
                     ->where('user_id', $userId)
                     ->where('tahun', $year - 1)
@@ -167,6 +178,11 @@ class CalcMemberExpenseJob implements ShouldQueue
                     }
                 }
 
+                if ($year == $currentYear && $previousYearLevel) {
+                    $levelId = $previousYearLevel->level;
+                    $lastLevel = $levels->firstWhere('id', $levelId);
+                }
+
                 DB::table('member_spent')->updateOrInsert(
                     [
                         'user_id' => $userId,
@@ -179,33 +195,47 @@ class CalcMemberExpenseJob implements ShouldQueue
                         'updated_at' => now(),
                     ]
                 );
+
+                // Simpan level tahun berjalan ke variabel
+                if ($year == $currentYear) {
+                    if ($totalSpent <= ($previousYearLevel->total_spent ?? 0)) {
+                        $currentLevelId = $previousYearLevel->level; // Tetap gunakan level tahun sebelumnya
+                    } else {
+                        $currentLevelId = $levelId; // Gunakan level yang sesuai dengan totalSpent
+                    }
+                }
             }
 
-            // Perbarui level_member_id dan points di tabel users
-            $totalPoints = DB::table('member_spent')
-                ->where('user_id', $userId)
-                ->where('tahun', $currentYear)
-                ->sum('total_spent') / 1000;
+            // Perbarui level_member_id dan points di tabel users untuk tahun berjalan
+            if ($currentLevelId) {
+                // Hitung total poin dari member_spent
+                $totalPoints = DB::table('member_spent')
+                    ->where('user_id', $userId)
+                    ->where('tahun', $currentYear)
+                    ->sum('total_spent') / 1000;
+                // Hitung total poin dari rewards
+                $totalRewardsPoints = DB::table('member_rewards as mr')
+                    ->join('rewards as r', 'mr.reward_id', '=', 'r.id')
+                    ->where('mr.user_id', $userId)
+                    ->sum('r.point');
 
-            $totalRewardsPoints = DB::table('member_rewards')
-                ->where('user_id', $userId)
-                ->where('status', '<>', '3') // Menggunakan operator '<>' untuk tidak sama dengan
-                ->sum('point');
+                // Hitung poin akhir
+                $finalPoints = round($totalPoints) - $totalRewardsPoints;
 
-            $finalPoints = round($totalPoints) - $totalRewardsPoints;
+                // Log::info("Updating user_id: $userId with final points: $finalPoints");
 
-            DB::table('users')
-                ->where('id', $userId)
-                ->update([
-                    'level_member_id' => $currentLevelId,
-                    'points' => $finalPoints,
-                ]);
+                // Update tabel users
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'level_member_id' => $currentLevelId,
+                        'points' => $finalPoints,
+                    ]);
+            }
         }
 
-        Log::info('CalcMemberExpenseJob completed.');
+        // Log::info('CalcMemberExpenseJob completed.');
     }
-
-
 
 
     public function refreshDaily(): void
