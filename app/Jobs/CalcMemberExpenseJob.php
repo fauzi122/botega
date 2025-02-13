@@ -50,12 +50,14 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil tahun pertama dari tabel transactions
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
+            // ->where('member_user_id', '3170')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_invoice)) as first_year")
             ->groupBy('member_user_id');
 
         // Ambil tahun pertama dari tabel fee_number
         $userFirstFeeYears = DB::table('fee_number')
             ->whereNotNull('created_at') // Hanya fee dengan created_at
+            // ->where('member_user_id', '3170')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(created_at)) as first_year")
             ->groupBy('member_user_id');
 
@@ -70,7 +72,9 @@ class CalcMemberExpenseJob implements ShouldQueue
         $currentYear = date('Y');
 
         // Ambil semua pengguna dari tabel users
-        $allUserIds = DB::table('users')->pluck('id');
+        $allUserIds = DB::table('users')
+            // ->where('id', '3170')
+            ->pluck('id');
 
         foreach ($allUserIds as $userId) {
             if (!isset($userFirstYears[$userId])) {
@@ -145,7 +149,7 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->where('tahun', $year - 1)
                     ->first();
 
-                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'asc')->get();
+                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
                 $lastLevel = $levels->firstWhere('id', $previousYearLevel->level ?? null);
                 $levelId = null;
 
