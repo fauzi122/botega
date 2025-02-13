@@ -147,7 +147,7 @@ class CalcMemberExpenseJob implements ShouldQueue
                     ->where('tahun', $year - 1)
                     ->first();
 
-                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'desc')->get();
+                $levels = LevelMemberModel::where('publish', 1)->orderBy('level', 'asc')->get();
                 $lastLevel = $levels->firstWhere('id', $previousYearLevel->level ?? null);
                 $levelId = null;
 
