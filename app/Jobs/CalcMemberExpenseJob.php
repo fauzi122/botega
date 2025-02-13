@@ -50,12 +50,14 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil tahun pertama dari tabel transactions
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
+            ->where('member_user_id', '8006')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_invoice)) as first_year")
             ->groupBy('member_user_id');
 
         // Ambil tahun pertama dari tabel fee_number
         $userFirstFeeYears = DB::table('fee_number')
             ->whereNotNull('created_at') // Hanya fee dengan created_at
+            ->where('member_user_id', '8006')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(created_at)) as first_year")
             ->groupBy('member_user_id');
 
@@ -70,14 +72,25 @@ class CalcMemberExpenseJob implements ShouldQueue
         $currentYear = date('Y');
 
         // Ambil semua pengguna dari tabel users
-        $allUserIds = DB::table('users')->pluck('id');
+        $allUserIds = DB::table('users')->where('id', '8006')->pluck('id');
 
         foreach ($allUserIds as $userId) {
-            // Jika user tidak memiliki transaksi atau fee, set tahun pertama sebagai tahun sekarang
-            $firstYear = $userFirstYears[$userId] ?? $currentYear;
+            if (!isset($userFirstYears[$userId])) {
+                // Jika user tidak memiliki transaksi, atur points menjadi 0
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'points' => 0,
+                        'level_member_id' => null, // Reset level jika tidak ada transaksi
+                    ]);
+
+                // Log::info("User_id: $userId has no transactions. Points set to 0.");
+                continue; // Lanjutkan ke user berikutnya
+            }
+            $firstYear = $userFirstYears[$userId];
             $yearsToProcess = range($firstYear, $currentYear);
             $lastLevel = null;
-            $currentLevelId = null;
+            $currentLevelId = null; // Menyimpan level tahun berjalan
 
             foreach ($yearsToProcess as $year) {
                 Log::info("Processing user_id: $userId for year: $year");
@@ -167,6 +180,11 @@ class CalcMemberExpenseJob implements ShouldQueue
                     }
                 }
 
+                if ($year == $currentYear && $previousYearLevel) {
+                    $levelId = $previousYearLevel->level;
+                    $lastLevel = $levels->firstWhere('id', $levelId);
+                }
+
                 DB::table('member_spent')->updateOrInsert(
                     [
                         'user_id' => $userId,
@@ -179,27 +197,42 @@ class CalcMemberExpenseJob implements ShouldQueue
                         'updated_at' => now(),
                     ]
                 );
+                // Simpan level tahun berjalan ke variabel
+                if ($year == $currentYear) {
+                    if ($totalSpent <= ($previousYearLevel->total_spent ?? 0)) {
+                        $currentLevelId = $previousYearLevel->level; // Tetap gunakan level tahun sebelumnya
+                    } else {
+                        $currentLevelId = $levelId; // Gunakan level yang sesuai dengan totalSpent
+                    }
+                }
             }
 
-            // Perbarui level_member_id dan points di tabel users
-            $totalPoints = DB::table('member_spent')
-                ->where('user_id', $userId)
-                ->where('tahun', $currentYear)
-                ->sum('total_spent') / 1000;
+            // Perbarui level_member_id dan points di tabel users untuk tahun berjalan
+            if ($currentLevelId) {
+                // Hitung total poin dari member_spent
+                $totalPoints = DB::table('member_spent')
+                    ->where('user_id', $userId)
+                    ->where('tahun', $currentYear)
+                    ->sum('total_spent') / 1000;
+                // Hitung total poin dari rewards
+                $totalRewardsPoints = DB::table('member_rewards')
+                    ->where('user_id', $userId)
+                    ->where('status', '<>', '3') // Menggunakan operator '<>' untuk tidak sama dengan
+                    ->sum('point');
 
-            $totalRewardsPoints = DB::table('member_rewards')
-                ->where('user_id', $userId)
-                ->where('status', '<>', '3') // Menggunakan operator '<>' untuk tidak sama dengan
-                ->sum('point');
+                // Hitung poin akhir
+                $finalPoints = round($totalPoints) - $totalRewardsPoints;
 
-            $finalPoints = round($totalPoints) - $totalRewardsPoints;
+                // Log::info("Updating user_id: $userId with final points: $finalPoints");
 
-            DB::table('users')
-                ->where('id', $userId)
-                ->update([
-                    'level_member_id' => $currentLevelId,
-                    'points' => $finalPoints,
-                ]);
+                // Update tabel users
+                DB::table('users')
+                    ->where('id', $userId)
+                    ->update([
+                        'level_member_id' => $currentLevelId,
+                        'points' => $finalPoints,
+                    ]);
+            }
         }
 
         Log::info('CalcMemberExpenseJob completed.');
