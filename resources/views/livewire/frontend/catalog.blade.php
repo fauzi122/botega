@@ -31,7 +31,7 @@
                                         <a href="{{ url('katalog-produk/berkas/' . $kat->id . '.pdf') }}">
                                             <img src="{{ url('katalog-produk/image/' . $kat->id . '.png') }}"
                                                 class="img-fluid" alt=""
-                                                style="object-fit: cover; height: 500px;width: 100%"
+                                                style="object-fit: cover; aspect-ratio: 1/1;width: 100%"
                                                 onerror="this.src='{{ asset('assets_frontend/img/noimage.png') }}'">
                                         </a>
                                     </div>
