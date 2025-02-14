@@ -232,8 +232,18 @@ class Form extends Component
         $idDetailDelivery = $type == 'DD' ? $detailTransaction?->id : null;
 
         [$inv, $sj] = $this->getNoInv_SJ($type, $detailTransaction);
+        // dd($detailTransaction);
+        $brandName = strtolower(explode(' ', $detailTransaction->name)[0]);
 
-        $feepercent = 3;
+        // Cek kondisi berdasarkan brand
+        if (in_array(strtolower($brandName), ['artisan', 'bottega', 'italica', 'duraslab', 'exotica'])) {
+            $feepercent = 5;
+        } elseif (strtolower($brandName) === 'moen') {
+            $feepercent = 10;
+        } else {
+            $feepercent = 2.5;
+        }
+        // $feepercent = 3;
         $feeamount =  $detailTransaction->dpp_amount * ($feepercent / 100);
         $feeamountretur = doubleval($feeamount / $detailTransaction->qty) * doubleval($detailTransaction?->retur_qty ?? 0,);
         $feeamount = $feeamount - $feeamountretur;
