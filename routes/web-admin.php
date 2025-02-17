@@ -369,6 +369,11 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
                 Route::get("/{id}", "MemberController@show");
                 Route::delete("/", "MemberController@delete_approval");
             });
+            
+            Route::prefix("release")->group(function () {
+                Route::get("/", "ReleaseNoteController@index");
+                Route::get("/data-source", "ReleaseNoteController@datasource");
+            });
 
             Route::prefix("promo")->group(function () {
                 Route::get("/", "PromoController@index");
