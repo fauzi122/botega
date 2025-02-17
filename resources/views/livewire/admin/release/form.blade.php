@@ -47,8 +47,8 @@
                                 <select class="form-select @error('tipe') is-invalid @enderror" id="tipe"
                                     name="tipe" wire:model="tipe">
                                     <option selected>Pilih tipe</option>
-                                    <option value="improvement">improvement</option>
-                                    <option value="bug">bug</option>
+                                    <option value="2">Improvement</option>
+                                    <option value="1">Bug</option>
                                 </select>
                                 @error('tipe')
                                     <span class="text-danger">{{ $message }}</span>

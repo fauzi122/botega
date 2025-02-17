@@ -372,7 +372,12 @@ Route::namespace("App\Http\Controllers\Admin")->group(function () {
             
             Route::prefix("release")->group(function () {
                 Route::get("/", "ReleaseNoteController@index");
-                Route::get("/data-source", "ReleaseNoteController@datasource");
+                Route::get("/data-source", "ReleaseNoteController@dataSource");
+                Route::get("/data-source-improvement", "ReleaseNoteController@dataSourceImprovement");
+                Route::get("/data-source-bug", "ReleaseNoteController@dataSourceBug");
+                // Hitung jumlah record di setiap tab
+                Route::get("/count-tab/{step}", "ReleaseNoteController@countTab");
+                Route::post('/status', "ReleaseNoteController@statusSolved");
             });
 
             Route::prefix("promo")->group(function () {
