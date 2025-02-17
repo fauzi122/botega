@@ -534,6 +534,11 @@ File: Main Js File
                         url: baseurl + "/member/",
                         icon: "users",
                     },
+                    {
+                        title: "Release Notes",
+                        url: baseurl + "/release/",
+                        icon: "arrow-right-circle",
+                    },
                     // { "title":"Promo", "url": baseurl + "/promo/"  },
                 ],
             },
