@@ -31,6 +31,9 @@
                                 <div class="form-group">
                                     <label class="col-md-1">NPWP</label><span class="col-md-3">{{$member->npwp}} </span>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-md-1">Tanggal Periode</label><span class="col-md-3">{{$feenumber->tgl_periode}} </span>
+                                </div>
                                 @endif
                                 <table class="table table-hover table-bordered table-striped table-responsive">
                                     <thead>
