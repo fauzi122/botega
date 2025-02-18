@@ -81,6 +81,16 @@
                                             <div class="col-md-5"><input type="text" id="customer" class="form-control" disabled /> </div>
                                         </div>
                                     </div>
+                                    <div class="row mt-2">
+                                        <label class="col-md-3">Tanggal Periode </label>
+                                        <div class="col-md-5">
+                                            <input type="date" id="tgl_periode" class="form-control @error('tgl_periode') is-invalid @enderror" wire:model.lazy="tgl_periode" required />
+                                            @error('tgl_periode')
+                                            <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+
 
                                     {{--<div class="form-group mb-3">
                                        <div class="row">

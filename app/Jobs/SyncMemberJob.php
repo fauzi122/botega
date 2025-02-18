@@ -293,7 +293,10 @@ class SyncMemberJob implements ShouldQueue
             // Dapatkan atau perbarui kategori menggunakan fungsi getKategoriMember
             $kategori = $this->getKategoriMember($accurateData['category']['id'] ?? null);
             $kategoriId = is_numeric($kategori) ? (int)$kategori : null; // Validasi sebagai integer
-
+            // if ($user->npwp<>  $isPerusahaanUpdated) {
+            //     $user = UserModel::find($this->lm->id);
+            //     $user->updateFeeRelatedCalculations(); // Panggil metode yang mengatur pembaruan terkait
+            // }
 
             // Update data user
             UserModel::query()
@@ -313,6 +316,7 @@ class SyncMemberJob implements ShouldQueue
                     'kategori_id' => $kategoriId, // Gunakan ID untuk kategori yang diperoleh
                     'updated_at' => now(),
                 ]);
+
 
             // Menyimpan atau memperbarui data bank
             $an = $accurateData['charField6'] ?? null; // Atas Nama

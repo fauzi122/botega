@@ -1154,6 +1154,11 @@ function buildTable() {
 }
 
 function save() {
+    let periode = document.getElementById("periode").value;
+    if (!periode) {
+        Swal.fire("Error", "Tanggal periode wajib diisi!", "error");
+        return;
+    }
     wire.save().then(() => {});
 }
 

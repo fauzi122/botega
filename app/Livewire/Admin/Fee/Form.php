@@ -31,6 +31,7 @@ class Form extends Component
     public $member;
     public $userRekening;
     public $namamemberlengkap;
+    public $tgl_periode;
 
     public $listsj = [];
     public $nosj;
@@ -54,6 +55,7 @@ class Form extends Component
             'member_user_id' => 'required',
             'transaction_id' => 'required',
             'detail_transaction_id' => 'required',
+            'tgl_periode' => 'required|date',
         ], [
             'member_user_id' => 'Member profesional harus diisikan',
             'transaction_id' => 'Nomor Invoice transaksi harus dipilih',
@@ -140,6 +142,33 @@ class Form extends Component
         $this->dispatch('refresh1');
         LogController::writeLog(ValidatedPermission::HAPUS_DATA_FEE, 'Hapus  fee  ', $id);
     }
+    public function updatedTglPeriode($value)
+    {
+        // Pastikan nilai tidak kosong atau null
+        if (empty($value)) {
+            // session()->flash('error', 'Tanggal periode tidak boleh kosong!');
+            return;
+        }
+
+        // Cek apakah data sudah ada atau belum
+        $r = FeeNumberModel::query()
+            ->where('member_user_id', $this->member_user_id)
+            ->whereNull('dt_pengajuan')
+            ->first();
+
+        if ($r == null) {
+            // Jika belum ada data, buat baru dengan saveFeeNumber()
+            // $this->saveFeeNumber();
+        } else {
+            // Jika sudah ada data, update hanya `tgl_periode`
+            $r->tgl_periode = $value;
+            $r->updated_at = Carbon::now();
+            $r->save(); // Gunakan save() agar perubahan tersimpan
+            session()->flash('success', 'Tanggal periode berhasil diperbarui!');
+        }
+    }
+
+
 
     private function saveFeeNumber()
     {
@@ -158,6 +187,7 @@ class Form extends Component
         if ($r == null) {
             $data['nomor'] = FeeNumberModel::generateNomor();
             $data['created_at'] = Carbon::now();
+            $data['tgl_periode'] = $this->tgl_periode;
             return FeeNumberModel::query()->insertGetId($data);
         } else {
             $data['updated_at'] = Carbon::now();
@@ -555,6 +585,12 @@ class Form extends Component
 
     public function render()
     {
+        $feeNumber = FeeNumberModel::where('member_user_id', $this->member_user_id)
+            ->whereNull('dt_pengajuan')
+            ->first();
+        if ($feeNumber) {
+            $this->tgl_periode = Carbon::parse($feeNumber->tgl_periode)->format('Y-m-d');
+        }
         $this->nosj = (int)$this->nosj;
 
         $trxid = (int)$this->transaction_id;

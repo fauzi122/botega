@@ -56,9 +56,9 @@ class CalcMemberExpenseJob implements ShouldQueue
 
         // Ambil tahun pertama dari tabel fee_number
         $userFirstFeeYears = DB::table('fee_number')
-            ->whereNotNull('created_at') // Hanya fee dengan created_at
+            ->whereNotNull('tlg_periode') // Hanya fee dengan tlg_periode
             // ->where('member_user_id', '3170')
-            ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(created_at)) as first_year")
+            ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tlg_periode)) as first_year")
             ->groupBy('member_user_id');
 
         // Gabungkan kedua sumber data
@@ -127,8 +127,8 @@ class CalcMemberExpenseJob implements ShouldQueue
                 // Hitung total_spent dari fee_number
                 $totalSpentFromFee = DB::table('fee_number')
                     ->where('member_user_id', $userId)
-                    ->whereNotNull('created_at') // Hanya yang created_at tidak null
-                    ->whereYear('created_at', $year) // Hanya tahun yang sedang diproses
+                    ->whereNotNull('tlg_periode') // Hanya yang tlg_periode tidak null
+                    ->whereYear('tlg_periode', $year) // Hanya tahun yang sedang diproses
                     ->sum('dpp_penjualan') ?? 0;
 
                 $totalSpentFromFee = round($totalSpentFromFee);
