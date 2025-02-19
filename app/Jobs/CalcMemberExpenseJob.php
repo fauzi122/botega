@@ -50,15 +50,15 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil tahun pertama dari tabel transactions
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
-            // ->where('member_user_id', '3170')
+            ->where('member_user_id', '10339')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_invoice)) as first_year")
             ->groupBy('member_user_id');
 
         // Ambil tahun pertama dari tabel fee_number
         $userFirstFeeYears = DB::table('fee_number')
-            ->whereNotNull('tlg_periode') // Hanya fee dengan tlg_periode
-            // ->where('member_user_id', '3170')
-            ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tlg_periode)) as first_year")
+            ->whereNotNull('tgl_periode') // Hanya fee dengan tgl_periode
+            ->where('member_user_id', '10339')
+            ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_periode)) as first_year")
             ->groupBy('member_user_id');
 
         // Gabungkan kedua sumber data
@@ -73,7 +73,7 @@ class CalcMemberExpenseJob implements ShouldQueue
 
         // Ambil semua pengguna dari tabel users
         $allUserIds = DB::table('users')
-            // ->where('id', '3170')
+            ->where('id', '10339')
             ->pluck('id');
 
         foreach ($allUserIds as $userId) {
@@ -127,8 +127,8 @@ class CalcMemberExpenseJob implements ShouldQueue
                 // Hitung total_spent dari fee_number
                 $totalSpentFromFee = DB::table('fee_number')
                     ->where('member_user_id', $userId)
-                    ->whereNotNull('tlg_periode') // Hanya yang tlg_periode tidak null
-                    ->whereYear('tlg_periode', $year) // Hanya tahun yang sedang diproses
+                    ->whereNotNull('tgl_periode') // Hanya yang tgl_periode tidak null
+                    ->whereYear('tgl_periode', $year) // Hanya tahun yang sedang diproses
                     ->sum('dpp_penjualan') ?? 0;
 
                 $totalSpentFromFee = round($totalSpentFromFee);
