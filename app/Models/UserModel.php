@@ -63,6 +63,7 @@ class UserModel extends Model
         // Ambil semua FeeNumber yang dt_finish nya masih kosong
         $feeNumbers = FeeNumberModel::where('member_user_id', $this->id)
             ->whereNull('dt_finish')
+            ->whereNull('dt_dp')
             ->get();
 
         // Jika tidak ada FeeNumber yang dt_finish nya kosong, maka hentikan proses
