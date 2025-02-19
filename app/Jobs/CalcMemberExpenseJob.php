@@ -50,14 +50,14 @@ class CalcMemberExpenseJob implements ShouldQueue
         // Ambil tahun pertama dari tabel transactions
         $userFirstTransactionYears = DB::table('transactions')
             ->whereNotNull('tgl_invoice')
-            ->where('member_user_id', '10339')
+            // ->where('member_user_id', '10339')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_invoice)) as first_year")
             ->groupBy('member_user_id');
 
         // Ambil tahun pertama dari tabel fee_number
         $userFirstFeeYears = DB::table('fee_number')
             ->whereNotNull('tgl_periode') // Hanya fee dengan tgl_periode
-            ->where('member_user_id', '10339')
+            // ->where('member_user_id', '10339')
             ->selectRaw("member_user_id COLLATE utf8mb4_general_ci as member_user_id, MIN(YEAR(tgl_periode)) as first_year")
             ->groupBy('member_user_id');
 
@@ -73,7 +73,7 @@ class CalcMemberExpenseJob implements ShouldQueue
 
         // Ambil semua pengguna dari tabel users
         $allUserIds = DB::table('users')
-            ->where('id', '10339')
+            // ->where('id', '10339')
             ->pluck('id');
 
         foreach ($allUserIds as $userId) {
