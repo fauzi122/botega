@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Gifttype;
 use App\Http\Controllers\Admin\LogController;
 use App\Library\ValidatedPermission;
 use App\Models\GiftTypeModel;
+use App\Models\LevelMemberModel;
 use App\Models\ProductCategoryModel;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -14,8 +15,17 @@ class Form extends Component
     public $name;
     public $price;
     public $description;
+    public $level_member_id;
     public $editform = false;
     public $lm;
+    public $levels;
+
+    public function mount(){
+        if(!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_LEVEL_MEMBER)){
+            return ;
+        }
+        $this->levels = LevelMemberModel::get();
+    }
 
     public function edit($id){
         if(!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_JENIS_HADIAH)){
@@ -25,6 +35,7 @@ class Form extends Component
 
         $this->lm = GiftTypeModel::query()->find($id);
         $this->editform = $this->lm != null;
+        $this->level_member_id = $this->lm?->level_member_id ?? '';
         $this->name = $this->lm?->name ?? '';
         $this->price = $this->lm?->price ?? 0;
         $this->description = $this->lm?->description ?? '';
@@ -38,12 +49,14 @@ class Form extends Component
         $v =   $this->validate([
             'name' => 'required|min:4',
             'price' => 'required|numeric|min:0',
+            'level_member_id' => 'required',
         ],[
             'name' => [
                 'required' => 'Nama gift harus diisikan',
                 'min' => 'Nama gif minimal 4 karakter'
             ],
-            'price' => 'Harga harus ditentukan, minimal 0'
+            'price' => 'Harga harus ditentukan, minimal 0',
+            'level_member_id' => "Level harus dipilih"
         ]);
         $v['description'] = $this->description;
         return $v;

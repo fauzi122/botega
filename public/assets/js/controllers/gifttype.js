@@ -66,6 +66,7 @@ function buildTable(){
                 return formatUang(data);
             }},
             { data: 'description'},
+            { data: 'level_member_id'},
             { data: 'id', render:(data, type, row, meta) => {
                     return `<button class='btn btn-sm btn-rounded btn-info' onclick="editdata('${row['id']}')"><i class="mdi mdi-pencil"></i> Edit</button> `;
                 }},
@@ -86,5 +87,8 @@ function editdata(id){
     wire.edit(id).then(()=>{
         let price = parseInt( wire.get('price'), 10);
         $('input[name=price]').val(price).trigger('input');
+
+        let lvl_member = wire.get('level_member_id');
+        $('#level_member_id').val(lvl_member).change();
     });
 }
