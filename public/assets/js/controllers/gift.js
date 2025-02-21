@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function(){
     $('select[name=user_id]').on('change', (e)=>{
         let v = $('select[name=user_id]').val();
         wire.set('user_id', v, false);
+        gift();
     });
 });
 
@@ -79,6 +80,12 @@ function buildTable(){
                 }},
 
         ]
+    });
+}
+
+function gift() {
+    wire.giftType().then(() => {
+        
     });
 }
 

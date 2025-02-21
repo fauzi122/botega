@@ -7,6 +7,7 @@ use App\Library\ValidatedPermission;
 use App\Models\GiftModel;
 use App\Models\GiftTypeModel;
 use App\Models\ProductCategoryModel;
+use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Component;
 
@@ -29,7 +30,8 @@ class Form extends Component
         if(!ValidatedPermission::authorize(ValidatedPermission::LIHAT_DATA_JENIS_HADIAH)){
             return ;
         }
-        $this->giftTypes = GiftTypeModel::get();
+
+        // $this->giftTypes = GiftTypeModel::get();
     }
 
     public function edit($id){
@@ -77,6 +79,11 @@ class Form extends Component
         $m = GiftTypeModel::find($this->gift_type_id);
         $this->price = $m->price;
         $this->dispatch('dapatharga');
+    }
+
+    public function giftType(){
+        $user = User::find($this->user_id);
+        $this->giftTypes = GiftTypeModel::where('level_member_id', $user->level_member_id)->get();
     }
 
     public function save(){
